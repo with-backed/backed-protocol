@@ -110,13 +110,14 @@ contract NFTPawnShop is ERC721Enumerable {
 		require(ticket.perBlockInterestRate <= interest, "NFTPawnShop: interest too high");
 		require(ticket.blockDuration <= blockDuration, "NFTPawnShop: block duration too low");
 		require(ticket.loanAmount <= amount, "NFTPawnShop: amount too low");
+		uint256 accumulatedInterest = 0;
 		if(ticket.lastAccumulatedInterestBlock != 0){
 			// someone already has this loan, to replace them, the offer must improve
 			require(ticket.loanAmount < amount || ticket.blockDuration < blockDuration ||
 			ticket.perBlockInterestRate < interest, "NFTPawnShop: loan terms must be better than existing loan");
-			uint256 interest = interestOwed(pawnTicketID);
+			accumulatedInterest = interestOwed(pawnTicketID);
 			// account acquiring this loan needs to transfer amount + interest so far
-			IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount + interest);
+			IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount + accumulatedInterest);
 			address currentLoanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
 			// we add to exisiting balance here incase this person has owned this loan before
 			_loanPaymentBalances[pawnTicketID][currentLoanOwner] = _loanPaymentBalances[pawnTicketID][currentLoanOwner] + interestOwed(pawnTicketID) + ticket.loanAmount; 
@@ -131,7 +132,7 @@ contract NFTPawnShop is ERC721Enumerable {
 			collateralID: ticket.collateralID,
 			collateralAddress: ticket.collateralAddress,
 			perBlockInterestRate: interest,
-			accumulatedInterest: 0,
+			accumulatedInterest: accumulatedInterest,
 			lastAccumulatedInterestBlock: block.number,
 			blockDuration: blockDuration,
 			loanAmount: amount,
