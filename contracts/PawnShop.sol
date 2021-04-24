@@ -26,11 +26,12 @@ struct PawnTicket {
 contract NFTPawnShop is ERC721Enumerable {
 
 	using SafeMath for uint256;
+	// ==== Immutable 
+	uint256 private SCALAR = 1e18;
 
-	// ID => LoanInfo
+	// ==== Mutable 
 	mapping(uint256 => PawnTicket) public pawnTickets;
 	uint256 private _nonce;
-	uint256 private SCALAR = 1e18;
 	// paybacks to claim
 	mapping(uint256 => mapping(address => uint256)) private _loanPaymentBalances;
 	// ERC721, each token represents a loan corresponding in ID to a PawnTicket
