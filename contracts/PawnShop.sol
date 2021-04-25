@@ -70,6 +70,14 @@ contract NFTPawnShop is ERC721Enumerable {
 			.add(ticket.accumulatedInterest);
 	}
 
+	function interestOwnedSinceLastAccumulation(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
+		PawnTicket storage ticket = pawnTickets[pawnTicketID];
+		return ticket.loanAmount
+			.mul(block.number.sub(ticket.lastAccumulatedInterestBlock))
+			.mul(ticket.perBlockInterestRate)
+			.div(SCALAR)
+	}
+
 	function drawableBalance(uint256 pawnTicketID) ticketExists(pawnTicketID) view external returns (uint256) {
 		PawnTicket storage ticket = pawnTickets[pawnTicketID];
 		return ticket.loanAmount.sub(ticket.loanAmountDrawn);
@@ -126,7 +134,9 @@ contract NFTPawnShop is ERC721Enumerable {
 			// someone already has this loan, to replace them, the offer must improve
 			require(ticket.loanAmount < amount || ticket.blockDuration < blockDuration ||
 			interestRateAfterPawnShopTake(ticket.perBlockInterestRate) < interest, "NFTPawnShop: loan terms must be better than existing loan");
-			accumulatedInterest = interestOwed(pawnTicketID);
+			// we only want to add the interest for blocks that this account held the loan
+			// i.e. since last accumulatedInterest
+			accumulatedInterest = interestOwnedSinceLastAccumulation(pawnTicketID);
 			// account acquiring this loan needs to transfer amount + interest so far
 			IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount + accumulatedInterest);
 			address currentLoanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
@@ -143,7 +153,7 @@ contract NFTPawnShop is ERC721Enumerable {
 			collateralID: ticket.collateralID,
 			collateralAddress: ticket.collateralAddress,
 			perBlockInterestRate: interest,
-			accumulatedInterest: accumulatedInterest,
+			accumulatedInterest: ticket.accumulatedInterest + accumulatedInterest,
 			lastAccumulatedInterestBlock: block.number,
 			blockDuration: blockDuration,
 			loanAmount: amount,
