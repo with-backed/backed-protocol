@@ -175,7 +175,6 @@ contract NFTPawnShop is ERC721Enumerable {
 		IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(loansContract).ownerOf(pawnTicketID), pawnTicketID);
 		ticket.closed = true;
 		IPawnLoans(loansContract).setCollateralSeized(pawnTicketID);
-
 	}
 
 	function withdrawLoanPayment(uint256 pawnTicketID, uint256 amount) ticketExists(pawnTicketID) external {
@@ -195,10 +194,3 @@ contract NFTPawnShop is ERC721Enumerable {
 		IERC20(asset).transfer(to, amount);
 	}
 }
-// TODO
-// - emit events
-// - add our take rate and adjust interest 
-
-// create loan info, mint lockedAsset token
-// someone takes on the loan, gets the loan token
-// 
