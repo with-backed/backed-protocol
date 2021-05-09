@@ -3,6 +3,8 @@ pragma solidity ^0.8.2;
 import './interfaces/IPawnLoans.sol';
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
+import "hardhat/console.sol";
+
 contract PawnLoans is ERC721, IPawnLoans {
     address public pawnShop;
     mapping(uint256 => bool) public override loanPaidBack;

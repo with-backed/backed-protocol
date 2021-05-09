@@ -52,6 +52,7 @@ describe("PawnShop contract", function () {
             expect(ticket.collateralAddress).to.equal(CryptoPunks.address)
             expect(ticket.perBlockInterestRate).to.equal(interest)
             expect(ticket.blockDuration).to.equal(blocks)
+            expect(ticket.accumulatedInterest).to.equal(0)
         })
         it("transfers NFT to contract, mints ticket", async function(){
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
@@ -96,9 +97,16 @@ describe("PawnShop contract", function () {
                 expect(ticket.loanAmount).to.equal(loanAmount)
                 expect(ticket.perBlockInterestRate).to.equal(interest)
                 expect(ticket.blockDuration).to.equal(blocks)
+                expect(ticket.accumulatedInterest).to.equal(0)
                 const block = await provider.getBlockNumber()
                 expect(ticket.lastAccumulatedInterestBlock).to.equal(block)
             })
+            it("transfers loan NFT to underwriter", async function(){
+                await PawnShop.connect(daiHolder).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
+                const owner = await PawnLoans.ownerOf("1")
+                expect(owner).to.equal(daiHolder.address)
+            });
+
         });
 
         context("when loan exists", function () {
@@ -116,19 +124,19 @@ describe("PawnShop contract", function () {
             it("reverts if amount is too low", async function(){
                 await expect(
                     PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
-                    ).to.be.revertedWith("NFTPawnShop: loan terms must be better than existing loan")
+                    ).to.be.revertedWith("NFTPawnShop: proposed terms must be better than existing terms")
             })
 
             it("reverts if interest is too high", async function(){
                 await expect(
                     PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
-                    ).to.be.revertedWith("NFTPawnShop: loan terms must be better than existing loan")
+                    ).to.be.revertedWith("NFTPawnShop: proposed terms must be better than existing terms")
             })
 
             it("reverts if block duration is too low", async function(){
                 await expect(
                     PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
-                    ).to.be.revertedWith("NFTPawnShop: loan terms must be better than existing loan")
+                    ).to.be.revertedWith("NFTPawnShop: proposed terms must be better than existing terms")
             })
 
             it("does not revert if interest is less", async function(){
@@ -148,9 +156,62 @@ describe("PawnShop contract", function () {
                         PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount.add(1))
                         ).not.to.be.reverted
             })
+
+            it("transfers loan token to the new underwriter", async function(){
+                await PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount.add(1))
+                const owner = await PawnLoans.ownerOf("1")
+                expect(owner).to.equal(addr4.address)
+            });
+
+            it("updates payback balance of previous owner", async function(){
+                const ticket = await PawnShop.ticketInfo("1")
+                const interest = await interestOwed("1")
+                await PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount.add(1))
+                var loanPaymentBalance = await PawnShop.loanPaymentBalance("1", daiHolder.address)
+                expect(loanPaymentBalance).to.equal(loanAmount.add(interest))
+            })
+
+            it("sets values correctly", async function(){
+                const accumulatedInterest = await interestOwed("1")
+                await PawnShop.connect(addr4).underwritePawnLoan("1", maxInterest, blocks, loanAmount.add(1))
+                const ticket = await PawnShop.ticketInfo("1")
+                expect(ticket.loanAmount).to.equal(loanAmount.add(1))
+                expect(ticket.perBlockInterestRate).to.equal(interest)
+                expect(ticket.blockDuration).to.equal(blocks)
+                expect(ticket.accumulatedInterest).to.equal(accumulatedInterest)
+                const block = await provider.getBlockNumber()
+                expect(ticket.lastAccumulatedInterestBlock).to.equal(block)
+            })
         });
         
     });
+
+    describe("drawLoan", function () {
+        it("transfers amount to lendee", async function(){
+            
+        })
+
+        it("does not allow if amount exceeds drawable amount", async function(){
+            
+        })
+
+        it("does not allow if loan is closed", async function(){
+
+        })
+
+    })
+
+    async function interestOwed(ticketID) {
+        const ticket = await PawnShop.ticketInfo(ticketID)
+        const interest = await PawnShop.lenderInterestRateAfterPawnShopTake(ticket.perBlockInterestRate)
+        const startBlock = ticket.lastAccumulatedInterestBlock
+        const curBlockNumber = await provider.getBlockNumber()
+        return ticket.loanAmount
+            .mul(ethers.BigNumber.from(curBlockNumber - startBlock))
+            .mul(interest)
+            .div(ethers.BigNumber.from(10).pow(18))
+            .add(ticket.accumulatedInterest)
+    }
 
     async function getMaxInterest() {
         return await PawnShop.lenderInterestRateAfterPawnShopTake(interest);

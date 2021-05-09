@@ -63,14 +63,48 @@ contract NFTPawnShop is ERC721Enumerable {
         return interestRate * (SCALAR - pawnShopTakeRate) / SCALAR;
     }
 
+    function lendeeInterestRateAfterPawnShopTake(uint256 interestRate) view public returns (uint256) {
+        return interestRate * SCALAR / (SCALAR - pawnShopTakeRate);
+    }
+
     function interestOwed(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
+        return totalInterestedOwned(ticket, ticket.perBlockInterestRate);
+        // PawnTicket storage ticket = ticketInfo[pawnTicketID];
+        // if(ticket.closed){
+        //     return 0;
+        // }
+        // return ticket.loanAmount
+        //     .mul(block.number.sub(ticket.lastAccumulatedInterestBlock).sub(1))
+        //     .mul(ticket.perBlockInterestRate)
+        //     .div(SCALAR)
+        //     .add(ticket.accumulatedInterest);
+    }
+
+    function interestOwedToLender(uint256 pawnTicketID) ticketExists(pawnTicketID) view external returns (uint256) {
+        PawnTicket storage ticket = ticketInfo[pawnTicketID];
+        return totalInterestedOwned(ticket, lenderInterestRateAfterPawnShopTake(ticket.perBlockInterestRate));
+        // PawnTicket storage ticket = ticketInfo[pawnTicketID];
+        // if(ticket.closed){
+        //     return 0;
+        // }
+        // return ticket.loanAmount
+        //     .mul(block.number.sub(ticket.lastAccumulatedInterestBlock).sub(1))
+        //     .mul(lenderInterestRateAfterPawnShopTake(ticket.perBlockInterestRate))
+        //     .div(SCALAR)
+        //     .add(ticket.accumulatedInterest);
+    }
+
+    // NOTE: we calculate using current block.sub(start block).sub(1), to exclude 
+    // both the start block and the current block from the interst 
+    function totalInterestedOwned(PawnTicket storage ticket, uint256 interestRate) private view returns (uint256) {
+        // PawnTicket storage ticket = ticketInfo[pawnTicketID];
         if(ticket.closed){
             return 0;
         }
         return ticket.loanAmount
-            .mul(block.number.sub(ticket.lastAccumulatedInterestBlock))
-            .mul(ticket.perBlockInterestRate)
+            .mul(block.number.sub(ticket.lastAccumulatedInterestBlock).sub(1))
+            .mul(interestRate)
             .div(SCALAR)
             .add(ticket.accumulatedInterest);
     }
@@ -88,8 +122,8 @@ contract NFTPawnShop is ERC721Enumerable {
         return ticket.blockDuration + ticket.lastAccumulatedInterestBlock;
     }
 
-    function loanPaymentBalance(uint256 pawnTicketID) ticketExists(pawnTicketID) view external returns (uint256) {
-        return _loanPaymentBalances[pawnTicketID][msg.sender];
+    function loanPaymentBalance(uint256 pawnTicketID, address account) ticketExists(pawnTicketID) view external returns (uint256) {
+        return _loanPaymentBalances[pawnTicketID][account];
     }
 
     constructor(address _manager) ERC721("Pawn Tickets", "PWNT") {
@@ -130,9 +164,12 @@ contract NFTPawnShop is ERC721Enumerable {
             require(ticket.loanAmount < amount || ticket.blockDuration < blockDuration || effectiveInterestRate > interest, "NFTPawnShop: proposed terms must be better than existing terms");
             // we only want to add the interest for blocks that this account held the loan
             // i.e. since last accumulatedInterest
+            // we do not include current block in the interest calculation. It will also not 
+            // be included in the next interest calculation. Blocks when a loan is bought out are 
+            // interest free :-) 
             accumulatedInterest = ticket.loanAmount
-                .mul(block.number.sub(ticket.lastAccumulatedInterestBlock))
-                .mul(ticket.perBlockInterestRate)
+                .mul(block.number.sub(ticket.lastAccumulatedInterestBlock).sub(1))
+                .mul(effectiveInterestRate)
                 .div(SCALAR);
             // account acquiring this loan needs to transfer amount + interest so far
             IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount + accumulatedInterest);
@@ -144,8 +181,9 @@ contract NFTPawnShop is ERC721Enumerable {
             IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount);
             IPawnLoans(loansContract).mintLoan(msg.sender, pawnTicketID);
         }
-
-        ticket.perBlockInterestRate = interest * SCALAR / (SCALAR - pawnShopTakeRate);
+        // interest rate in the struct is always the lendees rate,
+        // what is paid to the lowner owner has the pawn shop take removed
+        ticket.perBlockInterestRate = lendeeInterestRateAfterPawnShopTake(interest);
         ticket.accumulatedInterest = ticket.accumulatedInterest + accumulatedInterest;
         ticket.lastAccumulatedInterestBlock = block.number;
         ticket.blockDuration = blockDuration;
