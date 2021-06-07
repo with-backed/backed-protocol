@@ -279,7 +279,7 @@ describe("PawnShop contract", function () {
         it("transfers erc20 to pawn shop", async function(){
             var balance = await  DAI.balanceOf(punkHolder.address)
             expect(balance).to.equal(loanAmount.mul(3))
-            const interest = await interestedOwedTotal("1")
+            const interest = await interestOwedTotal("1")
             await PawnShop.connect(punkHolder).repayAndCloseTicket("1")
             balance = await DAI.balanceOf(punkHolder.address)
             expect(balance).to.equal(loanAmount.mul(3).sub(loanAmount).sub(interest))
@@ -298,6 +298,15 @@ describe("PawnShop contract", function () {
             expect(ticket.loanAmountDrawn).to.equal(0)
         })
 
+        it("updates cash drawer", async function(){
+            var value = await PawnShop.cashDrawer(DAI.address)
+            expect(value).to.equal(0)
+            const totalInterest = await interestOwedTotal("1")
+            const lenderInterest = await interestOwedToLender("1")
+            await PawnShop.connect(punkHolder).repayAndCloseTicket("1")
+            value = await PawnShop.cashDrawer(DAI.address)
+            expect(value).to.equal(totalInterest.sub(lenderInterest))
+        })
 
         it("reverts if ticket is closed", async function(){
             await PawnShop.connect(punkHolder).repayAndCloseTicket("1")
@@ -335,7 +344,78 @@ describe("PawnShop contract", function () {
         })
     })
 
-    async function interestedOwedTotal(ticketID) {
+    describe("withdrawLoanPayment", function () {
+        beforeEach(async function() {
+            await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
+
+            await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
+            maxInterest = await getMaxInterest();
+            await PawnShop.connect(daiHolder).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
+            await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
+            await DAI.connect(punkHolder).approve(PawnShop.address, loanAmount.mul(2))
+            await PawnShop.connect(punkHolder).drawLoan("1", loanAmount)
+            await PawnShop.connect(punkHolder).repayAndCloseTicket("1")
+        })
+
+        it("transfers ERC20 value, reduces loan payment balance", async function(){
+            const balanceBefore = await DAI.balanceOf(daiHolder.address)
+            const value = await PawnShop.loanPaymentBalance("1", daiHolder.address)
+            await expect(
+                PawnShop.connect(daiHolder).withdrawLoanPayment("1", value)
+                ).not.to.be.reverted
+            const balanceAfter = await DAI.balanceOf(daiHolder.address)
+            expect(balanceAfter).to.equal(balanceBefore.add(value))
+        })
+        
+        it("reverts if amount is greater than what is available", async function(){
+            const value = await PawnShop.loanPaymentBalance("1", daiHolder.address)
+            await expect(
+                PawnShop.connect(daiHolder).withdrawLoanPayment("1", value.add(1))
+                ).to.be.revertedWith("NFTPawnShop: Insufficient balance")
+        })
+    })
+
+    describe("withdrawFromCashDrawer", function () {
+        beforeEach(async function() {
+            await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
+
+            await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
+            maxInterest = await getMaxInterest();
+            await PawnShop.connect(daiHolder).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
+            await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
+            await DAI.connect(punkHolder).approve(PawnShop.address, loanAmount.mul(2))
+            await PawnShop.connect(punkHolder).drawLoan("1", loanAmount)
+            await PawnShop.connect(punkHolder).repayAndCloseTicket("1")
+        })
+
+        it("transfers ERC20 value, reduces loan payment balance", async function(){
+            await expect(
+                PawnShop.connect(daiHolder).withdrawFromCashDrawer(DAI.address, loanAmount, manager.address)
+                ).to.be.revertedWith("NFTPawnShop: manager only")
+        });
+
+        it("transfers ERC20 value, reduces loan payment balance", async function(){
+            const balanceBefore = await DAI.balanceOf(manager.address)
+            const value = await PawnShop.cashDrawer(DAI.address)
+            expect(value).to.be.above(0)
+            await expect(
+                PawnShop.connect(manager).withdrawFromCashDrawer(DAI.address, value, manager.address)
+                ).not.to.be.reverted
+            const balanceAfter = await DAI.balanceOf(manager.address)
+            expect(balanceAfter).to.equal(balanceBefore.add(value))
+
+        })
+        
+        it("reverts if amount is greater than what is available", async function(){
+            const balanceBefore = await DAI.balanceOf(manager.address)
+            const value = await PawnShop.cashDrawer(DAI.address)
+            await expect(
+                PawnShop.connect(manager).withdrawFromCashDrawer(DAI.address, value.add(1), manager.address)
+                ).to.be.revertedWith("NFTPawnShop: Insufficient funds")
+        })
+    })
+
+    async function interestOwedTotal(ticketID) {
         const ticket = await PawnShop.ticketInfo(ticketID)
         const interest = ticket.perBlockInterestRate
         const startBlock = ticket.lastAccumulatedInterestBlock

@@ -43,6 +43,7 @@ contract NFTPawnShop is ERC721Enumerable {
     address public manager;
     // 5% to start
     uint128 public pawnShopTakeRate = 5 * 1e16;
+    // ERC20 address => value
     mapping(address => uint256) public cashDrawer;
 
     // ==== modifiers
@@ -72,29 +73,11 @@ contract NFTPawnShop is ERC721Enumerable {
     function interestOwed(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         return totalInterestedOwned(ticket, ticket.perBlockInterestRate);
-        // PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        // if(ticket.closed){
-        //     return 0;
-        // }
-        // return ticket.loanAmount
-        //     .mul(block.number.sub(ticket.lastAccumulatedInterestBlock).sub(1))
-        //     .mul(ticket.perBlockInterestRate)
-        //     .div(SCALAR)
-        //     .add(ticket.accumulatedInterest);
     }
 
     function interestOwedToLender(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         return totalInterestedOwned(ticket, lenderInterestRateAfterPawnShopTake(ticket.perBlockInterestRate));
-        // PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        // if(ticket.closed){
-        //     return 0;
-        // }
-        // return ticket.loanAmount
-        //     .mul(block.number.sub(ticket.lastAccumulatedInterestBlock).sub(1))
-        //     .mul(lenderInterestRateAfterPawnShopTake(ticket.perBlockInterestRate))
-        //     .div(SCALAR)
-        //     .add(ticket.accumulatedInterest);
     }
 
     // NOTE: we calculate using current block.sub(start block).sub(1), to exclude 
@@ -252,7 +235,11 @@ contract NFTPawnShop is ERC721Enumerable {
     }
 
     function withdrawFromCashDrawer(address asset, uint256 amount, address to) managerOnly external {
-        require(cashDrawer[asset] >= amount, "NFTPawnShop: Insufficient funds");
+        cashDrawer[asset] = cashDrawer[asset].sub(amount, "NFTPawnShop: Insufficient funds");
         IERC20(asset).transfer(to, amount);
+    }
+
+    function updateManager(address _manager) managerOnly external {
+        manager = _manager;
     }
 }
