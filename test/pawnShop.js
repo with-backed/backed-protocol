@@ -36,6 +36,7 @@ describe("PawnShop contract", function () {
         await CryptoPunks.connect(punkHolder).mint();
         await CryptoPunks.connect(punkHolder).approve(PawnShop.address, punkId)
 
+
         DAIContract = await ethers.getContractFactory("DAI");
         DAI = await DAIContract.connect(daiHolder).deploy();
         await DAI.deployed();     
@@ -413,6 +414,37 @@ describe("PawnShop contract", function () {
                 PawnShop.connect(manager).withdrawFromCashDrawer(DAI.address, value.add(1), manager.address)
                 ).to.be.revertedWith("NFTPawnShop: Insufficient funds")
         })
+    })
+
+    describe("closeTicket", function () {
+        beforeEach(async function() {
+            await CryptoPunks.connect(punkHolder).mint();
+            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, "2")
+            await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
+
+            await PawnShop.connect(punkHolder).mintPawnTicket("2", CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
+        })
+
+        it("returns ERC721 to owner and closes ticket", async function(){
+            await PawnShop.connect(punkHolder).closeTicket("1")
+            const owner = await CryptoPunks.ownerOf("2")
+            expect(owner).to.equal(punkHolder.address)
+            const ticket = await PawnShop.ticketInfo("1")
+            expect(ticket.closed).to.equal(true)
+        });
+
+        it("reverts if caller is not ticket owner", async function(){
+            await expect(
+                PawnShop.connect(daiHolder).closeTicket("1")
+                ).to.be.revertedWith("NFTPawnShop: must be owner of pawned item")
+        });
+
+        it("reverts if ticket closed", async function(){
+            await PawnShop.connect(punkHolder).closeTicket("1")
+            await expect(
+                PawnShop.connect(punkHolder).closeTicket("1")
+                ).to.be.revertedWith("NFTPawnShop: ticket closed")
+        });
     })
 
     async function interestOwedTotal(ticketID) {

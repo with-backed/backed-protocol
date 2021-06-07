@@ -143,7 +143,7 @@ contract NFTPawnShop is ERC721Enumerable {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
         require(ticket.lastAccumulatedInterestBlock == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
-        IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), pawnTicketID);
+        IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), ticket.collateralID);
         ticket.closed = true;
     }
 
