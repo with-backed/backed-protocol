@@ -59,7 +59,7 @@ contract NFTPawnShop is ERC721Enumerable {
 
     // ==== view ====
     function totalOwed(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
-        return ticketInfo[pawnTicketID].loanAmountDrawn + interestOwed(pawnTicketID);
+        return ticketInfo[pawnTicketID].loanAmount + interestOwed(pawnTicketID);
     }
 
     function lenderInterestRateAfterPawnShopTake(uint256 interestRate) view public returns (uint256) {
@@ -83,7 +83,6 @@ contract NFTPawnShop is ERC721Enumerable {
     // NOTE: we calculate using current block.sub(start block).sub(1), to exclude 
     // both the start block and the current block from the interst 
     function totalInterestedOwned(PawnTicket storage ticket, uint256 interestRate) private view returns (uint256) {
-        // PawnTicket storage ticket = ticketInfo[pawnTicketID];
         if(ticket.closed){
             return 0;
         }
@@ -217,7 +216,7 @@ contract NFTPawnShop is ERC721Enumerable {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
         require(block.number > ticket.blockDuration + ticket.lastAccumulatedInterestBlock, "NFTPawnShop: payment is not late");
-        IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(loansContract).ownerOf(pawnTicketID), pawnTicketID);
+        IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(loansContract).ownerOf(pawnTicketID), ticket.collateralID);
         ticket.closed = true;
         ticket.collateralSeized = true;
     }
@@ -241,5 +240,10 @@ contract NFTPawnShop is ERC721Enumerable {
 
     function updateManager(address _manager) managerOnly external {
         manager = _manager;
+    }
+
+    function updatePawnShopTakeRate(uint128 _takeRate) managerOnly external {
+        require(_takeRate <= 3 * 1e17, "NFTPawnShop: max take rate 30%");
+        pawnShopTakeRate = _takeRate;
     }
 }
