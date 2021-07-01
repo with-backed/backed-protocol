@@ -207,14 +207,14 @@ describe("PawnShop contract", function () {
         it("does not allow if amount exceeds drawable amount", async function(){
             await expect(
                 PawnShop.connect(punkHolder).drawLoan("1", loanAmount.add(1))
-            ).to.be.revertedWith("NFTPawnShop: Insufficient loan balance")
+            ).to.be.reverted
         })
 
         it("does not allow if amount exceeds drawable amount", async function(){
             PawnShop.connect(punkHolder).drawLoan("1", loanAmount.sub(10))
             await expect(
                 PawnShop.connect(punkHolder).drawLoan("1", loanAmount.add(11))
-            ).to.be.revertedWith("NFTPawnShop: Insufficient loan balance")
+            ).to.be.reverted
         })
 
         it("does not allow if ticket is closed be repayment", async function(){
@@ -391,7 +391,7 @@ describe("PawnShop contract", function () {
             const value = await PawnShop.loanPaymentBalance("1", daiHolder.address)
             await expect(
                 PawnShop.connect(daiHolder).withdrawLoanPayment("1", value.add(1))
-                ).to.be.revertedWith("NFTPawnShop: Insufficient balance")
+                ).to.be.reverted
         })
     })
 
@@ -411,7 +411,7 @@ describe("PawnShop contract", function () {
         it("transfers ERC20 value, reduces loan payment balance", async function(){
             await expect(
                 PawnShop.connect(daiHolder).withdrawFromCashDrawer(DAI.address, loanAmount, manager.address)
-                ).to.be.revertedWith("NFTPawnShop: manager only")
+                ).to.be.reverted
         });
 
         it("transfers ERC20 value, reduces loan payment balance", async function(){
@@ -431,7 +431,7 @@ describe("PawnShop contract", function () {
             const value = await PawnShop.cashDrawer(DAI.address)
             await expect(
                 PawnShop.connect(manager).withdrawFromCashDrawer(DAI.address, value.add(1), manager.address)
-                ).to.be.revertedWith("NFTPawnShop: Insufficient funds")
+                ).to.be.reverted
         })
     })
 
