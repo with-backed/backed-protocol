@@ -1,4 +1,4 @@
-pragma solidity ^0.8.2;
+pragma solidity 0.8.6;
 
 interface IPawnLoans {
     function mintLoan(address to, uint256 pawnTicketId) external;
