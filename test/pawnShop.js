@@ -11,20 +11,24 @@ describe("PawnShop contract", function () {
     // defaults
     var interest = ethers.BigNumber.from(10).pow(14);
     var blocks = ethers.BigNumber.from(10);
-    var loanAmount = ethers.BigNumber.from(500).mul(ethers.BigNumber.from(10).pow(18))
+    var loanAmount = ethers.BigNumber.from(505).mul(ethers.BigNumber.from(10).pow(17))
 
     var punkId = "1"
+    let PawnTicketDescriptor;
 
     beforeEach(async function () {
         [manager, punkHolder, daiHolder, addr4, ...addrs] = await ethers.getSigners();        
 
+        PawnShopNFTDescriptorContract = await ethers.getContractFactory("PawnShopNFTDescriptor");
+        PawnShopNFTDescriptor = await PawnShopNFTDescriptorContract.deploy()
+        await PawnShopNFTDescriptor.deployed();
         
         PawnShopContract = await ethers.getContractFactory("NFTPawnShop");
-        PawnShop = await PawnShopContract.deploy(manager.address);
+        PawnShop = await PawnShopContract.deploy(manager.address, PawnShopNFTDescriptor.address);
         await PawnShop.deployed();
 
         PawnLoansContract = await ethers.getContractFactory("PawnLoans");
-        PawnLoans = await PawnLoansContract.deploy(PawnShop.address);
+        PawnLoans = await PawnLoansContract.deploy(PawnShop.address, PawnShopNFTDescriptor.address);
         await PawnLoans.deployed();
 
         await PawnShop.connect(manager).setPawnLoansContract(PawnLoans.address)
@@ -39,8 +43,16 @@ describe("PawnShop contract", function () {
 
         DAIContract = await ethers.getContractFactory("DAI");
         DAI = await DAIContract.connect(daiHolder).deploy();
-        await DAI.deployed();     
-      });    
+        await DAI.deployed();  
+      });
+      
+    describe("tokenURI", function() {
+        it("retrieves successfully", async function(){
+            await expect(
+                PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
+            ).not.to.be.reverted
+        })
+    })
 
 
     describe("mintPawnTicket", function () {
@@ -330,7 +342,7 @@ describe("PawnShop contract", function () {
 
         it("transfers collateral to loan owner, closed", async function(){
             // mine on block
-            await DAI.connect(daiHolder).transfer(addr4.address, loanAmount)
+            await DAI.connect(daiHolder).transfer(addr4.address, ethers.BigNumber.from(1))
             // 
             await PawnShop.connect(daiHolder).seizeCollateral("1")
             const ticket = await PawnShop.ticketInfo("1")
@@ -338,7 +350,6 @@ describe("PawnShop contract", function () {
             expect(ticket.collateralSeized).to.equal(true)
             const punkOwner = await CryptoPunks.ownerOf("2")
             expect(punkOwner).to.equal(daiHolder.address)
-
         })
 
         it("reverts if ticket is closed", async function(){
