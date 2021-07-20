@@ -130,8 +130,8 @@ contract NFTPawnShop is ERC721Enumerable {
         uint256 minAmount,
         address loanAsset,
         uint256 minBlocks
-        ) external {
-        uint256 id = ++_nonce;
+        ) external returns(uint256 id) {
+        id = ++_nonce;
         PawnTicket storage ticket = ticketInfo[id];
         IERC721(nftAddress).transferFrom(msg.sender, address(this), nftID);
         ticket.loanAsset = loanAsset;
