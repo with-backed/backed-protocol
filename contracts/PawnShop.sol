@@ -100,11 +100,8 @@ contract NFTPawnShop is ERC721Enumerable {
             + ticket.accumulatedInterest; //.add(ticket.accumulatedInterest);
     }
 
-    function drawableBalance(uint256 pawnTicketID) ticketExists(pawnTicketID) view external returns (uint256) {
+    function drawableBalance(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        if(ticket.closed){
-            return 0;
-        }
         return ticket.loanAmount - ticket.loanAmountDrawn;
     }
 
@@ -200,6 +197,7 @@ contract NFTPawnShop is ERC721Enumerable {
         // but if the loan was closed be seizing collateral, then lendee should still be able 
         // to draw the full amount
         require(!ticket.closed || ticket.collateralSeized, "NFTPawnShop: ticket closed");
+        require(amount <= drawableBalance(pawnTicketID), "NFTPawnShop: insufficient balance");
         ticket.loanAmountDrawn = ticket.loanAmountDrawn + amount;
         IERC20(ticket.loanAsset).transfer(msg.sender, amount);
     }

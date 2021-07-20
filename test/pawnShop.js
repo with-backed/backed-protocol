@@ -206,6 +206,9 @@ describe("PawnShop contract", function () {
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
             maxInterest = await getMaxInterest();
             await PawnShop.connect(daiHolder).underwritePawnLoan("1", maxInterest, blocks, loanAmount)
+
+            // transfer extra DAI to the pawnshop, so that reverts do not rely on ERC20 balance
+            await DAI.connect(daiHolder).transfer(PawnShop.address, loanAmount.mul(2))
         })
         
         it("transfers amount to lendee", async function(){
@@ -226,6 +229,13 @@ describe("PawnShop contract", function () {
             PawnShop.connect(punkHolder).drawLoan("1", loanAmount.sub(10))
             await expect(
                 PawnShop.connect(punkHolder).drawLoan("1", loanAmount.add(11))
+            ).to.be.reverted
+        })
+
+        it("does not allow if amount exceeds drawable amount", async function(){
+            PawnShop.connect(punkHolder).drawLoan("1", loanAmount.sub(10))
+            await expect(
+                PawnShop.connect(punkHolder).drawLoan("1", loanAmount.sub(4))
             ).to.be.reverted
         })
 
