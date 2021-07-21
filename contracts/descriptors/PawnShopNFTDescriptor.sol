@@ -38,9 +38,9 @@ contract PawnShopNFTDescriptor {
         view
         returns (string memory)
     {
-        (address loanAsset, address collateralAddress, uint256 collateralID, uint256 perBlockInterestRate
+        (bool closed, bool collateralSeized, uint256 perBlockInterestRate
         , , uint256 lastAccumulatedBlock, uint256 blockDuration,
-        uint256 loanAmount, , bool closed, bool collateralSeized) = pawnShop.ticketInfo(id);
+        uint256 loanAmount, , uint256 collateralID, address loanAsset, address collateralAddress) = pawnShop.ticketInfo(id);
 
         require(keccak256(abi.encodePacked((svgParams.nftType))) == ticketTypeHash || lastAccumulatedBlock != 0, 'Invalid loan ID');
 
@@ -57,7 +57,7 @@ contract PawnShopNFTDescriptor {
         svgParams.collateralAssetSymbol = collateralAssetSymbol(collateralAddress);
         svgParams.collateralId = UintStrings.decimalString(collateralID, 0, false);
         svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
-        svgParams.interestAccrued = accruedInterest(svgParams.nftType, pawnShop, id, loanAsset);
+        svgParams.interestAccrued = accruedInterest(pawnShop, id, loanAsset);
         svgParams.endBlock = lastAccumulatedBlock == 0 ? "n/a" : UintStrings.decimalString(lastAccumulatedBlock + blockDuration, 0, false);
         
         return generateDescriptor(svgParams);
@@ -79,11 +79,8 @@ contract PawnShopNFTDescriptor {
         return ERC721(asset).symbol();
     }
 
-    function accruedInterest(string memory nftType, NFTPawnShop pawnShop, uint256 pawnTicketId, address loanAsset) private view returns(string memory){
-        if (keccak256(abi.encodePacked((nftType))) == ticketTypeHash){
-            return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20(loanAsset).decimals(), false);
-        }
-        return UintStrings.decimalString(pawnShop.interestOwedToLender(pawnTicketId), IERC20(loanAsset).decimals(), false);
+    function accruedInterest(NFTPawnShop pawnShop, uint256 pawnTicketId, address loanAsset) private view returns(string memory){
+        return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20(loanAsset).decimals(), false);
     }
 
     function perBlockInterestToAnnual(uint256 perBlockInterest) private pure returns(uint256) {
