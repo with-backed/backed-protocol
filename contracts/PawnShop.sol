@@ -160,7 +160,7 @@ contract NFTPawnShop is ERC721Enumerable {
             IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount + accumulatedInterest);
             address currentLoanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
             // Add to exisiting balance here incase account has owned this loan before
-            _loanPaymentBalances[pawnTicketID][currentLoanOwner] = _loanPaymentBalances[pawnTicketID][currentLoanOwner] + accumulatedInterest + ticket.loanAmount; 
+            _loanPaymentBalances[pawnTicketID][currentLoanOwner] += accumulatedInterest + ticket.loanAmount; 
             IPawnLoans(loansContract).transferLoan(currentLoanOwner, msg.sender, pawnTicketID);
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + ((amount - ticket.loanAmount) * originationFeeRate / SCALAR);
             ticket.accumulatedInterest = ticket.accumulatedInterest + accumulatedInterest;
@@ -188,7 +188,7 @@ contract NFTPawnShop is ERC721Enumerable {
         uint256 interest = totalInterestedOwed(ticket, ticket.perBlockInterestRate);
         IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), interest + ticket.loanAmountDrawn);
         address loanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
-        _loanPaymentBalances[pawnTicketID][loanOwner] = _loanPaymentBalances[pawnTicketID][loanOwner] + interest + ticket.loanAmount;
+        _loanPaymentBalances[pawnTicketID][loanOwner] += interest + ticket.loanAmount;
         ticket.loanAmountDrawn = 0;
         ticket.closed = true;
         IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), ticket.collateralID);
