@@ -16,7 +16,7 @@ describe("PawnShop contract", function () {
     var blocks = ethers.BigNumber.from(10);
     var loanAmount = ethers.BigNumber.from(505).mul(ethers.BigNumber.from(10).pow(17))
 
-    var punkId = "1"
+    var punkId = ethers.BigNumber.from(1000);
     let PawnTicketDescriptor;
 
     beforeEach(async function () {
@@ -73,7 +73,7 @@ describe("PawnShop contract", function () {
         it("transfers NFT to contract, mints ticket", async function(){
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
             const punkOwner = await  CryptoPunks.ownerOf(punkId)
-            const ticketOwner = await PawnShop.ownerOf(punkId)
+            const ticketOwner = await PawnShop.ownerOf("1")
             expect(punkOwner).to.equal(PawnShop.address)
             expect(ticketOwner).to.equal(punkHolder.address)
         })
@@ -264,8 +264,8 @@ describe("PawnShop contract", function () {
 
         it("does allow if ticket is closed by seizure", async function(){
             await CryptoPunks.connect(punkHolder).mint();
-            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, "2")
-            await PawnShop.connect(punkHolder).mintPawnTicket("2", CryptoPunks.address, interest, loanAmount, DAI.address, 1)
+            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, punkId.add(1))
+            await PawnShop.connect(punkHolder).mintPawnTicket(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, 1)
             await PawnShop.connect(daiHolder).underwritePawnLoan("2", interest, 1, loanAmount)
             // mine on block
             await DAI.connect(daiHolder).transfer(addr4.address, loanAmount)
@@ -336,10 +336,10 @@ describe("PawnShop contract", function () {
     describe("seizeCollateral", function () {
         beforeEach(async function() {
              await CryptoPunks.connect(punkHolder).mint();
-            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, "2")
+            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, punkId.add(1))
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
-            await PawnShop.connect(punkHolder).mintPawnTicket("2", CryptoPunks.address, interest, loanAmount, DAI.address, 1)
+            await PawnShop.connect(punkHolder).mintPawnTicket(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, 1)
             await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, 1, loanAmount)
         })
 
@@ -351,7 +351,7 @@ describe("PawnShop contract", function () {
             const ticket = await PawnShop.ticketInfo("1")
             expect(ticket.closed).to.equal(true)
             expect(ticket.collateralSeized).to.equal(true)
-            const punkOwner = await CryptoPunks.ownerOf("2")
+            const punkOwner = await CryptoPunks.ownerOf(punkId.add(1))
             expect(punkOwner).to.equal(daiHolder.address)
         })
 
@@ -446,15 +446,15 @@ describe("PawnShop contract", function () {
     describe("closeTicket", function () {
         beforeEach(async function() {
             await CryptoPunks.connect(punkHolder).mint();
-            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, "2")
+            await CryptoPunks.connect(punkHolder).approve(PawnShop.address, punkId.add(1))
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
-            await PawnShop.connect(punkHolder).mintPawnTicket("2", CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
+            await PawnShop.connect(punkHolder).mintPawnTicket(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
         })
 
         it("returns ERC721 to owner and closes ticket", async function(){
             await PawnShop.connect(punkHolder).closeTicket("1")
-            const owner = await CryptoPunks.ownerOf("2")
+            const owner = await CryptoPunks.ownerOf(punkId.add(1))
             expect(owner).to.equal(punkHolder.address)
             const ticket = await PawnShop.ticketInfo("1")
             expect(ticket.closed).to.equal(true)
