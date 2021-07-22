@@ -50,8 +50,21 @@ contract NFTPawnShop is ERC721Enumerable {
     }
 
     modifier ticketExists(uint256 ticketID) { 
-        require(ticketID <= _nonce, "NFTPawnShop: pawn ticket does not exist");
+        _ticketExists(ticketID);
         _; 
+    }
+
+    modifier ticketOpen(uint256 ticketID) { 
+        _isOpen(ticketID);
+        _; 
+    }
+
+    function _ticketExists(uint256 ticketID) internal view {
+        require(ticketID <= _nonce, "NFTPawnShop: pawn ticket does not exist");
+    }
+
+    function _isOpen(uint256 ticketID) internal view {
+        require(!ticketInfo[ticketID].closed, "NFTPawnShop: ticket closed");
     }
 
     // ==== view ====
@@ -126,10 +139,9 @@ contract NFTPawnShop is ERC721Enumerable {
 
     // for closing a ticket and getting item back 
     // before it has a loan
-    function closeTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) external {
+    function closeTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) ticketOpen(pawnTicketID) external {
         require(ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        require(!ticket.closed, "NFTPawnShop: ticket closed");
         require(ticket.lastAccumulatedInterestBlock == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
         IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), ticket.collateralID);
         ticket.closed = true;
@@ -144,10 +156,10 @@ contract NFTPawnShop is ERC721Enumerable {
             uint256 amount
         ) 
         ticketExists(pawnTicketID) 
+        ticketOpen(pawnTicketID)
         external 
     {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        require(!ticket.closed, "NFTPawnShop: ticket closed");
         if(ticket.lastAccumulatedInterestBlock == 0){
             require(ticket.perBlockInterestRate >= interest && ticket.blockDuration <= blockDuration && ticket.loanAmount <= amount, "NFTPawnShop: Proposed terms do not qualify" );
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + (amount * originationFeeRate / SCALAR);
@@ -187,9 +199,8 @@ contract NFTPawnShop is ERC721Enumerable {
         IERC20(ticket.loanAsset).transfer(msg.sender, amount);
     }
 
-    function repayAndCloseTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) external {
+    function repayAndCloseTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) ticketOpen(pawnTicketID) external {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        require(!ticket.closed, "NFTPawnShop: ticket closed");
         uint256 interest = totalInterestedOwed(ticket, ticket.perBlockInterestRate);
         IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), interest + ticket.loanAmountDrawn);
         address loanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
@@ -199,9 +210,8 @@ contract NFTPawnShop is ERC721Enumerable {
         IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), ticket.collateralID);
     }
 
-    function seizeCollateral(uint256 pawnTicketID) ticketExists(pawnTicketID) external {
+    function seizeCollateral(uint256 pawnTicketID) ticketExists(pawnTicketID) ticketOpen(pawnTicketID) external {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        require(!ticket.closed, "NFTPawnShop: ticket closed");
         require(block.number > ticket.blockDuration + ticket.lastAccumulatedInterestBlock, "NFTPawnShop: payment is not late");
         IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(loansContract).ownerOf(pawnTicketID), ticket.collateralID);
         ticket.closed = true;
