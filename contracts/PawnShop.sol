@@ -30,7 +30,7 @@ contract NFTPawnShop is ERC721Enumerable {
     // i.e. 1e11 = 1 = 100%
     uint8 public immutable interestRateDecimals = 11;
     // 1%
-    uint40 public originationFeeRate = 1e9;
+    uint256 public originationFeeRate = 1e9;
     // i.e. 10 ** interestRateDecimals
     uint256 public immutable SCALAR = 1e11;
     uint256 private _nonce;
@@ -229,7 +229,7 @@ contract NFTPawnShop is ERC721Enumerable {
         manager = _manager;
     }
 
-    function updateOriginationFeeRate(uint40 _originationFeeRate) managerOnly external {
+    function updateOriginationFeeRate(uint256 _originationFeeRate) managerOnly external {
         require(_originationFeeRate <= 5 * (10 ** (interestRateDecimals - 2)), "NFTPawnShop: max fee 5%");
         originationFeeRate = _originationFeeRate;
     }
