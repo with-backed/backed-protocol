@@ -21,8 +21,8 @@ struct PawnTicket {
     uint256 loanAmountDrawn;
     // ==== immutable =====
     uint256 collateralID;
-    address loanAsset;
     address collateralAddress;
+    address loanAsset;
     
 }
 

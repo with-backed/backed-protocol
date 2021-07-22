@@ -40,7 +40,7 @@ contract PawnShopNFTDescriptor {
     {
         (bool closed, bool collateralSeized, uint256 perBlockInterestRate
         , , uint256 lastAccumulatedBlock, uint256 blockDuration,
-        uint256 loanAmount, , uint256 collateralID, address loanAsset, address collateralAddress) = pawnShop.ticketInfo(id);
+        uint256 loanAmount, , uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
 
         require(keccak256(abi.encodePacked((svgParams.nftType))) == ticketTypeHash || lastAccumulatedBlock != 0, 'Invalid loan ID');
 
