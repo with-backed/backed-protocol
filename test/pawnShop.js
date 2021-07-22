@@ -489,7 +489,7 @@ describe("PawnShop contract", function () {
             const newTake = ethers.BigNumber.from(6).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await expect(
                 PawnShop.connect(manager).updateOriginationFeeRate(newTake)
-            ).to.be.revertedWith("NFTPawnShop: fee too high")
+            ).to.be.revertedWith("NFTPawnShop: max fee 5%")
         })
 
         it("reverts if not called by manager", async function(){
