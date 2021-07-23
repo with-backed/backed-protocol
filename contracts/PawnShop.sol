@@ -2,6 +2,7 @@ pragma solidity 0.8.6;
 
 import './interfaces/IERC20.sol';
 import './interfaces/IPawnLoans.sol';
+import './interfaces/IPawnTickets.sol';
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import './descriptors/PawnShopNFTDescriptor.sol';
 
@@ -26,7 +27,7 @@ struct PawnTicket {
     
 }
 
-contract NFTPawnShop is ERC721Enumerable {
+contract NFTPawnShop {
     // i.e. 1e11 = 1 = 100%
     uint8 public immutable interestRateDecimals = 11;
     // 1%
@@ -35,8 +36,8 @@ contract NFTPawnShop is ERC721Enumerable {
     uint256 public immutable SCALAR = 1e11;
     uint256 private _nonce;
 
-    address private immutable _tokenDescriptor;
     address public loansContract;
+    address public ticketsContract;
     address public manager;
 
     mapping(uint256 => PawnTicket) public ticketInfo;
@@ -44,10 +45,6 @@ contract NFTPawnShop is ERC721Enumerable {
     mapping(address => uint256) public cashDrawer;
 
     // ==== view ====
-    function tokenURI(uint256 tokenId) public override view returns (string memory) {
-        return  PawnShopNFTDescriptor(_tokenDescriptor).ticketURI(this, tokenId);
-    }
-
     function totalOwed(uint256 pawnTicketID) view external returns (uint256) {
         require(pawnTicketID <= _nonce, "NFTPawnShop: pawn ticket does not exist");
         return ticketInfo[pawnTicketID].loanAmountDrawn + interestOwed(pawnTicketID);
@@ -89,9 +86,8 @@ contract NFTPawnShop is ERC721Enumerable {
         return _loanPaymentBalances[pawnTicketID][account];
     }
 
-    constructor(address _manager, address _tokenDescriptor_) ERC721("Pawn Tickets", "PWNT") {
+    constructor(address _manager) {
         manager = _manager;
-        _tokenDescriptor = _tokenDescriptor_;
     }
 
     // ==== state changing
@@ -115,17 +111,17 @@ contract NFTPawnShop is ERC721Enumerable {
         ticket.collateralAddress = nftAddress;
         ticket.perBlockInterestRate = maxInterest;
         ticket.blockDuration = minBlocks;
-        _safeMint(msg.sender, id, "");
+        IPawnTickets(ticketsContract).mintTicket(msg.sender, id);
     }
 
     // for closing a ticket and getting item back 
     // before it has a loan
     function closeTicket(uint256 pawnTicketID) external {
-        require(ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
+        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
         require(ticket.lastAccumulatedInterestBlock == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
-        IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), ticket.collateralID);
+        IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(ticketsContract).ownerOf(pawnTicketID), ticket.collateralID);
         ticket.closed = true;
     }
 
@@ -172,7 +168,7 @@ contract NFTPawnShop is ERC721Enumerable {
     }
 
     function drawLoan(uint256 pawnTicketID, uint256 amount) external {
-        require(ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
+        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         // can still withdraw if collateral was seized
         require(!ticket.closed || ticket.collateralSeized, "NFTPawnShop: ticket closed");
@@ -191,7 +187,7 @@ contract NFTPawnShop is ERC721Enumerable {
         _loanPaymentBalances[pawnTicketID][loanOwner] += interest + ticket.loanAmount;
         ticket.loanAmountDrawn = 0;
         ticket.closed = true;
-        IERC721(ticket.collateralAddress).transferFrom(address(this), ownerOf(pawnTicketID), ticket.collateralID);
+        IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(ticketsContract).ownerOf(pawnTicketID), ticket.collateralID);
     }
 
     function seizeCollateral(uint256 pawnTicketID) external {
@@ -216,6 +212,12 @@ contract NFTPawnShop is ERC721Enumerable {
         require(msg.sender == manager, "NFTPawnShop: manager only");
         require(loansContract == address(0), 'NFTPawnShop: already set');
         loansContract = _contract;
+    }
+
+    function setPawnTicketsContract(address _contract) external {
+        require(msg.sender == manager, "NFTPawnShop: manager only");
+        require(ticketsContract == address(0), 'NFTPawnShop: already set');
+        ticketsContract = _contract;
     }
 
     function withdrawFromCashDrawer(address asset, uint256 amount, address to) external {

@@ -27,14 +27,19 @@ describe("PawnShop contract", function () {
         await PawnShopNFTDescriptor.deployed();
         
         PawnShopContract = await ethers.getContractFactory("NFTPawnShop");
-        PawnShop = await PawnShopContract.deploy(manager.address, PawnShopNFTDescriptor.address);
+        PawnShop = await PawnShopContract.deploy(manager.address);
         await PawnShop.deployed();
 
         PawnLoansContract = await ethers.getContractFactory("PawnLoans");
         PawnLoans = await PawnLoansContract.deploy(PawnShop.address, PawnShopNFTDescriptor.address);
         await PawnLoans.deployed();
 
+        PawnTicketsContract = await ethers.getContractFactory("PawnTickets");
+        PawnTickets = await PawnTicketsContract.deploy(PawnShop.address, PawnShopNFTDescriptor.address);
+        await PawnTickets.deployed();
+
         await PawnShop.connect(manager).setPawnLoansContract(PawnLoans.address)
+        await PawnShop.connect(manager).setPawnTicketsContract(PawnTickets.address)
 
         CryptoPunksContract = await ethers.getContractFactory("CryptoPunks");
         CryptoPunks = await CryptoPunksContract.deploy();
@@ -73,7 +78,7 @@ describe("PawnShop contract", function () {
         it("transfers NFT to contract, mints ticket", async function(){
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks)
             const punkOwner = await  CryptoPunks.ownerOf(punkId)
-            const ticketOwner = await PawnShop.ownerOf("1")
+            const ticketOwner = await PawnTickets.ownerOf("1")
             expect(punkOwner).to.equal(PawnShop.address)
             expect(ticketOwner).to.equal(punkHolder.address)
         })
