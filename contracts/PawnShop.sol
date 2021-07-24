@@ -28,11 +28,12 @@ struct PawnTicket {
 }
 
 contract NFTPawnShop {
-    event MintTicket(uint256 indexed id, uint256 maxInterestRate, uint256 minLoanAmount, uint256 minBlockDuration);
-    event UnderwriteLoan(uint256 indexed id, uint256 interestRate, uint256 loanAmount, uint256 blockDuration);
-    event BuyoutUnderwriter(uint256 indexed id, uint256 interestRate, uint256 loanAmount, uint256 blockDuration, uint256 interestEarned);
+    event MintTicket(uint256 indexed id, address indexed minter, uint256 maxInterestRate, uint256 minLoanAmount, uint256 minBlockDuration);
+    event Close(uint256 indexed id);
+    event UnderwriteLoan(uint256 indexed id, address indexed underwriter, uint256 interestRate, uint256 loanAmount, uint256 blockDuration);
+    event BuyoutUnderwriter(uint256 indexed id, address indexed underwriter, address indexed replacedLoanOwner, uint256 interestRate, uint256 loanAmount, uint256 blockDuration, uint256 oldAmount, uint256 interestEarned);
     event DrawLoan(uint256 indexed id, uint256 amount);
-    event RepayAndClose(uint256 indexed id, uint256 interestEarned);
+    event RepayAndClose(uint256 indexed id, address indexed loanOwner, uint256 interestEarned, uint256 loanAmount);
     event SeizeCollateral(uint256 indexed id);
     event WithdrawRepayment(uint256 indexed id, uint256 amount);
 
@@ -121,8 +122,8 @@ contract NFTPawnShop {
         ticket.perBlockInterestRate = maxInterest;
         ticket.blockDuration = minBlocks;
 
-        IPawnTickets(ticketsContract).mintTicket(msg.sender, id);
-        emit MintTicket(id, maxInterest, minAmount, minBlocks);
+        IPawnTickets(ticketsContract).mintTicket(mintTo, id);
+        emit MintTicket(id, msg.sender, maxInterest, minAmount, minBlocks);
     }
 
     // for closing a ticket and getting item back 
@@ -134,6 +135,7 @@ contract NFTPawnShop {
         require(ticket.lastAccumulatedInterestBlock == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
         IERC721(ticket.collateralAddress).transferFrom(address(this), sendCollateralTo, ticket.collateralID);
         ticket.closed = true;
+        emit Close(pawnTicketID);
     }
 
     // loan ERC20, agreeing to pawn ticket terms or better
@@ -155,7 +157,7 @@ contract NFTPawnShop {
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + (amount * originationFeeRate / SCALAR);
             IERC20(ticket.loanAsset).transferFrom(msg.sender, address(this), amount);
             IPawnLoans(loansContract).mintLoan(sendLoanTo, pawnTicketID);
-            emit UnderwriteLoan(pawnTicketID, interestRate, amount, blockDuration);
+            emit UnderwriteLoan(pawnTicketID, msg.sender, interestRate, amount, blockDuration);
         } else {
             // someone already has this loan, to replace them, the offer must improve
             require(ticket.loanAmount < amount || ticket.blockDuration < blockDuration || ticket.perBlockInterestRate > interestRate, "NFTPawnShop: proposed terms must be better than existing terms");
@@ -173,7 +175,7 @@ contract NFTPawnShop {
             IPawnLoans(loansContract).transferLoan(currentLoanOwner, sendLoanTo, pawnTicketID);
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + ((amount - ticket.loanAmount) * originationFeeRate / SCALAR);
             ticket.accumulatedInterest = ticket.accumulatedInterest + accumulatedInterest;
-            emit BuyoutUnderwriter(pawnTicketID, interestRate, amount, blockDuration, accumulatedInterest);
+            emit BuyoutUnderwriter(pawnTicketID, msg.sender, currentLoanOwner, interestRate, amount, blockDuration, accumulatedInterest, ticket.loanAmount);
         }
         ticket.perBlockInterestRate = interestRate;
         ticket.lastAccumulatedInterestBlock = block.number;
@@ -203,7 +205,7 @@ contract NFTPawnShop {
         ticket.loanAmountDrawn = 0;
         ticket.closed = true;
         IERC721(ticket.collateralAddress).transferFrom(address(this), IERC721(ticketsContract).ownerOf(pawnTicketID), ticket.collateralID);
-        emit RepayAndClose(pawnTicketID, interest);
+        emit RepayAndClose(pawnTicketID, loanOwner, interest, ticket.loanAmount);
     }
 
     function seizeCollateral(uint256 pawnTicketID, address to) external {
