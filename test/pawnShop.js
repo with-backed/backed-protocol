@@ -56,8 +56,9 @@ describe("PawnShop contract", function () {
       
     describe("tokenURI", function() {
         it("retrieves successfully", async function(){
+            await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks, punkHolder.address)
             await expect(
-                PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, blocks, punkHolder.address)
+                PawnTickets.tokenURI("1")
             ).not.to.be.reverted
         })
     })
