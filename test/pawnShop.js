@@ -156,7 +156,7 @@ describe("PawnShop contract", function () {
 
             it("does not revert if interest is less", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.sub(1), blocks, loanAmount, addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.mul(90).div(100), blocks, loanAmount, addr4.address)
                         ).not.to.be.reverted
             })
 
@@ -168,12 +168,12 @@ describe("PawnShop contract", function () {
 
             it("does not revert if loan amount greater", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(1), addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(loanAmount.mul(10).div(100)), addr4.address)
                         ).not.to.be.reverted
             })
 
             it("transfers loan token to the new underwriter", async function(){
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(1), manager.address)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(loanAmount.mul(10).div(100)), manager.address)
                 const owner = await PawnLoans.ownerOf("1")
                 expect(owner).to.equal(manager.address)
             });
@@ -181,16 +181,17 @@ describe("PawnShop contract", function () {
             it("updates payback balance of previous owner", async function(){
                 const ticket = await PawnShop.ticketInfo("1")
                 const interestOwed = await interestOwedTotal("1")
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(1), addr4.address)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(loanAmount.mul(10).div(100)), addr4.address)
                 var loanPaymentBalance = await PawnShop.loanPaymentBalance("1", daiHolder.address)
                 expect(loanPaymentBalance).to.equal(loanAmount.add(interestOwed))
             })
 
             it("sets values correctly", async function(){
                 const accumulatedInterest = await interestOwedTotal("1")
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(1), addr4.address)
+                const newLoanAmount = loanAmount.add(loanAmount.mul(10).div(100))
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, newLoanAmount, addr4.address)
                 const ticket = await PawnShop.ticketInfo("1")
-                expect(ticket.loanAmount).to.equal(loanAmount.add(1))
+                expect(ticket.loanAmount).to.equal(newLoanAmount)
                 expect(ticket.perBlockInterestRate).to.equal(interest)
                 expect(ticket.blockDuration).to.equal(blocks)
                 expect(ticket.accumulatedInterest).to.equal(accumulatedInterest)
@@ -199,9 +200,11 @@ describe("PawnShop contract", function () {
             })
 
             it("updates cash drawer", async function(){
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount.add(100), addr4.address)
+                const increase = loanAmount.mul(10).div(100)
+                const newLoanAmount = loanAmount.add(increase)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, newLoanAmount, addr4.address)
                 value = await PawnShop.cashDrawer(DAI.address)
-                expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar).add(ethers.BigNumber.from(100).mul(originationFeeRate).div(scalar)))
+                expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar).add(increase.mul(originationFeeRate).div(scalar)))
             })
         });
         

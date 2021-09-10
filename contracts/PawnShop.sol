@@ -160,7 +160,7 @@ contract NFTPawnShop {
             emit UnderwriteLoan(pawnTicketID, msg.sender, interestRate, amount, blockDuration);
         } else {
             // someone already has this loan, to replace them, the offer must improve
-            require(ticket.loanAmount < amount || ticket.blockDuration < blockDuration || ticket.perBlockInterestRate > interestRate, "NFTPawnShop: proposed terms must be better than existing terms");
+            require(ticket.loanAmount + (ticket.loanAmount * 10 / 100) <= amount || ticket.blockDuration + (ticket.blockDuration * 10 / 100) <= blockDuration || ticket.perBlockInterestRate - (ticket.perBlockInterestRate * 10 / 100) >= interestRate, "NFTPawnShop: proposed terms must be better than existing terms");
             // Only add the interest for blocks that this account held the loan
             // note: blocks when the loan is bought out are interest free
             uint256 accumulatedInterest = ticket.loanAmount
