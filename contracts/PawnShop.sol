@@ -38,11 +38,11 @@ contract NFTPawnShop {
     event WithdrawRepayment(uint256 indexed id, uint256 amount);
 
     // i.e. 1e11 = 1 = 100%
-    uint8 public immutable interestRateDecimals = 11;
+    uint8 public constant interestRateDecimals = 11;
     // 1%
     uint256 public originationFeeRate = 1e9;
     // i.e. 10 ** interestRateDecimals
-    uint256 public immutable SCALAR = 1e11;
+    uint256 public constant SCALAR = 1e11;
     uint256 private _nonce;
 
     address public loansContract;
@@ -99,7 +99,7 @@ contract NFTPawnShop {
         manager = _manager;
     }
 
-    // ==== state changing
+    // ==== state changing ====
     function mintPawnTicket(
             uint256 nftID,
             address nftAddress,
