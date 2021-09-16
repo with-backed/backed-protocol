@@ -4,7 +4,7 @@ library HexStrings {
     bytes16 internal constant ALPHABET = '0123456789abcdef';
 
     function partialHexString(uint160 value) internal pure returns (string memory) {
-        uint8 length = 2;
+        uint8 length = 4;
         bytes memory buffer = new bytes(2 * length + 5);
         buffer[0] = '0';
         buffer[1] = 'x';

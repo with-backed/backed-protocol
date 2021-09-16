@@ -60,6 +60,8 @@ describe("PawnShop contract", function () {
             await expect(
                 PawnTickets.tokenURI("1")
             ).not.to.be.reverted
+            const u = await PawnTickets.tokenURI("1")
+            console.log(u)
         })
     })
 
@@ -82,6 +84,13 @@ describe("PawnShop contract", function () {
             const ticketOwner = await PawnTickets.ownerOf("1")
             expect(punkOwner).to.equal(PawnShop.address)
             expect(ticketOwner).to.equal(addr4.address)
+        })
+
+        it('reverts if not approved', async function(){
+            await CryptoPunks.connect(punkHolder).mint();
+            await expect(
+                PawnShop.connect(punkHolder).mintPawnTicket(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, blocks, addr4.address)
+            ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved")
         })
     });
 
