@@ -160,7 +160,13 @@ describe("PawnShop contract", function () {
             it("reverts if terms are not improved", async function(){
                 await expect(
                     PawnShop.connect(addr4).underwritePawnLoan("1", interest, blocks, loanAmount, daiHolder.address)
-                    ).to.be.revertedWith("NFTPawnShop: proposed terms must be better than existing terms")
+                ).to.be.revertedWith("NFTPawnShop: proposed terms must be better than existing terms")
+            })
+
+            it("reverts if one value does not meet or beat exisiting, even if others are improved", async function(){
+                await expect(
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.mul(90).div(100), blocks, loanAmount.sub(1), addr4.address)
+                        ).to.be.revertedWith("NFTPawnShop: Proposed terms do not qualify")
             })
 
             it("does not revert if interest is less", async function(){
@@ -380,7 +386,7 @@ describe("PawnShop contract", function () {
         })
     })
 
-    describe("withdrawLoanPayment", function () {
+    describe("withdrawLoanRepayment", function () {
         beforeEach(async function() {
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
@@ -396,7 +402,7 @@ describe("PawnShop contract", function () {
             const balanceBefore = await DAI.balanceOf(addr4.address)
             const value = await PawnShop.loanPaymentBalance("1", daiHolder.address)
             await expect(
-                PawnShop.connect(daiHolder).withdrawLoanPayment("1", value, addr4.address)
+                PawnShop.connect(daiHolder).withdrawLoanRepayment("1", value, addr4.address)
                 ).not.to.be.reverted
             const balanceAfter = await DAI.balanceOf(addr4.address)
             expect(balanceAfter).to.equal(balanceBefore.add(value))
@@ -405,7 +411,7 @@ describe("PawnShop contract", function () {
         it("reverts if amount is greater than what is available", async function(){
             const value = await PawnShop.loanPaymentBalance("1", daiHolder.address)
             await expect(
-                PawnShop.connect(daiHolder).withdrawLoanPayment("1", value.add(1), addr4.address)
+                PawnShop.connect(daiHolder).withdrawLoanRepayment("1", value.add(1), addr4.address)
                 ).to.be.reverted
         })
     })
@@ -502,7 +508,7 @@ describe("PawnShop contract", function () {
             const newTake = ethers.BigNumber.from(2).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await expect(
                 PawnShop.connect(daiHolder).updateOriginationFeeRate(newTake)
-            ).to.be.revertedWith("NFTPawnShop: manager only")
+            ).to.be.revertedWith("Ownable: caller is not the owner")
         })
     })
 
