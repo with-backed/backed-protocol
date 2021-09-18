@@ -3,7 +3,7 @@ pragma solidity 0.8.6;
 import 'base64-sol/base64.sol';
 import './../PawnShop.sol';
 import "hardhat/console.sol";
-import '../interfaces/IERC20.sol';
+import '../interfaces/IERC20Metadata.sol';
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import './NFTSVG.sol';
 import './HexStrings.sol';
@@ -64,15 +64,15 @@ contract PawnShopNFTDescriptor {
     }
 
     function interestRateString(NFTPawnShop pawnShop, uint256 perBlockInterestRate) private view returns (string memory){
-        return UintStrings.decimalString(perBlockInterestToAnnual(perBlockInterestRate), pawnShop.interestRateDecimals() - 2, true);
+        return UintStrings.decimalString(perBlockInterestToAnnual(perBlockInterestRate), pawnShop.INTEREST_RATE_DECIMALS() - 2, true);
     }
 
     function loanAmountString(uint256 amount, address asset) private view returns (string memory){
-        return UintStrings.decimalString(amount, IERC20(asset).decimals(), false);
+        return UintStrings.decimalString(amount, IERC20Metadata(asset).decimals(), false);
     }
 
     function loanAssetSymbol(address asset) private view returns (string memory){
-        return IERC20(asset).symbol();
+        return IERC20Metadata(asset).symbol();
     }
 
     function collateralAssetSymbol(address asset) private view returns (string memory){
@@ -80,7 +80,7 @@ contract PawnShopNFTDescriptor {
     }
 
     function accruedInterest(NFTPawnShop pawnShop, uint256 pawnTicketId, address loanAsset) private view returns(string memory){
-        return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20(loanAsset).decimals(), false);
+        return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20Metadata(loanAsset).decimals(), false);
     }
 
     function perBlockInterestToAnnual(uint256 perBlockInterest) private pure returns(uint256) {
