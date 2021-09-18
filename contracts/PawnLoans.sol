@@ -15,12 +15,15 @@ contract PawnLoans is ERC721, IPawnLoans {
         _tokenDescriptor = _tokenDescriptor_;
     }
 
-    function mintLoan(address to, uint256 tokenId) override external {
+    modifier pawnShopOnly(){ 
         require(msg.sender == pawnShop, "PawnLoans: Forbidden");
+        _; 
+    }
+
+    function mintLoan(address to, uint256 tokenId) pawnShopOnly() override external {
         _mint(to, tokenId);
     }
-    function transferLoan(address from, address to, uint256 loanId) override external{
-        require(msg.sender == pawnShop, "PawnLoans: Forbidden");
+    function transferLoan(address from, address to, uint256 loanId) pawnShopOnly() override external{
         _transfer(from, to, loanId);
     }
 
