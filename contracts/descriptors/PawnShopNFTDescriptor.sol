@@ -38,8 +38,8 @@ contract PawnShopNFTDescriptor {
         view
         returns (string memory)
     {
-        (bool closed, bool collateralSeized, uint256 perBlockInterestRate
-        , , uint256 lastAccumulatedBlock, uint256 blockDuration,
+        (bool closed, bool collateralSeized, uint256 perSecondInterestRate
+        , , uint256 lastAccumulatedBlock, uint256 durationSeconds,
         uint256 loanAmount, , uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
 
         require(keccak256(abi.encodePacked((svgParams.nftType))) == ticketTypeHash || lastAccumulatedBlock != 0, 'Invalid loan ID');
@@ -47,8 +47,8 @@ contract PawnShopNFTDescriptor {
         svgParams.loanAssetColor = UintStrings.decimalString(uint8(keccak256(abi.encodePacked(loanAsset))[0]), 0, false);
         svgParams.collateralAssetColor = UintStrings.decimalString(uint8(keccak256(abi.encodePacked(collateralAddress))[0]), 0, false);
         svgParams.id = UintStrings.decimalString(id, 0, false);
-        svgParams.status = loanStatus(lastAccumulatedBlock, blockDuration, closed, collateralSeized);
-        svgParams.interestRate = interestRateString(pawnShop, perBlockInterestRate); 
+        svgParams.status = loanStatus(lastAccumulatedBlock, durationSeconds, closed, collateralSeized);
+        svgParams.interestRate = interestRateString(pawnShop, perSecondInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
         svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset));
         svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
@@ -58,13 +58,13 @@ contract PawnShopNFTDescriptor {
         svgParams.collateralId = UintStrings.decimalString(collateralID, 0, false);
         svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
         svgParams.interestAccrued = accruedInterest(pawnShop, id, loanAsset);
-        svgParams.endBlock = lastAccumulatedBlock == 0 ? "n/a" : UintStrings.decimalString(lastAccumulatedBlock + blockDuration, 0, false);
+        svgParams.endBlock = lastAccumulatedBlock == 0 ? "n/a" : UintStrings.decimalString(lastAccumulatedBlock + durationSeconds, 0, false);
         
         return generateDescriptor(svgParams);
     }
 
-    function interestRateString(NFTPawnShop pawnShop, uint256 perBlockInterestRate) private view returns (string memory){
-        return UintStrings.decimalString(perBlockInterestToAnnual(perBlockInterestRate), pawnShop.INTEREST_RATE_DECIMALS() - 2, true);
+    function interestRateString(NFTPawnShop pawnShop, uint256 perSecondInterestRate) private view returns (string memory){
+        return UintStrings.decimalString(annualInterestRate(perSecondInterestRate), pawnShop.INTEREST_RATE_DECIMALS() - 2, true);
     }
 
     function loanAmountString(uint256 amount, address asset) private view returns (string memory){
@@ -83,11 +83,11 @@ contract PawnShopNFTDescriptor {
         return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20Metadata(loanAsset).decimals(), false);
     }
 
-    function perBlockInterestToAnnual(uint256 perBlockInterest) private pure returns(uint256) {
-        return perBlockInterest * 2252571; // block every 14s, (60/14)*60*24*365 ~= 2252571 blocks per year
+    function annualInterestRate(uint256 perSecondInterest) private pure returns(uint256) {
+        return perSecondInterest * 3.154e7;
     }
 
-    function loanStatus(uint256 lastAccumulatedBlock, uint256 blockDuration, bool closed, bool collateralSeized) view private returns(string memory){
+    function loanStatus(uint256 lastAccumulatedBlock, uint256 durationSeconds, bool closed, bool collateralSeized) view private returns(string memory){
         if(lastAccumulatedBlock == 0){
             return "awaiting underwriter";
         }
@@ -100,7 +100,7 @@ contract PawnShopNFTDescriptor {
             return "repaid and closed";
         }
 
-        if(block.number > (lastAccumulatedBlock + blockDuration)){
+        if(block.number > (lastAccumulatedBlock + durationSeconds)){
             return "past due";
         }
 
