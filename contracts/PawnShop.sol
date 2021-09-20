@@ -14,12 +14,12 @@ struct PawnTicket {
     // ==== mutable ======
     bool closed;
     bool collateralSeized;
-    uint256 perBlockInterestRate;
+    uint256 perSecondInterestRate;
     // used to track loanAsset amount of interest accumulated, incase of interest rate change
     uint256 accumulatedInterest;
     // at which block was the accumulated interest most recently calculated
-    uint256 lastAccumulatedInterestBlock;
-    uint256 blockDuration;
+    uint256 lastAccumulatedTimestamp;
+    uint256 durationSeconds;
     uint256 loanAmount;
     uint256 loanAmountDrawn;
     // ==== immutable =====
@@ -32,23 +32,23 @@ struct PawnTicket {
 contract NFTPawnShop is Ownable {
     using SafeERC20 for IERC20;
 
-    event MintTicket(uint256 indexed id, address indexed minter, uint256 maxInterestRate, uint256 minLoanAmount, uint256 minBlockDuration);
+    event MintTicket(uint256 indexed id, address indexed minter, uint256 maxInterestRate, uint256 minLoanAmount, uint256 minDurationSeconds);
     event Close(uint256 indexed id);
-    event UnderwriteLoan(uint256 indexed id, address indexed underwriter, uint256 interestRate, uint256 loanAmount, uint256 blockDuration);
-    event BuyoutUnderwriter(uint256 indexed id, address indexed underwriter, address indexed replacedLoanOwner, uint256 interestRate, uint256 loanAmount, uint256 blockDuration, uint256 oldAmount, uint256 interestEarned);
+    event UnderwriteLoan(uint256 indexed id, address indexed underwriter, uint256 interestRate, uint256 loanAmount, uint256 durationSeconds);
+    event BuyoutUnderwriter(uint256 indexed id, address indexed underwriter, address indexed replacedLoanOwner, uint256 interestRate, uint256 loanAmount, uint256 durationSeconds, uint256 oldAmount, uint256 interestEarned);
     event DrawLoan(uint256 indexed id, uint256 amount);
     event RepayAndClose(uint256 indexed id, address indexed loanOwner, uint256 interestEarned, uint256 loanAmount);
     event SeizeCollateral(uint256 indexed id);
     event WithdrawRepayment(uint256 indexed id, uint256 amount);
 
     // i.e. 1e11 = 1 = 100%
-    uint8 public constant INTEREST_RATE_DECIMALS = 11;
+    uint8 public constant INTEREST_RATE_DECIMALS = 12;
      // i.e. 10 ** INTEREST_RATE_DECIMALS
-    uint256 public constant SCALAR = 1e11;
+    uint256 public constant SCALAR = 1e12;
 
 
     // 1%
-    uint256 public originationFeeRate = 1e9;
+    uint256 public originationFeeRate = 1e10;
     uint256 private _nonce;
 
     address public loansContract;
@@ -72,18 +72,18 @@ contract NFTPawnShop is Ownable {
 
     function interestOwed(uint256 pawnTicketID) ticketExists(pawnTicketID) view public returns (uint256) {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        return totalInterestedOwed(ticket, ticket.perBlockInterestRate);
+        return totalInterestedOwed(ticket, ticket.perSecondInterestRate);
     }
 
     // NOTE: we calculate using current block.sub(start block).sub(1), to exclude 
     // both the start block and the current block from the interst 
     function totalInterestedOwed(PawnTicket storage ticket, uint256 interestRate) private view returns (uint256) {
-        if(ticket.closed || ticket.lastAccumulatedInterestBlock == 0 || block.number == ticket.lastAccumulatedInterestBlock){
+        if(ticket.closed || ticket.lastAccumulatedTimestamp == 0){
             return 0;
         }
         
         return ticket.loanAmount
-            * (block.number - ticket.lastAccumulatedInterestBlock - 1)
+            * (block.timestamp - ticket.lastAccumulatedTimestamp)
             * interestRate
             / SCALAR
             + ticket.accumulatedInterest;
@@ -94,9 +94,9 @@ contract NFTPawnShop is Ownable {
         return (ticket.loanAmount * (SCALAR - originationFeeRate) / SCALAR) - ticket.loanAmountDrawn;
     }
 
-    function loanEndBlock(uint256 pawnTicketID)  ticketExists(pawnTicketID) view external returns (uint256) {
+    function loanEndSeconds(uint256 pawnTicketID)  ticketExists(pawnTicketID) view external returns (uint256) {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
-        return ticket.blockDuration + ticket.lastAccumulatedInterestBlock;
+        return ticket.durationSeconds + ticket.lastAccumulatedTimestamp;
     }
 
     function loanPaymentBalance(uint256 pawnTicketID, address account) ticketExists(pawnTicketID) view public returns (uint256) {
@@ -114,7 +114,7 @@ contract NFTPawnShop is Ownable {
             uint256 maxInterest,
             uint256 minAmount,
             address loanAsset,
-            uint256 minBlocks,
+            uint256 minDurationSeconds,
             address mintTo
         ) 
         external 
@@ -127,11 +127,11 @@ contract NFTPawnShop is Ownable {
         ticket.loanAmount = minAmount;
         ticket.collateralID = nftID;
         ticket.collateralAddress = nftAddress;
-        ticket.perBlockInterestRate = maxInterest;
-        ticket.blockDuration = minBlocks;
+        ticket.perSecondInterestRate = maxInterest;
+        ticket.durationSeconds = minDurationSeconds;
 
         IPawnTickets(ticketsContract).mintTicket(mintTo, id);
-        emit MintTicket(id, msg.sender, maxInterest, minAmount, minBlocks);
+        emit MintTicket(id, msg.sender, maxInterest, minAmount, minDurationSeconds);
     }
 
     // for closing a ticket and getting item back 
@@ -141,7 +141,7 @@ contract NFTPawnShop is Ownable {
 
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
-        require(ticket.lastAccumulatedInterestBlock == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
+        require(ticket.lastAccumulatedTimestamp == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
         
         ticket.closed = true;
         IERC721(ticket.collateralAddress).transferFrom(address(this), sendCollateralTo, ticket.collateralID);
@@ -153,7 +153,7 @@ contract NFTPawnShop is Ownable {
     function underwritePawnLoan(
             uint256 pawnTicketID,
             uint256 interestRate,
-            uint256 blockDuration,
+            uint256 durationSeconds,
             uint256 amount,
             address sendLoanTo
         ) 
@@ -162,21 +162,20 @@ contract NFTPawnShop is Ownable {
     {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
-        require(ticket.perBlockInterestRate >= interestRate && ticket.blockDuration <= blockDuration && ticket.loanAmount <= amount, "NFTPawnShop: Proposed terms do not qualify" );
+        require(ticket.perSecondInterestRate >= interestRate && ticket.durationSeconds <= durationSeconds && ticket.loanAmount <= amount, "NFTPawnShop: Proposed terms do not qualify" );
 
-        if(ticket.lastAccumulatedInterestBlock == 0){
+        if(ticket.lastAccumulatedTimestamp == 0){
             IERC20(ticket.loanAsset).safeTransferFrom(msg.sender, address(this), amount);
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + (amount * originationFeeRate / SCALAR);
             IPawnLoans(loansContract).mintLoan(sendLoanTo, pawnTicketID);
-            emit UnderwriteLoan(pawnTicketID, msg.sender, interestRate, amount, blockDuration);
+            emit UnderwriteLoan(pawnTicketID, msg.sender, interestRate, amount, durationSeconds);
         } else {
             // someone already has this loan, to replace them, the offer must improve
-            require(ticket.loanAmount + (ticket.loanAmount * 10 / 100) <= amount || ticket.blockDuration + (ticket.blockDuration * 10 / 100) <= blockDuration || ticket.perBlockInterestRate - (ticket.perBlockInterestRate * 10 / 100) >= interestRate, "NFTPawnShop: proposed terms must be better than existing terms");
+            require(ticket.loanAmount + (ticket.loanAmount * 10 / 100) <= amount || ticket.durationSeconds + (ticket.durationSeconds * 10 / 100) <= durationSeconds || ticket.perSecondInterestRate - (ticket.perSecondInterestRate * 10 / 100) >= interestRate, "NFTPawnShop: proposed terms must be better than existing terms");
             // Only add the interest for blocks that this account held the loan
-            // note: blocks when the loan is bought out are interest free
             uint256 accumulatedInterest = ticket.loanAmount
-                * (block.number - ticket.lastAccumulatedInterestBlock - 1)
-                * ticket.perBlockInterestRate
+                * (block.timestamp - ticket.lastAccumulatedTimestamp)
+                * ticket.perSecondInterestRate
                 / SCALAR;
             // Account acquiring this loan needs to transfer amount + interest so far
             IERC20(ticket.loanAsset).safeTransferFrom(msg.sender, address(this), amount + accumulatedInterest);
@@ -186,11 +185,11 @@ contract NFTPawnShop is Ownable {
             IPawnLoans(loansContract).transferLoan(currentLoanOwner, sendLoanTo, pawnTicketID);
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + ((amount - ticket.loanAmount) * originationFeeRate / SCALAR);
             ticket.accumulatedInterest = ticket.accumulatedInterest + accumulatedInterest;
-            emit BuyoutUnderwriter(pawnTicketID, msg.sender, currentLoanOwner, interestRate, amount, blockDuration, accumulatedInterest, ticket.loanAmount);
+            emit BuyoutUnderwriter(pawnTicketID, msg.sender, currentLoanOwner, interestRate, amount, durationSeconds, accumulatedInterest, ticket.loanAmount);
         }
-        ticket.perBlockInterestRate = interestRate;
-        ticket.lastAccumulatedInterestBlock = block.number;
-        ticket.blockDuration = blockDuration;
+        ticket.perSecondInterestRate = interestRate;
+        ticket.lastAccumulatedTimestamp = block.timestamp;
+        ticket.durationSeconds = durationSeconds;
         ticket.loanAmount = amount;
     }
 
@@ -210,7 +209,7 @@ contract NFTPawnShop is Ownable {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
 
-        uint256 interest = totalInterestedOwed(ticket, ticket.perBlockInterestRate);
+        uint256 interest = totalInterestedOwed(ticket, ticket.perSecondInterestRate);
         IERC20(ticket.loanAsset).safeTransferFrom(msg.sender, address(this), interest + ticket.loanAmountDrawn);
         address loanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
         _loanPaymentBalances[pawnTicketID][loanOwner] += interest + ticket.loanAmount;
@@ -225,7 +224,7 @@ contract NFTPawnShop is Ownable {
 
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
-        require(block.number > ticket.blockDuration + ticket.lastAccumulatedInterestBlock, "NFTPawnShop: payment is not late");
+        require(block.timestamp > ticket.durationSeconds + ticket.lastAccumulatedTimestamp, "NFTPawnShop: payment is not late");
 
         ticket.closed = true;
         ticket.collateralSeized = true;
