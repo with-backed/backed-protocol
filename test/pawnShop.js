@@ -22,20 +22,32 @@ describe("PawnShop contract", function () {
     beforeEach(async function () {
         [manager, punkHolder, daiHolder, addr4, addr5, ...addrs] = await ethers.getSigners();        
 
-        PawnShopNFTDescriptorContract = await ethers.getContractFactory("PawnShopNFTDescriptor");
-        PawnShopNFTDescriptor = await PawnShopNFTDescriptorContract.deploy()
-        await PawnShopNFTDescriptor.deployed();
+        PawnTicketSVGContract = await ethers.getContractFactory("PawnTicketSVG");
+        PawnTicketSVG = await PawnTicketSVGContract.deploy()
+        await PawnTicketSVG.deployed();
+
+        PawnLoanSVGContract = await ethers.getContractFactory("PawnLoanSVG");
+        PawnLoanSVG = await PawnLoanSVGContract.deploy()
+        await PawnLoanSVG.deployed();
+
+        PawnTicketDescriptorContract = await ethers.getContractFactory("PawnTicketDescriptor");
+        PawnTicketDescriptor = await PawnTicketDescriptorContract.deploy(PawnTicketSVG.address)
+        await PawnTicketDescriptor.deployed();
+
+        PawnLoanDescriptorContract = await ethers.getContractFactory("PawnLoanDescriptor");
+        PawnLoanDescriptor = await PawnLoanDescriptorContract.deploy(PawnLoanSVG.address)
+        await PawnLoanDescriptor.deployed();
         
         PawnShopContract = await ethers.getContractFactory("NFTPawnShop");
         PawnShop = await PawnShopContract.deploy(manager.address);
         await PawnShop.deployed();
 
         PawnLoansContract = await ethers.getContractFactory("PawnLoans");
-        PawnLoans = await PawnLoansContract.deploy(PawnShop.address, PawnShopNFTDescriptor.address);
+        PawnLoans = await PawnLoansContract.deploy(PawnShop.address, PawnLoanDescriptor.address);
         await PawnLoans.deployed();
 
         PawnTicketsContract = await ethers.getContractFactory("PawnTickets");
-        PawnTickets = await PawnTicketsContract.deploy(PawnShop.address, PawnShopNFTDescriptor.address);
+        PawnTickets = await PawnTicketsContract.deploy(PawnShop.address, PawnTicketDescriptor.address);
         await PawnTickets.deployed();
 
         await PawnShop.connect(manager).setPawnLoansContract(PawnLoans.address)

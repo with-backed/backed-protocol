@@ -5,10 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import './interfaces/IPawnLoans.sol';
-import './interfaces/IPawnTickets.sol';
+import './interfaces/IMintable.sol';
 import './descriptors/PawnShopNFTDescriptor.sol';
-
-import "hardhat/console.sol";
 
 struct PawnTicket {
     // ==== mutable ======
@@ -130,7 +128,7 @@ contract NFTPawnShop is Ownable {
         ticket.perSecondInterestRate = maxInterest;
         ticket.durationSeconds = minDurationSeconds;
 
-        IPawnTickets(ticketsContract).mintTicket(mintTo, id);
+        IMintable(ticketsContract).mint(mintTo, id);
         emit MintTicket(id, msg.sender, maxInterest, minAmount, minDurationSeconds);
     }
 
@@ -167,7 +165,7 @@ contract NFTPawnShop is Ownable {
         if(ticket.lastAccumulatedTimestamp == 0){
             IERC20(ticket.loanAsset).safeTransferFrom(msg.sender, address(this), amount);
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + (amount * originationFeeRate / SCALAR);
-            IPawnLoans(loansContract).mintLoan(sendLoanTo, pawnTicketID);
+            IMintable(loansContract).mint(sendLoanTo, pawnTicketID);
             emit UnderwriteLoan(pawnTicketID, msg.sender, interestRate, amount, durationSeconds);
         } else {
             // someone already has this loan, to replace them, the offer must improve
@@ -182,7 +180,7 @@ contract NFTPawnShop is Ownable {
             address currentLoanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
             // Add to exisiting balance here incase account has owned this loan before
             _loanPaymentBalances[pawnTicketID][currentLoanOwner] += accumulatedInterest + ticket.loanAmount; 
-            IPawnLoans(loansContract).transferLoan(currentLoanOwner, sendLoanTo, pawnTicketID);
+            IPawnLoans(loansContract).pawnShopTransferLoan(currentLoanOwner, sendLoanTo, pawnTicketID);
             cashDrawer[ticket.loanAsset] = cashDrawer[ticket.loanAsset] + ((amount - ticket.loanAmount) * originationFeeRate / SCALAR);
             ticket.accumulatedInterest = ticket.accumulatedInterest + accumulatedInterest;
             emit BuyoutUnderwriter(pawnTicketID, msg.sender, currentLoanOwner, interestRate, amount, durationSeconds, accumulatedInterest, ticket.loanAmount);

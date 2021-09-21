@@ -5,109 +5,31 @@ import './../PawnShop.sol';
 import "hardhat/console.sol";
 import '../interfaces/IERC20Metadata.sol';
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import './NFTSVG.sol';
-import './HexStrings.sol';
-import './UintStrings.sol';
-
+import './libraries/PawnShopSVG.sol';
+import './libraries/PopulateSVGParams.sol';
 
 contract PawnShopNFTDescriptor {
-    bytes32 immutable ticketTypeHash = keccak256(abi.encodePacked(("ticket")));
+    string public nftType;
+    TypeSpecificSVGHelper immutable public svgHelper;
 
-    function ticketURI(NFTPawnShop pawnShop, uint256 id)
+    constructor(string memory _nftType, TypeSpecificSVGHelper _svgHelper) {
+        nftType = _nftType;
+        svgHelper = _svgHelper;
+    }
+
+    function uri(NFTPawnShop pawnShop, uint256 id)
         external
         view
         returns (string memory)
     {
-        NFTSVG.SVGParams memory svgParams;
-        svgParams.nftType = "ticket";
-        return uri(svgParams, pawnShop, id);
-    }
-
-    function loanURI(NFTPawnShop pawnShop, uint256 id)
-        external
-        view
-        returns (string memory)
-    {
-        NFTSVG.SVGParams memory svgParams;
-        svgParams.nftType = "loan";
-        return uri(svgParams, pawnShop, id);
-    }
-
-    function uri(NFTSVG.SVGParams memory svgParams, NFTPawnShop pawnShop, uint256 id)
-        private
-        view
-        returns (string memory)
-    {
-        (bool closed, bool collateralSeized, uint256 perSecondInterestRate
-        , , uint256 lastAccumulatedBlock, uint256 durationSeconds,
-        uint256 loanAmount, , uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
-
-        require(keccak256(abi.encodePacked((svgParams.nftType))) == ticketTypeHash || lastAccumulatedBlock != 0, 'Invalid loan ID');
-
-        svgParams.loanAssetColor = UintStrings.decimalString(uint8(keccak256(abi.encodePacked(loanAsset))[0]), 0, false);
-        svgParams.collateralAssetColor = UintStrings.decimalString(uint8(keccak256(abi.encodePacked(collateralAddress))[0]), 0, false);
-        svgParams.id = UintStrings.decimalString(id, 0, false);
-        svgParams.status = loanStatus(lastAccumulatedBlock, durationSeconds, closed, collateralSeized);
-        svgParams.interestRate = interestRateString(pawnShop, perSecondInterestRate); 
-        svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
-        svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset));
-        svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
-        svgParams.collateralContract = HexStrings.toHexString(uint160(collateralAddress), 20);
-        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(collateralAddress));
-        svgParams.collateralAssetSymbol = collateralAssetSymbol(collateralAddress);
-        svgParams.collateralId = UintStrings.decimalString(collateralID, 0, false);
-        svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
-        svgParams.interestAccrued = accruedInterest(pawnShop, id, loanAsset);
-        svgParams.endBlock = lastAccumulatedBlock == 0 ? "n/a" : UintStrings.decimalString(lastAccumulatedBlock + durationSeconds, 0, false);
+        PawnShopSVG.SVGParams memory svgParams;
+        svgParams.nftType = nftType;
+        svgParams = PopulateSVGParams.populate(svgParams, pawnShop, id);
         
         return generateDescriptor(svgParams);
     }
 
-    function interestRateString(NFTPawnShop pawnShop, uint256 perSecondInterestRate) private view returns (string memory){
-        return UintStrings.decimalString(annualInterestRate(perSecondInterestRate), pawnShop.INTEREST_RATE_DECIMALS() - 2, true);
-    }
-
-    function loanAmountString(uint256 amount, address asset) private view returns (string memory){
-        return UintStrings.decimalString(amount, IERC20Metadata(asset).decimals(), false);
-    }
-
-    function loanAssetSymbol(address asset) private view returns (string memory){
-        return IERC20Metadata(asset).symbol();
-    }
-
-    function collateralAssetSymbol(address asset) private view returns (string memory){
-        return ERC721(asset).symbol();
-    }
-
-    function accruedInterest(NFTPawnShop pawnShop, uint256 pawnTicketId, address loanAsset) private view returns(string memory){
-        return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20Metadata(loanAsset).decimals(), false);
-    }
-
-    function annualInterestRate(uint256 perSecondInterest) private pure returns(uint256) {
-        return perSecondInterest * 3.154e7;
-    }
-
-    function loanStatus(uint256 lastAccumulatedBlock, uint256 durationSeconds, bool closed, bool collateralSeized) view private returns(string memory){
-        if(lastAccumulatedBlock == 0){
-            return "awaiting underwriter";
-        }
-
-        if(collateralSeized){
-            return "collateral seized";
-        }
-
-        if(closed){
-            return "repaid and closed";
-        }
-
-        if(block.number > (lastAccumulatedBlock + durationSeconds)){
-            return "past due";
-        }
-
-        return 'underwritten';
-    }
-
-    function generateDescriptor(NFTSVG.SVGParams memory svgParams)
+    function generateDescriptor(PawnShopSVG.SVGParams memory svgParams)
         private
         view
         returns (string memory)
@@ -125,9 +47,7 @@ contract PawnShopNFTDescriptor {
                                 ' #',
                                 svgParams.id,
                                 '", "description":"',
-                                generateDescription(
-                                    svgParams.id,
-                                    svgParams.nftType),
+                                generateDescription(),
                                 generateDescriptionDetails(
                                     svgParams.loanAssetContract,
                                     svgParams.loanAssetSymbol,
@@ -136,7 +56,7 @@ contract PawnShopNFTDescriptor {
                                     svgParams.collateralId),
                                 '", "image": "',
                                 'data:image/svg+xml;base64,',
-                                Base64.encode(bytes(NFTSVG.generateSVG(svgParams))),
+                                Base64.encode(bytes(PawnShopSVG.generateSVG(svgParams, svgHelper))),
                                 '"}'
                             )
                         )
@@ -145,33 +65,7 @@ contract PawnShopNFTDescriptor {
             );
     }
 
-    function generateDescription(
-        string memory pawnTicketId,
-        string memory nftType
-        ) private view returns (string memory){
-        if (keccak256(abi.encodePacked((nftType))) == ticketTypeHash){
-            return generateTicketDescription();
-        }
-        return generateLoanDescription(pawnTicketId);
-    }
-
-    function generateLoanDescription(string memory pawnTicketId) private pure returns (string memory){
-            return string(
-                abi.encodePacked(
-                    'This Pawn Shop Loan NFT was created when Pawn Shop Ticket #', 
-                    pawnTicketId,
-                    ' was underwritten. If the loan is paid back on time, the holder of this NFT is entitled to the loaned funds plus interest. If it is not paid back on time, the holder of this ticket is entitled to seize the NFT collateral.\\n'
-                )
-            );
-    }
-
-    function generateTicketDescription() private pure returns (string memory){
-            return string(
-                abi.encodePacked(
-                    'This Pawn Shop Ticket NFT was created by the deposit an NFT into the Pawn Shop to serve as collateral for a loan. If underwritten, the ticket holder can withdraw funds loaned against this asset. On loan payback, the ticket holder receives the NFT collateral back. If the ticket is marked closed, the collateral has been withdrawn.\\n'
-                )
-            );
-    }
+    function generateDescription() internal virtual pure returns (string memory) {}
 
     function generateDescriptionDetails(
         string memory loanAsset,
