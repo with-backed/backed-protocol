@@ -62,7 +62,7 @@ library PopulateSVGParams{
     }
 
     function annualInterestRate(uint256 perSecondInterest) private pure returns(uint256) {
-        return perSecondInterest * 3.154e7;
+        return perSecondInterest * 31_536_000;
     }
 
     function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed, bool collateralSeized) view private returns(string memory){

@@ -10,7 +10,7 @@ contract PawnShopNFT is ERC721Enumerable, IMintable {
     PawnShopNFTDescriptor public immutable descriptor;
 
     modifier pawnShopOnly(){ 
-        require(msg.sender == address(pawnShop), "PawnLoans: Forbidden");
+        require(msg.sender == address(pawnShop), "Only pawn shop");
         _; 
     }
 
@@ -30,6 +30,7 @@ contract PawnShopNFT is ERC721Enumerable, IMintable {
     }
 
     function tokenURI(uint256 tokenId) public override view returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
         return descriptor.uri(pawnShop, tokenId);
     }
 }
