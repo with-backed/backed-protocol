@@ -170,11 +170,7 @@ contract NFTPawnShop is Ownable {
         } else {
             // someone already has this loan, to replace them, the offer must improve
             require(ticket.loanAmount + (ticket.loanAmount * 10 / 100) <= amount || ticket.durationSeconds + (ticket.durationSeconds * 10 / 100) <= durationSeconds || ticket.perSecondInterestRate - (ticket.perSecondInterestRate * 10 / 100) >= interestRate, "NFTPawnShop: proposed terms must be better than existing terms");
-            // Only add the interest for blocks that this account held the loan
-            uint256 accumulatedInterest = ticket.loanAmount
-                * (block.timestamp - ticket.lastAccumulatedTimestamp)
-                * ticket.perSecondInterestRate
-                / SCALAR;
+            uint256 accumulatedInterest = totalInterestedOwed(ticket, ticket.perSecondInterestRate);
             // Account acquiring this loan needs to transfer amount + interest so far
             IERC20(ticket.loanAsset).safeTransferFrom(msg.sender, address(this), amount + accumulatedInterest);
             address currentLoanOwner = IERC721(loansContract).ownerOf(pawnTicketID);
@@ -192,7 +188,7 @@ contract NFTPawnShop is Ownable {
     }
 
     function drawLoan(uint256 pawnTicketID, uint256 amount, address to) external {
-        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
+        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: only pawn ticket holder");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         // can still withdraw if collateral was seized
         require(!ticket.closed || ticket.collateralSeized, "NFTPawnShop: ticket closed");

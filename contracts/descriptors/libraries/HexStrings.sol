@@ -9,6 +9,7 @@ library HexStrings {
         buffer[0] = '0';
         buffer[1] = 'x';
         uint8 offset = 2 * length + 1;
+        value >>= 128;
         for (uint8 i = offset; i > 1; --i) {
             buffer[i] = ALPHABET[value & 0xf];
             value >>= 4;

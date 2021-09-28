@@ -73,7 +73,7 @@ describe("PawnShop contract", function () {
                 PawnTickets.tokenURI("1")
             ).not.to.be.reverted
             const u = await PawnTickets.tokenURI("1")
-            console.log(u)
+            // console.log(u)
         })
     })
 
@@ -189,7 +189,7 @@ describe("PawnShop contract", function () {
 
             it("does not revert if durationSeconds greater", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds.add(1), loanAmount, addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds.add(durationSeconds.mul(10).div(100)), loanAmount, addr4.address)
                         ).not.to.be.reverted
             })
 
@@ -233,6 +233,15 @@ describe("PawnShop contract", function () {
                 value = await PawnShop.cashDrawer(DAI.address)
                 expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar).add(increase.mul(originationFeeRate).div(scalar)))
             })
+
+            context("when loan amount is the same", function () {
+                it('does not increase cash drawer balance', async function(){
+                    var valueBefore = await PawnShop.cashDrawer(DAI.address)
+                    await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds.add(durationSeconds.mul(10).div(100)), loanAmount, addr4.address)
+                    var valueAfter = await PawnShop.cashDrawer(DAI.address)
+                    expect(valueBefore).to.equal(valueAfter)
+                })
+            })
         });
         
     });
@@ -255,15 +264,15 @@ describe("PawnShop contract", function () {
 
         it("does not allow if amount exceeds drawable amount", async function(){
             await expect(
-                PawnShop.connect(punkHolder).drawLoan("1", drawableBalance().add(1))
-            ).to.be.reverted
+                PawnShop.connect(punkHolder).drawLoan("1", drawableBalance().add(1), addr4.address)
+            ).to.be.revertedWith("NFTPawnShop: insufficient balance")
         })
 
         it("does not allow if amount exceeds drawable amount", async function(){
             PawnShop.connect(punkHolder).drawLoan("1", drawableBalance().sub(10), addr4.address);
             await expect(
                 PawnShop.connect(punkHolder).drawLoan("1", drawableBalance().add(11), addr4.address)
-            ).to.be.reverted
+            ).to.be.revertedWith("NFTPawnShop: insufficient balance")
         })
 
         it("does not allow if amount exceeds drawable amount", async function(){
@@ -273,7 +282,7 @@ describe("PawnShop contract", function () {
             PawnShop.connect(punkHolder).drawLoan("1", drawableBalance().sub(10), punkHolder.address)
             await expect(
                 PawnShop.connect(punkHolder).drawLoan("1", drawableBalance().sub(4), punkHolder.address)
-            ).to.be.reverted
+            ).to.be.revertedWith("NFTPawnShop: insufficient balance")
         })
 
         it("does not allow if ticket is closed be repayment", async function(){
@@ -304,7 +313,7 @@ describe("PawnShop contract", function () {
         it("reverts if caller is not owner of pawned item", async function(){
             await expect( 
                 PawnShop.connect(addr4).drawLoan("1", drawableBalance(), punkHolder.address)
-            ).to.be.revertedWith("NFTPawnShop: must be owner of pawned item")
+            ).to.be.revertedWith("NFTPawnShop: only pawn ticket holder")
         })
 
         it("updates loan amount drawn", async function(){
