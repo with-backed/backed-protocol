@@ -215,7 +215,6 @@ describe("PawnShop contract", function () {
 
             it("pays back previous owner", async function(){
                 const beforeValue = await DAI.balanceOf(daiHolder.address)
-                const ticket = await PawnShop.ticketInfo("1")
                 await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, loanAmount.add(loanAmount.mul(10).div(100)), addr4.address)
                 const interestOwed = await interestOwedTotal("1")
                 const afterValue = await DAI.balanceOf(daiHolder.address)
@@ -249,6 +248,22 @@ describe("PawnShop contract", function () {
                     await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds.add(durationSeconds.mul(10).div(100)), loanAmount, addr4.address)
                     var valueAfter = await DAI.balanceOf(PawnShop.address)
                     expect(valueBefore).to.equal(valueAfter)
+                })
+            })
+
+            context('when bought out again', function() {
+                it('transfers payout correctly', async function(){
+                    const buyout1LoanAmount = loanAmount.add(loanAmount.mul(10).div(100))
+                    const buyout2LoanAmount = buyout1LoanAmount.add(buyout1LoanAmount.mul(10).div(100))
+                    
+                    await DAI.connect(daiHolder).approve(PawnShop.address, buyout2LoanAmount.mul(2))
+                    
+                    await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, buyout1LoanAmount, addr4.address)
+                    const addr4BeforeBalance = await DAI.balanceOf(addr4.address)
+                    await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, buyout2LoanAmount, daiHolder.address)
+                    const interestOwed = await interestOwedTotal("1")
+                    const addr4AfterBalance = await DAI.balanceOf(addr4.address)
+                    expect(addr4AfterBalance).to.equal(addr4BeforeBalance.add(buyout1LoanAmount).add(interestOwed))
                 })
             })
         });
