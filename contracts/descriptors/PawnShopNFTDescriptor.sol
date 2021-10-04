@@ -47,7 +47,7 @@ contract PawnShopNFTDescriptor {
                                 ' #',
                                 svgParams.id,
                                 '", "description":"',
-                                generateDescription(),
+                                generateDescription(svgParams.id),
                                 generateDescriptionDetails(
                                     svgParams.loanAssetContract,
                                     svgParams.loanAssetSymbol,
@@ -65,7 +65,7 @@ contract PawnShopNFTDescriptor {
             );
     }
 
-    function generateDescription() internal virtual pure returns (string memory) {}
+    function generateDescription(string memory pawnTicketId) internal virtual pure returns (string memory) {}
 
     function generateDescriptionDetails(
         string memory loanAsset,
