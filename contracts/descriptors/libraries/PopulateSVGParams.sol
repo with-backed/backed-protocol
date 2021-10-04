@@ -18,9 +18,9 @@ library PopulateSVGParams{
         view
         returns (PawnShopSVG.SVGParams memory)
     {
-        (bool closed, bool collateralSeized, uint256 perSecondInterestRate,
+        (bool closed, bool collateralSeized, uint256 perSecondInterestRate, ,
         uint256 lastAccumulatedTimestamp, uint256 durationSeconds,
-        uint256 loanAmount, , uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
+        uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
 
         svgParams.loanAssetColor = Strings.toString(uint8(keccak256(abi.encodePacked(loanAsset))[0]));
         svgParams.collateralAssetColor = Strings.toString(uint8(keccak256(abi.encodePacked(collateralAddress))[0]));
@@ -78,8 +78,8 @@ library PopulateSVGParams{
             return "repaid and closed";
         }
 
-        if(block.number > (lastAccumulatedTimestamp + durationSeconds)){
-            return "active, accumulating interest, past due";
+        if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)){
+            return "past due, accumulating interest";
         }
 
         return 'active, accumulating interest';

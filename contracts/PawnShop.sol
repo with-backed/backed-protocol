@@ -106,13 +106,13 @@ contract NFTPawnShop is Ownable {
     {
         id = ++_nonce;
         PawnTicket storage ticket = ticketInfo[id];
-        IERC721(nftAddress).transferFrom(msg.sender, address(this), nftID);
         ticket.loanAsset = loanAsset;
         ticket.loanAmount = minAmount;
         ticket.collateralID = nftID;
         ticket.collateralAddress = nftAddress;
         ticket.perSecondInterestRate = maxInterest;
         ticket.durationSeconds = minDurationSeconds;
+        IERC721(nftAddress).transferFrom(msg.sender, address(this), nftID);
 
         IMintable(ticketsContract).mint(mintTo, id);
         emit MintTicket(id, msg.sender, maxInterest, minAmount, minDurationSeconds);
@@ -137,8 +137,8 @@ contract NFTPawnShop is Ownable {
     function underwritePawnLoan(
             uint256 pawnTicketID,
             uint256 interestRate,
-            uint256 durationSeconds,
             uint256 amount,
+            uint256 durationSeconds,
             address sendLoanTo
         ) 
         ticketExists(pawnTicketID)

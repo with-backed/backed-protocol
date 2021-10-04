@@ -115,24 +115,24 @@ describe("PawnShop contract", function () {
 
             it("reverts if amount is too low", async function(){
                 await expect(
-                    PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount.sub(1), daiHolder.address)
+                    PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount.sub(1), durationSeconds, daiHolder.address)
                     ).to.be.revertedWith("NFTPawnShop: Proposed terms do not qualify")
             })
 
             it("reverts if interest is too high", async function(){
                 await expect(
-                    PawnShop.connect(daiHolder).underwritePawnLoan("1", interest.add(1), durationSeconds, loanAmount, daiHolder.address)
+                    PawnShop.connect(daiHolder).underwritePawnLoan("1", interest.add(1), loanAmount, durationSeconds, daiHolder.address)
                     ).to.be.revertedWith("NFTPawnShop: Proposed terms do not qualify")
             })
 
             it("reverts if block duration is too low", async function(){
                 await expect(
-                    PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds.sub(1), loanAmount, daiHolder.address)
+                    PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds.sub(1), daiHolder.address)
                     ).to.be.revertedWith("NFTPawnShop: Proposed terms do not qualify")
             })
             it("sets values correctly", async function(){
                 await expect(
-                        PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+                        PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
                         ).not.to.be.reverted
                 const ticket = await PawnShop.ticketInfo("1")
                 expect(ticket.loanAmount).to.equal(loanAmount)
@@ -143,7 +143,7 @@ describe("PawnShop contract", function () {
                 expect(ticket.lastAccumulatedTimestamp).to.equal(block.timestamp)
             })
             it("transfers loan NFT to underwriter", async function(){
-                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, addr5.address)
+                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, addr5.address)
                 const owner = await PawnLoans.ownerOf("1")
                 expect(owner).to.equal(addr5.address)
             });
@@ -151,7 +151,7 @@ describe("PawnShop contract", function () {
             it("leaves origination fee in contract", async function(){
                 var value = await DAI.balanceOf(PawnShop.address)
                 expect(value).to.equal(0)
-                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
                 value = await DAI.balanceOf(PawnShop.address)
                 expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar))
             })
@@ -159,7 +159,7 @@ describe("PawnShop contract", function () {
             it("transfers loan asset borrower", async function(){
                 var value = await DAI.balanceOf(punkHolder.address)
                 expect(value).to.equal(0)
-                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
                 value = await DAI.balanceOf(punkHolder.address)
                 expect(value).to.equal(loanAmount.sub(loanAmount.mul(originationFeeRate).div(scalar)))
             })
@@ -171,7 +171,7 @@ describe("PawnShop contract", function () {
                 await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount)
 
                 await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+                await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
 
                 await DAI.connect(daiHolder).transfer(addr4.address, loanAmount.mul(2))
                 await DAI.connect(addr4).approve(PawnShop.address, loanAmount.mul(2))
@@ -179,43 +179,43 @@ describe("PawnShop contract", function () {
 
             it("reverts if terms are not improved", async function(){
                 await expect(
-                    PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+                    PawnShop.connect(addr4).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
                 ).to.be.revertedWith("NFTPawnShop: proposed terms must be better than existing terms")
             })
 
             it("reverts if one value does not meet or beat exisiting, even if others are improved", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.mul(90).div(100), durationSeconds, loanAmount.sub(1), addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.mul(90).div(100), loanAmount.sub(1), durationSeconds, addr4.address)
                         ).to.be.revertedWith("NFTPawnShop: Proposed terms do not qualify")
             })
 
             it("does not revert if interest is less", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.mul(90).div(100), durationSeconds, loanAmount, addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest.mul(90).div(100), loanAmount, durationSeconds, addr4.address)
                         ).not.to.be.reverted
             })
 
             it("does not revert if durationSeconds greater", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds.add(durationSeconds.mul(10).div(100)), loanAmount, addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, loanAmount, durationSeconds.add(durationSeconds.mul(10).div(100)), addr4.address)
                         ).not.to.be.reverted
             })
 
             it("does not revert if loan amount greater", async function(){
                 await expect(
-                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, loanAmount.add(loanAmount.mul(10).div(100)), addr4.address)
+                        PawnShop.connect(addr4).underwritePawnLoan("1", interest, loanAmount.add(loanAmount.mul(10).div(100)), durationSeconds, addr4.address)
                         ).not.to.be.reverted
             })
 
             it("transfers loan token to the new underwriter", async function(){
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, loanAmount.add(loanAmount.mul(10).div(100)), manager.address)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, loanAmount.add(loanAmount.mul(10).div(100)), durationSeconds, manager.address)
                 const owner = await PawnLoans.ownerOf("1")
                 expect(owner).to.equal(manager.address)
             });
 
             it("pays back previous owner", async function(){
                 const beforeValue = await DAI.balanceOf(daiHolder.address)
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, loanAmount.add(loanAmount.mul(10).div(100)), addr4.address)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, loanAmount.add(loanAmount.mul(10).div(100)), durationSeconds, addr4.address)
                 const interestOwed = await interestOwedTotal("1")
                 const afterValue = await DAI.balanceOf(daiHolder.address)
                 expect(afterValue).to.equal(beforeValue.add(loanAmount).add(interestOwed))
@@ -223,7 +223,7 @@ describe("PawnShop contract", function () {
 
             it("sets values correctly", async function(){
                 const newLoanAmount = loanAmount.add(loanAmount.mul(10).div(100))
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, newLoanAmount, addr4.address)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, newLoanAmount, durationSeconds, addr4.address)
                 const accumulatedInterest = await interestOwedTotal("1")
                 const ticket = await PawnShop.ticketInfo("1")
                 expect(ticket.loanAmount).to.equal(newLoanAmount)
@@ -237,7 +237,7 @@ describe("PawnShop contract", function () {
             it("takes origination fee correctly", async function(){
                 const increase = loanAmount.mul(10).div(100)
                 const newLoanAmount = loanAmount.add(increase)
-                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, newLoanAmount, addr4.address)
+                await PawnShop.connect(addr4).underwritePawnLoan("1", interest, newLoanAmount, durationSeconds, addr4.address)
                 value = await DAI.balanceOf(PawnShop.address)
                 expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar).add(increase.mul(originationFeeRate).div(scalar)))
             })
@@ -245,7 +245,7 @@ describe("PawnShop contract", function () {
             context("when loan amount is the same", function () {
                 it('does not increase cash drawer balance', async function(){
                     var valueBefore = await DAI.balanceOf(PawnShop.address)
-                    await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds.add(durationSeconds.mul(10).div(100)), loanAmount, addr4.address)
+                    await PawnShop.connect(addr4).underwritePawnLoan("1", interest, loanAmount, durationSeconds.add(durationSeconds.mul(10).div(100)), addr4.address)
                     var valueAfter = await DAI.balanceOf(PawnShop.address)
                     expect(valueBefore).to.equal(valueAfter)
                 })
@@ -258,9 +258,9 @@ describe("PawnShop contract", function () {
                     
                     await DAI.connect(daiHolder).approve(PawnShop.address, buyout2LoanAmount.mul(2))
                     
-                    await PawnShop.connect(addr4).underwritePawnLoan("1", interest, durationSeconds, buyout1LoanAmount, addr4.address)
+                    await PawnShop.connect(addr4).underwritePawnLoan("1", interest, buyout1LoanAmount, durationSeconds, addr4.address)
                     const addr4BeforeBalance = await DAI.balanceOf(addr4.address)
-                    await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, buyout2LoanAmount, daiHolder.address)
+                    await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, buyout2LoanAmount, durationSeconds, daiHolder.address)
                     const interestOwed = await interestOwedTotal("1")
                     const addr4AfterBalance = await DAI.balanceOf(addr4.address)
                     expect(addr4AfterBalance).to.equal(addr4BeforeBalance.add(buyout1LoanAmount).add(interestOwed))
@@ -275,7 +275,7 @@ describe("PawnShop contract", function () {
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
             await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
             await DAI.connect(punkHolder).approve(PawnShop.address, loanAmount.mul(2))
         })
@@ -316,7 +316,7 @@ describe("PawnShop contract", function () {
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, 1, punkHolder.address)
-            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, 1, loanAmount, daiHolder.address)
+            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, 1, daiHolder.address)
         })
 
         it("transfers collateral to given address, closed", async function(){
@@ -355,7 +355,7 @@ describe("PawnShop contract", function () {
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
             await PawnShop.connect(punkHolder).mintPawnTicket(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, durationSeconds, loanAmount, daiHolder.address)
+            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
             await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
             await DAI.connect(punkHolder).approve(PawnShop.address, loanAmount.mul(2))
             await PawnShop.connect(punkHolder).repayAndCloseTicket("1")
