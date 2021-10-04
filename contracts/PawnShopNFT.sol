@@ -26,6 +26,7 @@ contract PawnShopNFT is ERC721Enumerable, IMintable {
     }
 
     function mint(address to, uint256 tokenId) pawnShopOnly() override external {
+        require(!_exists(tokenId), "PawnShopNFT: token with tokenId already exists");
         _safeMint(to, tokenId);
     }
 

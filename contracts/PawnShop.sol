@@ -6,7 +6,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import './interfaces/IPawnLoans.sol';
 import './interfaces/IMintable.sol';
+import './interfaces/IPawnShop.sol';
 import './descriptors/PawnShopNFTDescriptor.sol';
+
 
 struct PawnTicket {
     // ==== mutable ======
@@ -26,15 +28,8 @@ struct PawnTicket {
     
 }
 
-contract NFTPawnShop is Ownable {
+contract NFTPawnShop is Ownable, IPawnShop {
     using SafeERC20 for IERC20;
-
-    event MintTicket(uint256 indexed id, address indexed minter, uint256 maxInterestRate, uint256 minLoanAmount, uint256 minDurationSeconds);
-    event Close(uint256 indexed id);
-    event UnderwriteLoan(uint256 indexed id, address indexed underwriter, uint256 interestRate, uint256 loanAmount, uint256 durationSeconds);
-    event BuyoutUnderwriter(uint256 indexed id, address indexed underwriter, address indexed replacedLoanOwner, uint256 interestEarned, uint256 replacedAmount);
-    event Repay(uint256 indexed id, address indexed repayer, address indexed loanOwner, uint256 interestEarned, uint256 loanAmount);
-    event SeizeCollateral(uint256 indexed id, address indexed to);
 
     // i.e. 1e11 = 1 = 100%
     uint8 public constant INTEREST_RATE_DECIMALS = 12;
@@ -200,7 +195,7 @@ contract NFTPawnShop is Ownable {
         ticket.closed = true;
         ticket.collateralSeized = true;
         IERC721(ticket.collateralAddress).transferFrom(address(this), to, ticket.collateralID);
-        emit SeizeCollateral(pawnTicketID, to);
+        emit SeizeCollateral(pawnTicketID);
         emit Close(pawnTicketID);
     }
 
