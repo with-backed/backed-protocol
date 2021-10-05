@@ -27,6 +27,37 @@ interface IPawnShop {
     // @param interestEarned The amount of interest the loan has accrued from first underwrite to this buyout
     // @param replacedAmount The loan amount prior to buyout
     event BuyoutUnderwriter(uint256 indexed id, address indexed underwriter, address indexed replacedLoanOwner, uint256 interestEarned, uint256 replacedAmount);
+    
+    // @notice Emitted when loan is repaid
+    // @param id The pawn ticket id
+    // @param repayer msg.sender
+    // @param loanOwner The current holder of the pawn loan NFT (PWNL)
+    // @param interestEarned The total interest accumulated on the loan
+    // @param loanAmount The loan amount 
     event Repay(uint256 indexed id, address indexed repayer, address indexed loanOwner, uint256 interestEarned, uint256 loanAmount);
+
+    // @notice Emitted when loan NFT collateral is seized 
+    // @param id The ticket id
     event SeizeCollateral(uint256 indexed id);
+
+    // @notice The magnitude of SCALAR
+    // @dev 10^INTEREST_RATE_DECIMALS = 100%
+    function INTEREST_RATE_DECIMALS() external returns (uint8);
+    
+    // @notice The SCALAR for all percentages in the pawn shop
+    // @dev Any interest rate passed to a function should already been multiplied by SCALAR
+    function SCALAR() external returns (uint256);
+
+    // @notice returns the info for this pawn ticket
+    // @param pawnTicketID The id of the pawn ticket
+    // @return closed Whether or not the tickte is closed
+    // @return perSecondInterestRate The person second interest rate, scaled by SCALAR
+    // @return accumulatedInterest The amount of interest accumulated on the loan prior to the current underwriter
+    // @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, i.e. the timestamp of the most recent underwriting
+    // @return durationSeconds The loan duration in seconds
+    // @return loanAmount The loan amount
+    // @return collateralID The token ID of the NFT collateal
+    // @return collateralAddress The contract address of the NFT collateral 
+    // @return loanAsset The contract address of the loan asset.
+    function ticketInfo(uint256 pawnTicketID) external view returns (bool closed, uint256 perSecondInterestRate, uint256 accumulatedInterest, uint256 lastAccumulatedTimestamp, uint256 durationSeconds, uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset);
 }

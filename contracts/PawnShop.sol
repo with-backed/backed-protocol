@@ -30,21 +30,17 @@ struct PawnTicket {
 contract NFTPawnShop is Ownable, IPawnShop {
     using SafeERC20 for IERC20;
 
-    // i.e. 1e11 = 1 = 100%
-    uint8 public constant INTEREST_RATE_DECIMALS = 12;
-     // i.e. 10 ** INTEREST_RATE_DECIMALS
-    uint256 public constant SCALAR = 1e12;
+    uint8 public constant override INTEREST_RATE_DECIMALS = 12;
+    uint256 public constant override SCALAR = 1 * (10 ** INTEREST_RATE_DECIMALS);
 
-
-    // 1%
-    uint256 public originationFeeRate = 1e10;
+    uint256 public originationFeeRate = 1 * (10 ** (INTEREST_RATE_DECIMALS - 2));
     uint256 private _nonce;
 
     address public loansContract;
     address public ticketsContract;
     address public manager;
 
-    mapping(uint256 => PawnTicket) public ticketInfo;
+    mapping(uint256 => PawnTicket) public override ticketInfo;
 
     // ==== modifiers
     modifier ticketExists(uint256 ticketID) { 
@@ -62,8 +58,6 @@ contract NFTPawnShop is Ownable, IPawnShop {
         return totalInterestedOwed(ticket, ticket.perSecondInterestRate);
     }
 
-    // NOTE: we calculate using current block.sub(start block).sub(1), to exclude 
-    // both the start block and the current block from the interst 
     function totalInterestedOwed(PawnTicket storage ticket, uint256 interestRate) private view returns (uint256) {
         if(ticket.closed || ticket.lastAccumulatedTimestamp == 0){
             return 0;
@@ -112,8 +106,6 @@ contract NFTPawnShop is Ownable, IPawnShop {
         emit MintTicket(id, msg.sender, maxInterest, minAmount, minDurationSeconds);
     }
 
-    // for closing a ticket and getting item back 
-    // before it has a loan
     function closeTicket(uint256 pawnTicketID, address sendCollateralTo) external {
         require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: must be owner of pawned item");
 
@@ -126,8 +118,6 @@ contract NFTPawnShop is Ownable, IPawnShop {
         emit Close(pawnTicketID);
     }
 
-    // loan ERC20, agreeing to pawn ticket terms or better
-    // replaces existing loan, if there is one and the terms qualify 
     function underwritePawnLoan(
             uint256 pawnTicketID,
             uint256 interestRate,
@@ -172,6 +162,7 @@ contract NFTPawnShop is Ownable, IPawnShop {
     }
 
     function repayAndCloseTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) external {
+        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: ticket holder only");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
 

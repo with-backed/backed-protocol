@@ -326,7 +326,6 @@ describe("PawnShop contract", function () {
             await PawnShop.connect(daiHolder).seizeCollateral("1", addr4.address)
             const ticket = await PawnShop.ticketInfo("1")
             expect(ticket.closed).to.equal(true)
-            expect(ticket.collateralSeized).to.equal(true)
             const punkOwner = await CryptoPunks.ownerOf(punkId.add(1))
             expect(punkOwner).to.equal(addr4.address)
         })
