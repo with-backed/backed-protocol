@@ -13,7 +13,6 @@ import './descriptors/PawnShopNFTDescriptor.sol';
 struct PawnTicket {
     // ==== mutable ======
     bool closed;
-    bool collateralSeized;
     uint256 perSecondInterestRate;
     // used to track loanAsset amount of interest accumulated, incase of interest rate change
     uint256 accumulatedInterest;
@@ -193,7 +192,6 @@ contract NFTPawnShop is Ownable, IPawnShop {
         require(block.timestamp > ticket.durationSeconds + ticket.lastAccumulatedTimestamp, "NFTPawnShop: payment is not late");
 
         ticket.closed = true;
-        ticket.collateralSeized = true;
         IERC721(ticket.collateralAddress).transferFrom(address(this), to, ticket.collateralID);
         emit SeizeCollateral(pawnTicketID);
         emit Close(pawnTicketID);

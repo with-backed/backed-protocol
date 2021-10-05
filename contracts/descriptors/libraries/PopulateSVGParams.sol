@@ -18,14 +18,14 @@ library PopulateSVGParams{
         view
         returns (PawnShopSVG.SVGParams memory)
     {
-        (bool closed, bool collateralSeized, uint256 perSecondInterestRate, ,
+        (bool closed, uint256 perSecondInterestRate, ,
         uint256 lastAccumulatedTimestamp, uint256 durationSeconds,
         uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
 
         svgParams.loanAssetColor = Strings.toString(uint8(keccak256(abi.encodePacked(loanAsset))[0]));
         svgParams.collateralAssetColor = Strings.toString(uint8(keccak256(abi.encodePacked(collateralAddress))[0]));
         svgParams.id = Strings.toString(id);
-        svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed, collateralSeized);
+        svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
         svgParams.interestRate = interestRateString(pawnShop, perSecondInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
         svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset));
@@ -65,17 +65,13 @@ library PopulateSVGParams{
         return perSecondInterest * 31_536_000;
     }
 
-    function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed, bool collateralSeized) view private returns(string memory){
+    function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed) view private returns(string memory){
         if(lastAccumulatedTimestamp == 0){
             return "active, awaiting underwriter";
         }
 
-        if(collateralSeized){
-            return "closed, collateral seized";
-        }
-
         if(closed){
-            return "repaid and closed";
+            return "closed";
         }
 
         if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)){
