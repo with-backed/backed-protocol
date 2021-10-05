@@ -42,7 +42,7 @@ contract PawnShopNFTDescriptor {
                         bytes(
                             abi.encodePacked(
                                 '{"name":"',
-                                'NFT Pawn Shop - ',
+                                'Pawn',
                                 svgParams.nftType,
                                 ' #',
                                 svgParams.id,
