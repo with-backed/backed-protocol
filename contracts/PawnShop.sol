@@ -42,9 +42,17 @@ contract NFTPawnShop is Ownable, IPawnShop {
 
     mapping(uint256 => PawnTicket) public override ticketInfo;
 
+    mapping(address => bool) public isAllowedLoanAsset;
+    uint256 public maxLoanAmount = 100 * (1e18);
+
     // ==== modifiers
     modifier ticketExists(uint256 ticketID) { 
         require(ticketID <= _nonce, "NFTPawnShop: pawn ticket does not exist");
+        _; 
+    }
+
+    modifier amountAllowed(uint256 loanAmount) { 
+        require(loanAmount <= maxLoanAmount, "NFTPawnShop: loan amount too high");
         _; 
     }
 
@@ -89,9 +97,11 @@ contract NFTPawnShop is Ownable, IPawnShop {
             uint256 minDurationSeconds,
             address mintTo
         ) 
-        external 
+        external
+        amountAllowed(minAmount)
         returns(uint256 id) 
     {
+        require(isAllowedLoanAsset[loanAsset], 'loan asset not allowed');
         id = ++_nonce;
         PawnTicket storage ticket = ticketInfo[id];
         ticket.loanAsset = loanAsset;
@@ -125,6 +135,7 @@ contract NFTPawnShop is Ownable, IPawnShop {
             uint256 durationSeconds,
             address sendLoanTo
         ) 
+        amountAllowed(amount)
         ticketExists(pawnTicketID)
         external 
     {
@@ -210,5 +221,13 @@ contract NFTPawnShop is Ownable, IPawnShop {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTPawnShop: max fee 5%");
         
         originationFeeRate = _originationFeeRate;
+    }
+
+    function setAllowedLoanAsset(address asset, bool allowed) onlyOwner() external {
+        isAllowedLoanAsset[asset] = allowed;
+    }
+
+    function setMaxLoanAmount(uint256 amount) onlyOwner() external {
+        maxLoanAmount = amount;
     }
 }

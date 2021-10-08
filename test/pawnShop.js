@@ -64,6 +64,8 @@ describe("PawnShop contract", function () {
         DAIContract = await ethers.getContractFactory("DAI");
         DAI = await DAIContract.connect(daiHolder).deploy();
         await DAI.deployed();  
+
+        await PawnShop.setAllowedLoanAsset(DAI.address, true)
       });
       
     describe("tokenURI", function() {
