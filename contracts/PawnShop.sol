@@ -174,7 +174,6 @@ contract NFTPawnShop is Ownable, IPawnShop {
     }
 
     function repayAndCloseTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) external {
-        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: ticket holder only");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
 
