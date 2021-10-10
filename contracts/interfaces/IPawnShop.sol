@@ -4,10 +4,13 @@ interface IPawnShop {
     // @notice Emitted when pawn ticket is created
     // @param id The id of the new ticket, matches token id of pawn ticket nft
     // @param minter msg.sender
-    // @param maxInterestRate max per second interest rate, scaled by SCALAR
+    // @param collateralTokenId The token id of the collateral NFT
+    // @param collateralContract The contract address of the collateral NFT
+    // @param maxInterestRate The max per second interest rate, scaled by SCALAR
+    // @param loanAssetContract The contract address of the loan asset
     // @param minLoanAmount mimimum loan amount
     // @param minDurationSeconds minimum loan duration in seconds
-    event MintTicket(uint256 indexed id, address indexed minter, uint256 maxInterestRate, uint256 minLoanAmount, uint256 minDurationSeconds);
+    event MintTicket(uint256 indexed id, address indexed minter, uint256 collateralTokenId, address collateralContract, uint256 maxInterestRate, address loanAssetContract, uint256 minLoanAmount, uint256 minDurationSeconds);
 
     // @notice Emitted when ticket is closed
     // @param id The id of the ticket which has been closed
