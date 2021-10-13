@@ -1,14 +1,12 @@
 pragma solidity 0.8.6;
 import 'base64-sol/base64.sol';
-import '../../interfaces/TypeSpecificSVGHelper.sol';
+import '../../interfaces/ITicketTypeSpecificSVGHelper.sol';
 
 
 library PawnShopSVG {
 
     struct SVGParams{
-        string nftType; // "ticket" or "loan"
-        string collateralAssetColor;
-        string loanAssetColor;
+        string nftType; // "Borrow" or "Lend"
         string id;
         string status;
         string interestRate;
@@ -24,15 +22,14 @@ library PawnShopSVG {
         string endDateTime;
     }
 
-    function generateSVG(SVGParams memory params, TypeSpecificSVGHelper typeSpecificHelper) internal pure returns (string memory svg) {
+    function generateSVG(SVGParams memory params, ITicketTypeSpecificSVGHelper typeSpecificHelper) internal pure returns (string memory svg) {
         return string(
                 abi.encodePacked(
                     stylesAndBackground(
                         typeSpecificHelper,
-                        params.nftType,
                         params.id,
-                        params.loanAssetColor,
-                        params.collateralAssetColor
+                        params.loanAssetContract,
+                        params.collateralContract
                     ),
                     typeSpecificHelper.typeSpecificDetails(
                         params.id
@@ -57,11 +54,10 @@ library PawnShopSVG {
     }
 
     function stylesAndBackground(
-        TypeSpecificSVGHelper typeSpecificHelper,
-        string memory nftType,
+        ITicketTypeSpecificSVGHelper typeSpecificHelper,
         string memory id,
-        string memory loanAssetColor,
-        string memory collateralAssetColor) 
+        string memory loanAsset,
+        string memory collateralAsset) 
         private pure returns (string memory) {
         return string(
             abi.encodePacked(
@@ -70,24 +66,16 @@ library PawnShopSVG {
             '.st0{fill:url(#wash);fill-opacity:0.7;}',
             '.st1{opacity:0.8;fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;enable-background:new;}',
             '.st2{font-family: serif;}',
-            '.st3{font-size:40px;}',
-            '.st4{letter-spacing:4;}',
+            '.st4{margin: 6px; font-size: 36px; letter-spacing: 1.8px;}',
             '.st5{fill:none;}',
             '.st6{font-family: sans-serif; font-weight: bold;}',
-            '.st7{font-size:13px;}',
+            '.st7{font-size:14px;}',
             '.st8{font-family: sans-serif;}',
-            typeSpecificHelper.backgroundColorsStyles(collateralAssetColor, loanAssetColor),
+            '.outer {width: 43px; height: 360px; position: relative; display: inline-block; margin: 0 15px;}',
+	        '.inner {position: absolute; top: 50%; left: 50%;}',
+            typeSpecificHelper.backgroundColorsStyles(loanAsset, collateralAsset),
         '</style>',
         '<defs>',
-            '<mask id="mask-marquee">',
-            '<rect x="20" y="70" width="260" height="30" fill="#fff"/>',
-            '</mask>',
-            '<mask id="mask-amount">',
-            '<rect x="124" y="341" width="146" height="30" fill="#fff"/>',
-            '</mask>',
-            '<mask id="mask-accrued">',
-            '<rect x="146" y="382" width="124" height="30" fill="#fff"/>',
-            '</mask>',
             '<radialGradient id="wash" cx="120" cy="40" r="140" gradientTransform="skewY(5)" gradientUnits="userSpaceOnUse">',
                 '<stop  offset="0%" class="highlight-offset"/>',
                 '<stop  offset="100%" class="highlight-hue"/>',
@@ -106,12 +94,12 @@ library PawnShopSVG {
         string memory collateralId
         ) internal pure returns (string memory svg) {
         return string(abi.encodePacked(
-            '<tspan x="0" y="0" class="st6 st7">collateral nft </tspan><tspan x="87.3" y="0" class="st8 st7"> (',
+            '<tspan x="0" y="108" class="st6 st7">collateral nft </tspan><tspan x="90" y="108" class="st8 st7"> (',
             collateralAssetSymbol,
             ') ',
             collateralAssetPartial,
             '</tspan>',
-            '<tspan x="0" y="30.9" class="st6 st7">collateral ID </tspan><tspan x="83.5" y="30.9" class="st8 st7">',
+            '<tspan x="0" y="144" class="st6 st7">collateral ID </tspan><tspan x="86" y="144" class="st8 st7">',
             collateralId,
             '</tspan>'
         ));
@@ -128,28 +116,28 @@ library PawnShopSVG {
     ) private pure returns (string memory){
         return string(
             abi.encodePacked(
-                '<tspan x="0" y="61.8" class="st6 st7">loan amount</tspan><tspan x="83.4" y="61.8" class="st8 st7">',
+                '<tspan x="0" y="0" class="st6 st7">loan amount</tspan><tspan x="86" y="0" class="st8 st7">',
                 loanAmount,
                 ' ',
                 loanAssetSymbol,
                 '</tspan>',
-                '<tspan x="0" y="92.6" class="st6 st7">interest rate</tspan><tspan x="80.3" y="92.6" class="st8 st7">',
+                '<tspan x="0" y="36" class="st6 st7">interest rate</tspan><tspan x="83" y="36" class="st8 st7">',
                 interestRate,
                 '</tspan>'
-                '<tspan x="0" y="123.5" class="st6 st7">status</tspan><tspan x="41.3" y="123.5" class="st8 st7">',
+                '<tspan x="0" y="72" class="st6 st7">status</tspan><tspan x="45" y="72" class="st8 st7">',
                 status,
                 '</tspan>',
-                '<tspan x="0" y="154.4" class="st6 st7">interest accrued</tspan><tspan x="108.4" y="154.4" class="st8 st7">',
+                '<tspan x="0" y="180" class="st6 st7">interest accrued</tspan><tspan x="111" y="180" class="st8 st7">',
                 interestAccrued,
                 ' ',
                 loanAssetSymbol,
                 '</tspan>',
-                '<tspan x="0" y="185.3" class="st6 st7">loan asset </tspan><tspan x="72.5" y="185.3" class="st8 st7"> (',
+                '<tspan x="0" y="216" class="st6 st7">loan asset </tspan><tspan x="76" y="216" class="st8 st7"> (',
                 loanAssetSymbol,
                 ') ',
                 loanAssetPartial,
                 '</tspan>',
-                '<tspan x="0" y="216.1" class="st6 st7">end date</tspan><tspan x="65.5" y="216.1" class="st8 st7">',
+                '<tspan x="0" y="252" class="st6 st7">end date</tspan><tspan x="68" y="252" class="st8 st7">',
                 endDateTime,
                 '</tspan>'
             )

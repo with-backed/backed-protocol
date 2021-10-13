@@ -22,8 +22,6 @@ library PopulateSVGParams{
         uint256 lastAccumulatedTimestamp, uint256 durationSeconds,
         uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
 
-        svgParams.loanAssetColor = Strings.toString(uint8(keccak256(abi.encodePacked(loanAsset))[0]));
-        svgParams.collateralAssetColor = Strings.toString(uint8(keccak256(abi.encodePacked(collateralAddress))[0]));
         svgParams.id = Strings.toString(id);
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
         svgParams.interestRate = interestRateString(pawnShop, perSecondInterestRate); 

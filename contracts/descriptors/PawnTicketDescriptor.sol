@@ -1,7 +1,7 @@
 import './PawnShopNFTDescriptor.sol';
 
 contract PawnTicketDescriptor is PawnShopNFTDescriptor {
-    constructor(TypeSpecificSVGHelper _svgHelper) PawnShopNFTDescriptor("ticket", _svgHelper) {
+    constructor(ITicketTypeSpecificSVGHelper _svgHelper) PawnShopNFTDescriptor("ticket", _svgHelper) {
     }
 
     function generateDescription(string memory pawnTicketId) internal virtual override pure returns (string memory) {
