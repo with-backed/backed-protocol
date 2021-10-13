@@ -10,9 +10,9 @@ import './libraries/PopulateSVGParams.sol';
 
 contract PawnShopNFTDescriptor {
     string public nftType;
-    TypeSpecificSVGHelper immutable public svgHelper;
+    ITicketTypeSpecificSVGHelper immutable public svgHelper;
 
-    constructor(string memory _nftType, TypeSpecificSVGHelper _svgHelper) {
+    constructor(string memory _nftType, ITicketTypeSpecificSVGHelper _svgHelper) {
         nftType = _nftType;
         svgHelper = _svgHelper;
     }
@@ -42,8 +42,8 @@ contract PawnShopNFTDescriptor {
                         bytes(
                             abi.encodePacked(
                                 '{"name":"',
-                                'Pawn',
                                 svgParams.nftType,
+                                ' ticket',
                                 ' #',
                                 svgParams.id,
                                 '", "description":"',
