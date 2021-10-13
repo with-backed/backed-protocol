@@ -5,26 +5,26 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import './DateTimeLibrary.sol';
 import './UintStrings.sol';
-import '../../PawnShop.sol';
+import '../../NFTLoanFacilitator.sol';
 import '../../interfaces/IERC20Metadata.sol';
 import './HexStrings.sol';
-import './PawnShopSVG.sol';
+import './NFTLoanTicketSVG.sol';
 
 
 library PopulateSVGParams{
     
-    function populate(PawnShopSVG.SVGParams memory svgParams, NFTPawnShop pawnShop, uint256 id)
+    function populate(NFTLoanTicketSVG.SVGParams memory svgParams, NFTLoanFacilitator nftLoanFacilitator, uint256 id)
         internal
         view
-        returns (PawnShopSVG.SVGParams memory)
+        returns (NFTLoanTicketSVG.SVGParams memory)
     {
         (bool closed, uint256 perSecondInterestRate, ,
         uint256 lastAccumulatedTimestamp, uint256 durationSeconds,
-        uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset) = pawnShop.ticketInfo(id);
+        uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset) = nftLoanFacilitator.loanInfo(id);
 
         svgParams.id = Strings.toString(id);
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
-        svgParams.interestRate = interestRateString(pawnShop, perSecondInterestRate); 
+        svgParams.interestRate = interestRateString(nftLoanFacilitator, perSecondInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
         svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset));
         svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
@@ -33,14 +33,14 @@ library PopulateSVGParams{
         svgParams.collateralAssetSymbol = collateralAssetSymbol(collateralAddress);
         svgParams.collateralId = Strings.toString(collateralID);
         svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
-        svgParams.interestAccrued = accruedInterest(pawnShop, id, loanAsset);
+        svgParams.interestAccrued = accruedInterest(nftLoanFacilitator, id, loanAsset);
         svgParams.endDateTime = lastAccumulatedTimestamp == 0 ? "n/a" : endDateTime(lastAccumulatedTimestamp + durationSeconds);
         
         return svgParams;
     }
 
-    function interestRateString(NFTPawnShop pawnShop, uint256 perSecondInterestRate) private view returns (string memory){
-        return UintStrings.decimalString(annualInterestRate(perSecondInterestRate), pawnShop.INTEREST_RATE_DECIMALS() - 2, true);
+    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perSecondInterestRate) private view returns (string memory){
+        return UintStrings.decimalString(annualInterestRate(perSecondInterestRate), nftLoanFacilitator.INTEREST_RATE_DECIMALS() - 2, true);
     }
 
     function loanAmountString(uint256 amount, address asset) private view returns (string memory){
@@ -55,8 +55,8 @@ library PopulateSVGParams{
         return ERC721(asset).symbol();
     }
 
-    function accruedInterest(NFTPawnShop pawnShop, uint256 pawnTicketId, address loanAsset) private view returns(string memory){
-        return UintStrings.decimalString(pawnShop.interestOwed(pawnTicketId), IERC20Metadata(loanAsset).decimals(), false);
+    function accruedInterest(NFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) private view returns(string memory){
+        return UintStrings.decimalString(nftLoanFacilitator.interestOwed(loanId), IERC20Metadata(loanAsset).decimals(), false);
     }
 
     function annualInterestRate(uint256 perSecondInterest) private pure returns(uint256) {

@@ -2,7 +2,7 @@ pragma solidity 0.8.6;
 
 import './TicketTypeSpecificSVGHelper.sol';
 
-contract PawnLoanSVG is TicketTypeSpecificSVGHelper {
+contract LendTicketSVGHelper is TicketTypeSpecificSVGHelper {
     function backgroundColorsStyles(string memory collateralAsset, string memory loanAsset) external pure override returns (string memory){
         return colorStyles(loanAsset, collateralAsset);
     }

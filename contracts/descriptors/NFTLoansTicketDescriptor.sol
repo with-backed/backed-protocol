@@ -1,14 +1,14 @@
 pragma solidity 0.8.6;
 
 import 'base64-sol/base64.sol';
-import './../PawnShop.sol';
+import './../NFTLoanFacilitator.sol';
 import "hardhat/console.sol";
 import '../interfaces/IERC20Metadata.sol';
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import './libraries/PawnShopSVG.sol';
+import './libraries/NFTLoanTicketSVG.sol';
 import './libraries/PopulateSVGParams.sol';
 
-contract PawnShopNFTDescriptor {
+contract NFTLoansTicketDescriptor {
     string public nftType;
     ITicketTypeSpecificSVGHelper immutable public svgHelper;
 
@@ -17,19 +17,19 @@ contract PawnShopNFTDescriptor {
         svgHelper = _svgHelper;
     }
 
-    function uri(NFTPawnShop pawnShop, uint256 id)
+    function uri(NFTLoanFacilitator nftLoanFacilitator, uint256 id)
         external
         view
         returns (string memory)
     {
-        PawnShopSVG.SVGParams memory svgParams;
+        NFTLoanTicketSVG.SVGParams memory svgParams;
         svgParams.nftType = nftType;
-        svgParams = PopulateSVGParams.populate(svgParams, pawnShop, id);
+        svgParams = PopulateSVGParams.populate(svgParams, nftLoanFacilitator, id);
         
         return generateDescriptor(svgParams);
     }
 
-    function generateDescriptor(PawnShopSVG.SVGParams memory svgParams)
+    function generateDescriptor(NFTLoanTicketSVG.SVGParams memory svgParams)
         private
         view
         returns (string memory)
@@ -56,7 +56,7 @@ contract PawnShopNFTDescriptor {
                                     svgParams.collateralId),
                                 '", "image": "',
                                 'data:image/svg+xml;base64,',
-                                Base64.encode(bytes(PawnShopSVG.generateSVG(svgParams, svgHelper))),
+                                Base64.encode(bytes(NFTLoanTicketSVG.generateSVG(svgParams, svgHelper))),
                                 '"}'
                             )
                         )

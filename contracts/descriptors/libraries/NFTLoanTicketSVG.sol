@@ -3,17 +3,20 @@ import 'base64-sol/base64.sol';
 import '../../interfaces/ITicketTypeSpecificSVGHelper.sol';
 
 
-library PawnShopSVG {
+library NFTLoanTicketSVG {
 
     struct SVGParams{
-        string nftType; // "Borrow" or "Lend"
+        // "Borrow" or "Lend"
+        string nftType;
         string id;
         string status;
         string interestRate;
         string loanAssetContract;
+        // shortened hex address to fit in image
         string loanAssetContractPartial;
         string loanAssetSymbol;
         string collateralContract;
+        // shortened hex address to fit in image
         string collateralContractPartial;
         string collateralAssetSymbol;
         string collateralId;

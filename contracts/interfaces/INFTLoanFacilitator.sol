@@ -1,8 +1,8 @@
 pragma solidity 0.8.6;
 
-interface IPawnShop {
-    // @notice Emitted when pawn ticket is created
-    // @param id The id of the new ticket, matches token id of pawn ticket nft
+interface INFTLoanFacilitator {
+    // @notice Emitted when the loan is created
+    // @param id The id of the new loan, matches the token id of the borrow ticket minted in the same transaction
     // @param minter msg.sender
     // @param collateralTokenId The token id of the collateral NFT
     // @param collateralContract The contract address of the collateral NFT
@@ -10,7 +10,7 @@ interface IPawnShop {
     // @param loanAssetContract The contract address of the loan asset
     // @param minLoanAmount mimimum loan amount
     // @param minDurationSeconds minimum loan duration in seconds
-    event MintTicket(uint256 indexed id, address indexed minter, uint256 collateralTokenId, address collateralContract, uint256 maxInterestRate, address loanAssetContract, uint256 minLoanAmount, uint256 minDurationSeconds);
+    event CreateLoan(uint256 indexed id, address indexed minter, uint256 collateralTokenId, address collateralContract, uint256 maxInterestRate, address loanAssetContract, uint256 minLoanAmount, uint256 minDurationSeconds);
 
     // @notice Emitted when ticket is closed
     // @param id The id of the ticket which has been closed
@@ -32,9 +32,9 @@ interface IPawnShop {
     event BuyoutUnderwriter(uint256 indexed id, address indexed underwriter, address indexed replacedLoanOwner, uint256 interestEarned, uint256 replacedAmount);
     
     // @notice Emitted when loan is repaid
-    // @param id The pawn ticket id
+    // @param id The loan id
     // @param repayer msg.sender
-    // @param loanOwner The current holder of the pawn loan NFT (PWNL)
+    // @param loanOwner The current holder of the lend ticket for this loan, token id matching the loan id
     // @param interestEarned The total interest accumulated on the loan
     // @param loanAmount The loan amount 
     event Repay(uint256 indexed id, address indexed repayer, address indexed loanOwner, uint256 interestEarned, uint256 loanAmount);
@@ -47,12 +47,12 @@ interface IPawnShop {
     // @dev 10^INTEREST_RATE_DECIMALS = 100%
     function INTEREST_RATE_DECIMALS() external returns (uint8);
     
-    // @notice The SCALAR for all percentages in the pawn shop
+    // @notice The SCALAR for all percentages in the loan facilitator contract
     // @dev Any interest rate passed to a function should already been multiplied by SCALAR
     function SCALAR() external returns (uint256);
 
-    // @notice returns the info for this pawn ticket
-    // @param pawnTicketID The id of the pawn ticket
+    // @notice returns the info for this loan
+    // @param loanId The id of the loan
     // @return closed Whether or not the tickte is closed
     // @return perSecondInterestRate The person second interest rate, scaled by SCALAR
     // @return accumulatedInterest The amount of interest accumulated on the loan prior to the current underwriter
@@ -62,9 +62,9 @@ interface IPawnShop {
     // @return collateralID The token ID of the NFT collateal
     // @return collateralAddress The contract address of the NFT collateral 
     // @return loanAsset The contract address of the loan asset.
-    function ticketInfo(uint256 pawnTicketID) external view returns (bool closed, uint256 perSecondInterestRate, uint256 accumulatedInterest, uint256 lastAccumulatedTimestamp, uint256 durationSeconds, uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset);
+    function loanInfo(uint256 loanId) external view returns (bool closed, uint256 perSecondInterestRate, uint256 accumulatedInterest, uint256 lastAccumulatedTimestamp, uint256 durationSeconds, uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset);
 
     // @notice returns the total amount owed for the loan, i.e. principal + interest
-    // @param pawnTicketId The ticket id
-    function totalOwed(uint256 pawnTicketID) ticketExists(pawnTicketID) view external returns (uint256);
+    // @param loanId The loan id
+    function totalOwed(uint256 loanId) view external returns (uint256);
 }
