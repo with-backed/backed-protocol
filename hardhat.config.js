@@ -18,18 +18,7 @@ module.exports = {
   networks: {
 	  hardhat: {
 	    chainId: 1337
-	  },
-    ropsten: {
-      url: `https://eth-ropsten.alchemyapi.io/v2/${ALCHEMY_ROPSTEN_API_KEY}`,
-      accounts: [`0x${ROPSTEN_PRIVATE_KEY}`],
-    },
-    rinkeby: {
-      url: `https://eth-rinkeby.alchemyapi.io/v2/${ALCHEMY_RINKEBY_API_KEY}`,
-      accounts: [`0x${RINKEBY_PRIVATE_KEY}`],
-    },
- },
- etherscan: {
-  apiKey: ETHERSCAN_API_KEY
-  }
+	  }
+ }
 };
 
