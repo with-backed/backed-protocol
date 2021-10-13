@@ -64,6 +64,8 @@ describe("PawnShop contract", function () {
         DAIContract = await ethers.getContractFactory("DAI");
         DAI = await DAIContract.connect(daiHolder).deploy();
         await DAI.deployed();  
+
+        await PawnShop.setLoanAssetMaxAmount(DAI.address, 100)
       });
       
     describe("tokenURI", function() {
@@ -311,7 +313,7 @@ describe("PawnShop contract", function () {
 
     describe("seizeCollateral", function () {
         beforeEach(async function() {
-             await CryptoPunks.connect(punkHolder).mint();
+            await CryptoPunks.connect(punkHolder).mint();
             await CryptoPunks.connect(punkHolder).approve(PawnShop.address, punkId.add(1))
             await DAI.connect(daiHolder).approve(PawnShop.address, loanAmount.mul(2))
 
@@ -328,6 +330,15 @@ describe("PawnShop contract", function () {
             expect(ticket.closed).to.equal(true)
             const punkOwner = await CryptoPunks.ownerOf(punkId.add(1))
             expect(punkOwner).to.equal(addr4.address)
+        })
+
+        it('reverts if non-loan-owner calls', async function(){
+            // mine on block
+            await DAI.connect(daiHolder).transfer(addr4.address, ethers.BigNumber.from(1))
+            // 
+            await expect(
+                PawnShop.connect(addr4).seizeCollateral("1", addr4.address)
+            ).to.be.revertedWith("NFTPawnShop: underwriter only")
         })
 
         it("reverts if ticket is closed", async function(){
@@ -414,7 +425,14 @@ describe("PawnShop contract", function () {
             await PawnShop.connect(punkHolder).closeTicket("1", addr4.address)
             await expect(
                 PawnShop.connect(punkHolder).closeTicket("1", addr4.address)
-                ).to.be.revertedWith("NFTPawnShop: ticket closed")
+            ).to.be.revertedWith("NFTPawnShop: ticket closed")
+        });
+
+        it("reverts if ticket has underwriter", async function(){
+            await PawnShop.connect(daiHolder).underwritePawnLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
+            await expect(
+                PawnShop.connect(punkHolder).closeTicket("1", addr4.address)
+            ).to.be.revertedWith("NFTPawnShop: underwritten, use repayAndCloseTicket")
         });
     })
 

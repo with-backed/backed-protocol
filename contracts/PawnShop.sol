@@ -8,6 +8,7 @@ import './interfaces/IPawnLoans.sol';
 import './interfaces/IMintable.sol';
 import './interfaces/IPawnShop.sol';
 import './descriptors/PawnShopNFTDescriptor.sol';
+import './interfaces/IERC20Metadata.sol';
 
 
 struct PawnTicket {
@@ -42,10 +43,16 @@ contract NFTPawnShop is Ownable, IPawnShop {
 
     mapping(uint256 => PawnTicket) public override ticketInfo;
 
+    mapping(address => uint256) public loanAssetMaxAmount;
+
     // ==== modifiers
     modifier ticketExists(uint256 ticketID) { 
         require(ticketID <= _nonce, "NFTPawnShop: pawn ticket does not exist");
         _; 
+    }
+
+    function isAmountAllowed(address asset, uint256 loanAmount) public returns (bool) {
+        return loanAmount <= loanAssetMaxAmount[asset];
     }
 
     // ==== view ====
@@ -89,9 +96,13 @@ contract NFTPawnShop is Ownable, IPawnShop {
             uint256 minDurationSeconds,
             address mintTo
         ) 
-        external 
+        external
         returns(uint256 id) 
     {
+        require(isAmountAllowed(loanAsset, minAmount), "NFTPawnShop: loan amount too high");
+
+        IERC721(nftAddress).transferFrom(msg.sender, address(this), nftID);
+
         id = ++_nonce;
         PawnTicket storage ticket = ticketInfo[id];
         ticket.loanAsset = loanAsset;
@@ -100,10 +111,9 @@ contract NFTPawnShop is Ownable, IPawnShop {
         ticket.collateralAddress = nftAddress;
         ticket.perSecondInterestRate = maxInterest;
         ticket.durationSeconds = minDurationSeconds;
-        IERC721(nftAddress).transferFrom(msg.sender, address(this), nftID);
-
+        
         IMintable(ticketsContract).mint(mintTo, id);
-        emit MintTicket(id, msg.sender, maxInterest, minAmount, minDurationSeconds);
+        emit MintTicket(id, msg.sender, nftID, nftAddress, maxInterest, loanAsset, minAmount, minDurationSeconds);
     }
 
     function closeTicket(uint256 pawnTicketID, address sendCollateralTo) external {
@@ -111,7 +121,7 @@ contract NFTPawnShop is Ownable, IPawnShop {
 
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
-        require(ticket.lastAccumulatedTimestamp == 0, "NFTPawnShop: has loan, use repayAndCloseTicket");
+        require(ticket.lastAccumulatedTimestamp == 0, "NFTPawnShop: underwritten, use repayAndCloseTicket");
         
         ticket.closed = true;
         IERC721(ticket.collateralAddress).transferFrom(address(this), sendCollateralTo, ticket.collateralID);
@@ -129,6 +139,8 @@ contract NFTPawnShop is Ownable, IPawnShop {
         external 
     {
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
+        require(isAmountAllowed(ticket.loanAsset, amount), "NFTPawnShop: loan amount too high");
+
         require(!ticket.closed, "NFTPawnShop: ticket closed");
         require(ticket.perSecondInterestRate >= interestRate && ticket.durationSeconds <= durationSeconds && ticket.loanAmount <= amount, "NFTPawnShop: Proposed terms do not qualify" );
 
@@ -162,7 +174,6 @@ contract NFTPawnShop is Ownable, IPawnShop {
     }
 
     function repayAndCloseTicket(uint256 pawnTicketID) ticketExists(pawnTicketID) external {
-        require(IERC721(ticketsContract).ownerOf(pawnTicketID) == msg.sender, "NFTPawnShop: ticket holder only");
         PawnTicket storage ticket = ticketInfo[pawnTicketID];
         require(!ticket.closed, "NFTPawnShop: ticket closed");
 
@@ -210,5 +221,9 @@ contract NFTPawnShop is Ownable, IPawnShop {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTPawnShop: max fee 5%");
         
         originationFeeRate = _originationFeeRate;
+    }
+
+    function setLoanAssetMaxAmount(address asset, uint256 amount) onlyOwner() external {
+        loanAssetMaxAmount[asset] = amount * (10 ** IERC20Metadata(asset).decimals());
     }
 }
