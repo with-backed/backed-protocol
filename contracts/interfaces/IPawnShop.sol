@@ -60,4 +60,8 @@ interface IPawnShop {
     // @return collateralAddress The contract address of the NFT collateral 
     // @return loanAsset The contract address of the loan asset.
     function ticketInfo(uint256 pawnTicketID) external view returns (bool closed, uint256 perSecondInterestRate, uint256 accumulatedInterest, uint256 lastAccumulatedTimestamp, uint256 durationSeconds, uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset);
+
+    // @notice returns the total amount owed for the loan, i.e. principal + interest
+    // @param pawnTicketId The ticket id
+    function totalOwed(uint256 pawnTicketID) ticketExists(pawnTicketID) view external returns (uint256);
 }
