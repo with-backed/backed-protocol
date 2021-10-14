@@ -1,3 +1,5 @@
+pragma solidity 0.8.6;
+
 import './NFTLoansTicketDescriptor.sol';
 
 contract BorrowTicketDescriptor is NFTLoansTicketDescriptor {

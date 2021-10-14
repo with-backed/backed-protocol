@@ -30,7 +30,6 @@ library NFTLoanTicketSVG {
                 abi.encodePacked(
                     stylesAndBackground(
                         typeSpecificHelper,
-                        params.id,
                         params.loanAssetContract,
                         params.collateralContract
                     ),
@@ -58,7 +57,6 @@ library NFTLoanTicketSVG {
 
     function stylesAndBackground(
         ITicketTypeSpecificSVGHelper typeSpecificHelper,
-        string memory id,
         string memory loanAsset,
         string memory collateralAsset) 
         private pure returns (string memory) {
