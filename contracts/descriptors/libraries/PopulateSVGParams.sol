@@ -13,6 +13,8 @@ import './NFTLoanTicketSVG.sol';
 
 library PopulateSVGParams{
     
+    // @notice Populates and returns the passed `svgParams` with loan info retrieved from
+    // `nftLoanFacilitator` for `id`, the loan id
     function populate(NFTLoanTicketSVG.SVGParams memory svgParams, NFTLoanFacilitator nftLoanFacilitator, uint256 id)
         internal
         view
