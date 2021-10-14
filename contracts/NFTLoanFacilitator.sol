@@ -41,16 +41,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     mapping(uint256 => Loan) public override loanInfo;
 
-    mapping(address => uint256) public loanAssetMaxAmount;
-
     // ==== modifiers
     modifier loanExists(uint256 loanId) { 
         require(loanId <= _nonce, "NFTLoanFacilitator: loan does not exist");
         _; 
-    }
-
-    function isAmountAllowed(address asset, uint256 loanAmount) view public returns (bool) {
-        return loanAmount <= loanAssetMaxAmount[asset];
     }
 
     // ==== view ====
@@ -98,8 +92,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         external
         returns(uint256 id) 
     {
-        require(isAmountAllowed(loanAssetContractAddress, minLoanAmount), "NFTLoanFacilitator: loan amount too high");
-
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
 
         id = ++_nonce;
@@ -139,7 +131,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         external 
     {
         Loan storage loan = loanInfo[loanId];
-        require(isAmountAllowed(loan.loanAssetContractAddress, amount), "NFTLoanFacilitator: loan amount too high");
 
         require(!loan.closed, "NFTLoanFacilitator: loan closed");
         require(loan.perSecondInterestRate >= interestRate && loan.durationSeconds <= durationSeconds && loan.loanAmount <= amount, "NFTLoanFacilitator: Proposed terms do not qualify" );
@@ -221,9 +212,5 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         
         originationFeeRate = _originationFeeRate;
-    }
-
-    function setLoanAssetMaxAmount(address asset, uint256 amount) onlyOwner() external {
-        loanAssetMaxAmount[asset] = amount * (10 ** IERC20Metadata(asset).decimals());
     }
 }

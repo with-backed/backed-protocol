@@ -64,8 +64,6 @@ describe("NFTLoanFacilitator contract", function () {
         DAIContract = await ethers.getContractFactory("DAI");
         DAI = await DAIContract.connect(daiHolder).deploy();
         await DAI.deployed();  
-
-        await NFTLoanFacilitator.setLoanAssetMaxAmount(DAI.address, 100)
       });
       
     describe("tokenURI", function() {
