@@ -7,7 +7,7 @@ contract LendTicketSVGHelper is TicketTypeSpecificSVGHelper {
         return colorStyles(loanAsset, collateralAsset);
     }
 
-    function typeSpecificDetails(string memory loanId) external pure override returns (string memory){
+    function typeSpecificDetails(string memory id) external pure override returns (string memory){
         return string(abi.encodePacked(
             '<path class="st1" d="M420,420H70v-17.6c-7.8,0-14.2-6.4-14.2-14.2c0-7.8,6.4-14.2,14.2-14.2v-14.2c-7.8,0-14.2-6.4-14.2-14.2',
             'c0-7.8,6.4-14.2,14.2-14.2v-14.2c-7.8,0-14.2-6.4-14.2-14.2c0-7.8,6.4-14.2,14.2-14.2v-14.2c-7.8,0-14.2-6.4-14.2-14.2',
@@ -17,7 +17,7 @@ contract LendTicketSVGHelper is TicketTypeSpecificSVGHelper {
             '<foreignObject x="345" y="60" width="60" height="360">',
                 '<div xmlns="http://www.w3.org/1999/xhtml" class="outer">',
                     '<div class="inner rotate"><span class="st4">LNDT</span><span class="st4">#',
-                    loanId,
+                    id,
                     '</span></div>',
                     
                 '</div>',

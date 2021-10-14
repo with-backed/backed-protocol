@@ -270,7 +270,7 @@ describe("NFTLoanFacilitator contract", function () {
         
     });
 
-    describe("repayAndcloseLoan", function () {
+    describe("repayAndCloseLoan", function () {
         beforeEach(async function() {
             await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
@@ -282,28 +282,28 @@ describe("NFTLoanFacilitator contract", function () {
 
         it("pays back lender", async function(){
             const balanceBefore = await DAI.balanceOf(daiHolder.address)
-            await NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             const interest = await interestOwedTotal("1")
             const balanceAfter = await DAI.balanceOf(daiHolder.address)
             expect(balanceAfter).to.equal(balanceBefore.add(loanAmount.add(interest)))
         })
 
         it("transfers collateral back to lendee", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             const punkOwner = await  CryptoPunks.ownerOf(punkId)
             expect(punkOwner).to.equal(punkHolder.address)
         })
 
         it("closes ticket", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             const ticket = await NFTLoanFacilitator.loanInfo("1")
             expect(ticket.closed).to.equal(true)
         })
 
         it("reverts if ticket is closed", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+                NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
         })
 
@@ -344,7 +344,7 @@ describe("NFTLoanFacilitator contract", function () {
             // repay and close
             await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
             await DAI.connect(punkHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
-            await NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             // 
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
@@ -366,7 +366,7 @@ describe("NFTLoanFacilitator contract", function () {
             await NFTLoanFacilitator.connect(daiHolder).underwriteLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
             await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
             await DAI.connect(punkHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
-            await NFTLoanFacilitator.connect(punkHolder).repayAndcloseLoan("1")
+            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
         })
 
         it("transfers ERC20 value, reduces loan payment balance", async function(){
@@ -430,7 +430,7 @@ describe("NFTLoanFacilitator contract", function () {
             await NFTLoanFacilitator.connect(daiHolder).underwriteLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: underwritten, use repayAndcloseLoan")
+            ).to.be.revertedWith("NFTLoanFacilitator: underwritten, use repayAndCloseLoan")
         });
     })
 

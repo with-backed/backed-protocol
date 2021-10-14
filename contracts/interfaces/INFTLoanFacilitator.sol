@@ -171,7 +171,7 @@ interface INFTLoanFacilitator {
     // @notice repays and closes the loan, transferring totalOwed() to the current Lend Ticket holder
     // and transferring the collateral NFT to the Borrow Ticket holder.
     // @param loanId The loan id
-    function repayAndcloseLoan(uint256 loanId) external;
+    function repayAndCloseLoan(uint256 loanId) external;
 
     // @notice Transfers the collateral NFT to `sendCollateralTo` and closes the loan.
     // @dev Can only be called by Lend Ticket holder. Can only be called 
