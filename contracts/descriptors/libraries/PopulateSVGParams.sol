@@ -22,7 +22,8 @@ library PopulateSVGParams{
     {
         (bool closed, uint256 perSecondInterestRate, ,
         uint256 lastAccumulatedTimestamp, uint256 durationSeconds,
-        uint256 loanAmount, uint256 collateralID, address collateralAddress, address loanAsset) = nftLoanFacilitator.loanInfo(id);
+        uint256 loanAmount, uint256 collateralID, 
+        address collateralAddress, address loanAsset) = nftLoanFacilitator.loanInfo(id);
 
         svgParams.id = Strings.toString(id);
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
@@ -36,13 +37,21 @@ library PopulateSVGParams{
         svgParams.collateralId = Strings.toString(collateralID);
         svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
         svgParams.interestAccrued = accruedInterest(nftLoanFacilitator, id, loanAsset);
-        svgParams.endDateTime = lastAccumulatedTimestamp == 0 ? "n/a" : endDateTime(lastAccumulatedTimestamp + durationSeconds);
+        svgParams.endDateTime = lastAccumulatedTimestamp == 0 ? "n/a" 
+        : endDateTime(lastAccumulatedTimestamp + durationSeconds);
         
         return svgParams;
     }
 
-    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perSecondInterestRate) private view returns (string memory){
-        return UintStrings.decimalString(annualInterestRate(perSecondInterestRate), nftLoanFacilitator.INTEREST_RATE_DECIMALS() - 2, true);
+    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perSecondInterestRate) 
+    private view 
+    returns (string memory)
+    {
+        return UintStrings.decimalString(
+            annualInterestRate(perSecondInterestRate),
+            nftLoanFacilitator.INTEREST_RATE_DECIMALS() - 2,
+            true
+            );
     }
 
     function loanAmountString(uint256 amount, address asset) private view returns (string memory){
@@ -57,15 +66,24 @@ library PopulateSVGParams{
         return ERC721(asset).symbol();
     }
 
-    function accruedInterest(NFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) private view returns(string memory){
-        return UintStrings.decimalString(nftLoanFacilitator.interestOwed(loanId), IERC20Metadata(loanAsset).decimals(), false);
+    function accruedInterest(NFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) 
+    private view 
+    returns(string memory)
+    {
+        return UintStrings.decimalString(
+            nftLoanFacilitator.interestOwed(loanId),
+            IERC20Metadata(loanAsset).decimals(),
+            false);
     }
 
     function annualInterestRate(uint256 perSecondInterest) private pure returns(uint256) {
         return perSecondInterest * 31_536_000;
     }
 
-    function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed) view private returns(string memory){
+    function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed) 
+    view private 
+    returns(string memory)
+    {
         if(lastAccumulatedTimestamp == 0){
             return "active, awaiting underwriter";
         }
@@ -82,7 +100,9 @@ library PopulateSVGParams{
     }
 
     function endDateTime(uint256 endDateSeconds) private pure returns (string memory){
-        (uint year, uint month, uint day, uint hour, uint minute, uint second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(endDateSeconds);
+        (uint year, uint month, 
+        uint day, uint hour, 
+        uint minute, uint second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(endDateSeconds);
         return string(
             abi.encodePacked(
                 Strings.toString(year),

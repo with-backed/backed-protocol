@@ -4,7 +4,8 @@ import '../interfaces/ITicketTypeSpecificSVGHelper.sol';
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
-    function backgroundColorsStyles(string memory collateralAsset, string memory loanAsset) external pure override virtual returns (string memory) {}
+    function backgroundColorsStyles(string memory collateralAsset, string memory loanAsset) 
+    external pure override virtual returns (string memory) {}
     function typeSpecificDetails(string memory id) external pure override virtual returns (string memory) {}
 
     function colorStyles(string memory primary, string memory secondary) internal pure returns (string memory){
@@ -16,7 +17,10 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
                 '.highlight-offset{stop-color:',
                 addressStringToHSL(secondary),
                 '}',
-                '.rotate {-moz-transform: translateX(-50%) translateY(-50%) rotate(-90deg); -webkit-transform: translateX(-50%) translateY(-50%) rotate(-90deg); transform: translateX(-50%) translateY(-50%) rotate(-90deg);}'
+                '.rotate {',
+                '-moz-transform: translateX(-50%) translateY(-50%) rotate(-90deg);',
+                '-webkit-transform: translateX(-50%) translateY(-50%) rotate(-90deg);',
+                'transform: translateX(-50%) translateY(-50%) rotate(-90deg);}'
             )
         );
     }

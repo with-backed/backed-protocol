@@ -56,7 +56,8 @@ library UintStrings {
         return generateDecimalString(params);
     }
 
-    // With modifications, From https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/NFTDescriptor.sol#L189-L231
+    // With modifications, 
+    // From https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/NFTDescriptor.sol#L189-L231
 
     struct DecimalStringParams {
         // significant figures of decimal

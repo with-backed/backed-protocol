@@ -104,7 +104,16 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         loan.durationSeconds = minDurationSeconds;
         
         IMintable(borrowTicketContract).mint(mintBorrowTicketTo, id);
-        emit CreateLoan(id, msg.sender, collateralTokenId, collateralContractAddress, maxPerSecondInterest, loanAssetContractAddress, minLoanAmount, minDurationSeconds);
+        emit CreateLoan(
+            id,
+            msg.sender,
+            collateralTokenId,
+            collateralContractAddress,
+            maxPerSecondInterest,
+            loanAssetContractAddress,
+            minLoanAmount,
+            minDurationSeconds
+            );
     }
 
     function closeLoan(uint256 loanId, address sendCollateralTo) override external {
@@ -133,25 +142,40 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         Loan storage loan = loanInfo[loanId];
 
         require(!loan.closed, "NFTLoanFacilitator: loan closed");
-        require(loan.perSecondInterestRate >= interestRate && loan.durationSeconds <= durationSeconds && loan.loanAmount <= amount, "NFTLoanFacilitator: Proposed terms do not qualify" );
+        require(loan.perSecondInterestRate >= interestRate 
+        && loan.durationSeconds <= durationSeconds && loan.loanAmount <= amount, 
+        "NFTLoanFacilitator: Proposed terms do not qualify" );
 
         if(loan.lastAccumulatedTimestamp == 0){
             IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
             uint256 facilitatorTake = amount * originationFeeRate / SCALAR;
-            IERC20(loan.loanAssetContractAddress).safeTransfer(IERC721(borrowTicketContract).ownerOf(loanId), amount - facilitatorTake);
+            IERC20(loan.loanAssetContractAddress).safeTransfer(
+                IERC721(borrowTicketContract).ownerOf(loanId),
+                amount - facilitatorTake
+                );
             IMintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 amountIncrease = amount - loan.loanAmount;
-            require((loan.loanAmount * 10 / 100) <= amountIncrease || loan.durationSeconds + (loan.durationSeconds * 10 / 100) <= durationSeconds || loan.perSecondInterestRate - (loan.perSecondInterestRate * 10 / 100) >= interestRate, "NFTLoanFacilitator: proposed terms must be better than existing terms");
+            require((loan.loanAmount * 10 / 100) <= amountIncrease
+            || loan.durationSeconds + (loan.durationSeconds * 10 / 100) <= durationSeconds 
+            || loan.perSecondInterestRate - (loan.perSecondInterestRate * 10 / 100) >= interestRate, 
+            "NFTLoanFacilitator: proposed terms must be better than existing terms");
 
             uint256 accumulatedInterest = totalInterestedOwed(loan, loan.perSecondInterestRate);
-            IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount + accumulatedInterest);
+            IERC20(loan.loanAssetContractAddress).safeTransferFrom(
+                msg.sender,
+                address(this),
+                amount + accumulatedInterest
+                );
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
             IERC20(loan.loanAssetContractAddress).safeTransfer(currentLoanOwner, accumulatedInterest + loan.loanAmount);
             ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
             if(amountIncrease > 0){
                 uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
-                IERC20(loan.loanAssetContractAddress).safeTransfer(IERC721(borrowTicketContract).ownerOf(loanId), amount - loan.loanAmount - facilitatorTake);
+                IERC20(loan.loanAssetContractAddress).safeTransfer(
+                    IERC721(borrowTicketContract).ownerOf(loanId),
+                    amount - loan.loanAmount - facilitatorTake
+                    );
             }
 
             loan.accumulatedInterest = accumulatedInterest;
@@ -172,7 +196,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         address loanOwner = IERC721(lendTicketContract).ownerOf(loanId);
         loan.closed = true;
         IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, loanOwner, interest + loan.loanAmount);
-        IERC721(loan.collateralContractAddress).transferFrom(address(this), IERC721(borrowTicketContract).ownerOf(loanId), loan.collateralTokenId);
+        IERC721(loan.collateralContractAddress).transferFrom(
+            address(this),
+            IERC721(borrowTicketContract).ownerOf(loanId),
+            loan.collateralTokenId
+            );
         emit Repay(loanId, msg.sender, loanOwner, interest, loan.loanAmount);
         emit Close(loanId);
     }
@@ -182,7 +210,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
         Loan storage loan = loanInfo[loanId];
         require(!loan.closed, "NFTLoanFacilitator: loan closed");
-        require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp, "NFTLoanFacilitator: payment is not late");
+        require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp,
+        "NFTLoanFacilitator: payment is not late");
 
         loan.closed = true;
         IERC721(loan.collateralContractAddress).transferFrom(address(this), sendCollateralTo, loan.collateralTokenId);

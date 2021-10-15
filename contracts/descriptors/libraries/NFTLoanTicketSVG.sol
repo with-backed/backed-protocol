@@ -26,7 +26,10 @@ library NFTLoanTicketSVG {
     }
 
     // @notice returns an SVG image as a string. The SVG image is specific to the SVGParams
-    function generateSVG(SVGParams memory params, ITicketTypeSpecificSVGHelper typeSpecificHelper) internal pure returns (string memory svg) {
+    function generateSVG(SVGParams memory params, ITicketTypeSpecificSVGHelper typeSpecificHelper) 
+    internal pure 
+    returns (string memory svg) 
+    {
         return string(
                 abi.encodePacked(
                     stylesAndBackground(
@@ -63,7 +66,8 @@ library NFTLoanTicketSVG {
         private pure returns (string memory) {
         return string(
             abi.encodePacked(
-        '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 480 480" width="480" height="480" xml:space="preserve">',
+        '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ',
+        'x="0px" y="0px" viewBox="0 0 480 480" width="480" height="480" xml:space="preserve">',
         '<style type="text/css">',
             '.st0{fill:url(#wash);fill-opacity:0.7;}',
             '.st1{opacity:0.8;fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;enable-background:new;}',
@@ -78,7 +82,8 @@ library NFTLoanTicketSVG {
             typeSpecificHelper.backgroundColorsStyles(loanAsset, collateralAsset),
         '</style>',
         '<defs>',
-            '<radialGradient id="wash" cx="120" cy="40" r="140" gradientTransform="skewY(5)" gradientUnits="userSpaceOnUse">',
+            '<radialGradient id="wash" cx="120" cy="40" r="140" ',
+                'gradientTransform="skewY(5)" gradientUnits="userSpaceOnUse">',
                 '<stop  offset="0%" class="highlight-offset"/>',
                 '<stop  offset="100%" class="highlight-hue"/>',
                 '<animate attributeName="r" values="300;520;320;420;300" dur="25s" repeatCount="indefinite"/>',

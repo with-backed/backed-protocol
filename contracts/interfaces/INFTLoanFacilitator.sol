@@ -83,7 +83,8 @@ interface INFTLoanFacilitator {
     // @return closed Whether or not the tickte is closed
     // @return perSecondInterestRate The person second interest rate, scaled by SCALAR
     // @return accumulatedInterest The amount of interest accumulated on the loan prior to the current underwriter
-    // @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, i.e. the timestamp of the most recent underwriting
+    // @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
+    // i.e. the timestamp of the most recent underwriting
     // @return durationSeconds The loan duration in seconds
     // @return loanAmount The loan amount
     // @return collateralID The token ID of the NFT collateal
