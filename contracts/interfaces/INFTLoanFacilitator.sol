@@ -71,7 +71,7 @@ interface INFTLoanFacilitator {
     event SeizeCollateral(uint256 indexed id);
 
     // @notice The magnitude of SCALAR
-    // @dev 10^INTEREST_RATE_DECIMALS = 100%
+    // @dev 10^INTEREST_RATE_DECIMALS = 1 = 100%
     function INTEREST_RATE_DECIMALS() external returns (uint8);
     
     // @notice The SCALAR for all percentages in the loan facilitator contract
@@ -140,7 +140,8 @@ interface INFTLoanFacilitator {
 
     // @notice Closes the loan, sends the NFT collateral to sendCollateralTo
     // @dev Can only be called by the holder of the Borrow Ticket with tokenId
-    // matching the loanId. Can only be called if loan has not be underwritten
+    // matching the loanId. Can only be called if loan has not be underwritten,
+    // i.e. lastAccumulatedInterestTimestamp = 0
     // @param loanId The loan id
     // @param sendCollateralTo The address to send the collateral NFT to
     function closeLoan(uint256 loanId, address sendCollateralTo) external;

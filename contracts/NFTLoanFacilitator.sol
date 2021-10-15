@@ -30,9 +30,11 @@ struct Loan {
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeERC20 for IERC20;
 
+    // 10^INTEREST_RATE_DECIMALS = 1 = 100%
     uint8 public constant override INTEREST_RATE_DECIMALS = 12;
     uint256 public constant override SCALAR = 1 * (10 ** INTEREST_RATE_DECIMALS);
 
+    // 1%
     uint256 public originationFeeRate = 1 * (10 ** (INTEREST_RATE_DECIMALS - 2));
     uint256 private _nonce;
 
@@ -233,7 +235,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         borrowTicketContract = _contract;
     }
 
-    function withdrawFromCashDrawer(address asset, uint256 amount, address to) onlyOwner() external {
+    function withdrawOriginationFees(address asset, uint256 amount, address to) onlyOwner() external {
         IERC20(asset).safeTransfer(to, amount);
     }
 

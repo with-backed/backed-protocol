@@ -408,7 +408,7 @@ describe("NFTLoanFacilitator contract", function () {
         })
     })
 
-    describe("withdrawFromCashDrawer", function () {
+    describe("withdrawOriginationFees", function () {
         beforeEach(async function() {
             await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
@@ -421,7 +421,7 @@ describe("NFTLoanFacilitator contract", function () {
 
         it("transfers ERC20 value, reduces loan payment balance", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).withdrawFromCashDrawer(DAI.address, loanAmount, manager.address)
+                NFTLoanFacilitator.connect(daiHolder).withdrawOriginationFees(DAI.address, loanAmount, manager.address)
                 ).to.be.reverted
         });
 
@@ -430,7 +430,7 @@ describe("NFTLoanFacilitator contract", function () {
             const value = await DAI.balanceOf(NFTLoanFacilitator.address)
             expect(value).to.be.above(0)
             await expect(
-                NFTLoanFacilitator.connect(manager).withdrawFromCashDrawer(DAI.address, value, manager.address)
+                NFTLoanFacilitator.connect(manager).withdrawOriginationFees(DAI.address, value, manager.address)
                 ).not.to.be.reverted
             const balanceAfter = await DAI.balanceOf(manager.address)
             expect(balanceAfter).to.equal(balanceBefore.add(value))
@@ -441,7 +441,7 @@ describe("NFTLoanFacilitator contract", function () {
             const balanceBefore = await DAI.balanceOf(manager.address)
             const value = await DAI.balanceOf(NFTLoanFacilitator.address)
             await expect(
-                NFTLoanFacilitator.connect(manager).withdrawFromCashDrawer(DAI.address, value.add(1), manager.address)
+                NFTLoanFacilitator.connect(manager).withdrawOriginationFees(DAI.address, value.add(1), manager.address)
                 ).to.be.reverted
         })
     })
