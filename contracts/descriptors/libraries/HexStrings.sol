@@ -4,12 +4,13 @@ library HexStrings {
     bytes16 internal constant ALPHABET = '0123456789abcdef';
 
     function partialHexString(uint160 value) internal pure returns (string memory) {
-        uint8 length = 4;
+        uint8 length = 3;
         bytes memory buffer = new bytes(2 * length + 5);
         buffer[0] = '0';
         buffer[1] = 'x';
         uint8 offset = 2 * length + 1;
-        value >>= 128;
+        // remove values not in partial length
+        value >>= 4 * (40 - (length * 2));
         for (uint8 i = offset; i > 1; --i) {
             buffer[i] = ALPHABET[value & 0xf];
             value >>= 4;
