@@ -69,11 +69,11 @@ describe("NFTLoanFacilitator contract", function () {
     describe("tokenURI", function() {
         it("retrieves successfully", async function(){
             await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-            // await expect(
-            //     BorrowTicket.tokenURI("1")
-            // ).not.to.be.reverted
-            const u = await BorrowTicket.tokenURI("1")
-            console.log(u)
+            await expect(
+                BorrowTicket.tokenURI("1")
+            ).not.to.be.reverted
+            // const u = await BorrowTicket.tokenURI("1")
+            // console.log(u)
         })
     })
 
@@ -106,8 +106,52 @@ describe("NFTLoanFacilitator contract", function () {
         })
     });
 
+    describe("closeLoan", function () {
+        beforeEach(async function() {
+            await CryptoPunks.connect(punkHolder).mint();
+            await CryptoPunks.connect(punkHolder).approve(NFTLoanFacilitator.address, punkId.add(1))
+            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+
+            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
+        })
+
+        it("transfers ERC721 and closes ticket", async function(){
+            await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+            const owner = await CryptoPunks.ownerOf(punkId.add(1))
+            expect(owner).to.equal(addr4.address)
+            const ticket = await NFTLoanFacilitator.loanInfo("1")
+            expect(ticket.closed).to.equal(true)
+        });
+
+        it("reverts if loan does not exist", async function(){
+            await expect(
+                NFTLoanFacilitator.connect(daiHolder).closeLoan("2", addr4.address)
+                ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+        });
+
+        it("reverts if caller is not ticket owner", async function(){
+            await expect(
+                NFTLoanFacilitator.connect(daiHolder).closeLoan("1", addr4.address)
+                ).to.be.revertedWith("NFTLoanFacilitator: borrower only")
+        });
+
+        it("reverts if loan closed", async function(){
+            await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+            await expect(
+                NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+            ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
+        });
+
+        it("reverts if ticket has underwriter", async function(){
+            await NFTLoanFacilitator.connect(daiHolder).underwriteLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
+            await expect(
+                NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+            ).to.be.revertedWith("NFTLoanFacilitator: underwritten, use repayAndCloseLoan")
+        });
+    })
+
     describe("underwriteLoan", function () {
-        context("when no loan exists", function () {
+        context("when loan has not been underwritten", function () {
             beforeEach(async function() {
                 await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
                 await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
@@ -166,7 +210,7 @@ describe("NFTLoanFacilitator contract", function () {
 
         });
 
-        context("when loan exists", function () {
+        context("when loan has been underwritten", function () {
             beforeEach(async function() {
                 await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
 
@@ -356,6 +400,12 @@ describe("NFTLoanFacilitator contract", function () {
                 NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
             ).to.be.revertedWith("NFTLoanFacilitator: payment is not late")
         })
+
+        it("reverts loan does not exist", async function(){
+            await expect(
+                NFTLoanFacilitator.connect(daiHolder).seizeCollateral("2", addr4.address)
+            ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+        })
     })
 
     describe("withdrawFromCashDrawer", function () {
@@ -394,44 +444,6 @@ describe("NFTLoanFacilitator contract", function () {
                 NFTLoanFacilitator.connect(manager).withdrawFromCashDrawer(DAI.address, value.add(1), manager.address)
                 ).to.be.reverted
         })
-    })
-
-    describe("closeLoan", function () {
-        beforeEach(async function() {
-            await CryptoPunks.connect(punkHolder).mint();
-            await CryptoPunks.connect(punkHolder).approve(NFTLoanFacilitator.address, punkId.add(1))
-            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
-
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-        })
-
-        it("transfers ERC721 and closes ticket", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            const owner = await CryptoPunks.ownerOf(punkId.add(1))
-            expect(owner).to.equal(addr4.address)
-            const ticket = await NFTLoanFacilitator.loanInfo("1")
-            expect(ticket.closed).to.equal(true)
-        });
-
-        it("reverts if caller is not ticket owner", async function(){
-            await expect(
-                NFTLoanFacilitator.connect(daiHolder).closeLoan("1", addr4.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: borrower only")
-        });
-
-        it("reverts if loan closed", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            await expect(
-                NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
-        });
-
-        it("reverts if ticket has underwriter", async function(){
-            await NFTLoanFacilitator.connect(daiHolder).underwriteLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
-            await expect(
-                NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: underwritten, use repayAndCloseLoan")
-        });
     })
 
     describe("updateOriginationFee", function () {
