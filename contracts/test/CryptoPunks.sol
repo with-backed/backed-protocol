@@ -12,7 +12,11 @@ contract CryptoPunks is ERC721 {
     }
 
     function mint() external {
-        _safeMint(msg.sender, _nonce++, "");
+        mintTo(msg.sender);
+    }
+
+    function mintTo(address to) public {
+        _safeMint(to, _nonce++, "");
     }
 
     function _baseURI() internal pure override returns (string memory) {
