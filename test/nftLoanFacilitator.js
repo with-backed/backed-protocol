@@ -9,9 +9,9 @@ describe("NFTLoanFacilitator contract", function () {
     let LendTicket;
     let CryptoPunks;
     // defaults
-    var interestRateDecimals = 12
-    var originationFeeRate = ethers.BigNumber.from(10).pow(interestRateDecimals - 2);
-    var scalar = ethers.BigNumber.from(10).pow(interestRateDecimals);
+    var interestRateDecimals
+    var originationFeeRate
+    var scalar
     var interest = ethers.BigNumber.from(10).pow(4);
     var durationSeconds = ethers.BigNumber.from(10);
     var loanAmount = ethers.BigNumber.from(505).mul(ethers.BigNumber.from(10).pow(17))
@@ -38,9 +38,13 @@ describe("NFTLoanFacilitator contract", function () {
         LendTicketDescriptor = await LendTicketDescriptorContract.deploy(LendTicketSVGHelper.address)
         await LendTicketDescriptor.deployed();
         
-        NFTLoanFacilitatorCOntract = await ethers.getContractFactory("NFTLoanFacilitator");
-        NFTLoanFacilitator = await NFTLoanFacilitatorCOntract.deploy(manager.address);
+        NFTLoanFacilitatorContract = await ethers.getContractFactory("NFTLoanFacilitator");
+        NFTLoanFacilitator = await NFTLoanFacilitatorContract.deploy(manager.address);
         await NFTLoanFacilitator.deployed();
+
+        interestRateDecimals = await NFTLoanFacilitator.INTEREST_RATE_DECIMALS();
+        originationFeeRate = ethers.BigNumber.from(10).pow(interestRateDecimals - 2);
+        scalar = ethers.BigNumber.from(10).pow(interestRateDecimals);
 
         LendTicketContract = await ethers.getContractFactory("LendTicket");
         LendTicket = await LendTicketContract.deploy(NFTLoanFacilitator.address, LendTicketDescriptor.address);

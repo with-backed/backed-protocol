@@ -31,11 +31,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeERC20 for IERC20;
 
     // 10^INTEREST_RATE_DECIMALS = 1 = 100%
-    uint8 public constant override INTEREST_RATE_DECIMALS = 12;
-    uint256 public constant override SCALAR = 1 * (10 ** INTEREST_RATE_DECIMALS);
+    uint8 public constant override INTEREST_RATE_DECIMALS = 10;
+    uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;
 
     // 1%
-    uint256 public originationFeeRate = 1 * (10 ** (INTEREST_RATE_DECIMALS - 2));
+    uint256 public originationFeeRate = 10 ** (INTEREST_RATE_DECIMALS - 2);
     uint256 private _nonce;
 
     address public lendTicketContract;
