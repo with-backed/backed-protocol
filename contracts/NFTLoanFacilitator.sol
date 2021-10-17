@@ -51,22 +51,27 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     // ==== view ====
     function totalOwed(uint256 loanId) loanExists(loanId) override view external returns (uint256) {
-        return loanInfo[loanId].loanAmount + interestOwed(loanId);
+        Loan storage loan = loanInfo[loanId];
+        if(loan.closed || loan.lastAccumulatedTimestamp == 0){
+            return 0;
+        }
+
+        return loanInfo[loanId].loanAmount + _interestOwed(loan);
     }
 
     function interestOwed(uint256 loanId) loanExists(loanId) override view public returns (uint256) {
         Loan storage loan = loanInfo[loanId];
-        return totalInterestedOwed(loan, loan.perSecondInterestRate);
+        return _interestOwed(loan);
     }
 
-    function totalInterestedOwed(Loan storage loan, uint256 interestRate) private view returns (uint256) {
-        if(loan.closed){
+    function _interestOwed(Loan storage loan) private view returns (uint256) {
+        if(loan.closed || loan.lastAccumulatedTimestamp == 0){
             return 0;
         }
         
         return loan.loanAmount
             * (block.timestamp - loan.lastAccumulatedTimestamp)
-            * interestRate
+            * loan.perSecondInterestRate
             / SCALAR
             + loan.accumulatedInterest;
     }
@@ -163,7 +168,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             || loan.perSecondInterestRate - (loan.perSecondInterestRate * 10 / 100) >= interestRate, 
             "NFTLoanFacilitator: proposed terms must be better than existing terms");
 
-            uint256 accumulatedInterest = totalInterestedOwed(loan, loan.perSecondInterestRate);
+            uint256 accumulatedInterest = _interestOwed(loan);
             IERC20(loan.loanAssetContractAddress).safeTransferFrom(
                 msg.sender,
                 address(this),
@@ -194,7 +199,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         Loan storage loan = loanInfo[loanId];
         require(!loan.closed, "NFTLoanFacilitator: loan closed");
 
-        uint256 interest = totalInterestedOwed(loan, loan.perSecondInterestRate);
+        uint256 interest = _interestOwed(loan);
         address loanOwner = IERC721(lendTicketContract).ownerOf(loanId);
         loan.closed = true;
         IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, loanOwner, interest + loan.loanAmount);

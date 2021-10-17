@@ -18,7 +18,11 @@ module.exports = {
   networks: {
 	  hardhat: {
 	    chainId: 1337
-	  }
+	  },
+    rinkeby: {
+      url: `https://eth-rinkeby.alchemyapi.io/v2/${ALCHEMY_RINKEBY_API_KEY}`,
+      accounts: [`0x${RINKEBY_PRIVATE_KEY}`],
+    }
  }
 };
 

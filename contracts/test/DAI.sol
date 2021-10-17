@@ -8,6 +8,6 @@ contract DAI is ERC20 {
     }
 
     function mint(uint256 amount, address to) external {
-        _mint(to, amount * decimals());
+        _mint(to, amount * (10**decimals()));
     }
 }
