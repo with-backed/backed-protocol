@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract CryptoPunks is ERC721 {
     using Strings for uint256;
 
-    uint256 private _nonce = 1000;
+    uint256 private _nonce = 1;
 
 	constructor() ERC721("CryptoPunks", "PUNKS") {
     }
@@ -20,7 +20,7 @@ contract CryptoPunks is ERC721 {
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://wrappedpunks.com:3000/api/punks/metadata/";
+        return "https://monarchs.vercel.app/api/";
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
