@@ -8,7 +8,7 @@ contract CryptoPunks is ERC721 {
 
     uint256 private _nonce = 1;
 
-	constructor() ERC721("CryptoPunks", "PUNKS") {
+	constructor() ERC721("Monarchs", "MNR") {
     }
 
     function mint() external {
@@ -20,7 +20,7 @@ contract CryptoPunks is ERC721 {
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://monarchs.vercel.app/api/";
+        return "ipfs://QmXuEFJVjQrHX7GRWY2WnbUP59re3WsyDLZoKqXvRPSxBY/";
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
