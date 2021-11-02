@@ -1,5 +1,6 @@
 pragma solidity 0.8.6;
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -224,7 +225,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit Close(loanId);
     }
 
-    // === manger state changing
+    // === manager state changing
 
     function setLendTicketContract(address _contract) onlyOwner() external {
         require(lendTicketContract == address(0), 'NFTLoanFacilitator: already set');
