@@ -18,7 +18,11 @@ module.exports = {
   networks: {
 	  hardhat: {
 	    chainId: 1337
-	  }
+	  },
+    rinkeby: {
+      url: process.env.JSON_RPC_PROVIDER,
+      accounts: [`0x${RINKEBY_PRIVATE_KEY}`],
+    }
  }
 };
 
