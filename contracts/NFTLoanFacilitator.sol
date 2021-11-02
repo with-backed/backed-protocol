@@ -258,7 +258,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit Close(loanId);
     }
 
-    // === manger state changing
+    // === manager state changing
 
     /**
      * @notice Sets lendTicketContract to _contract

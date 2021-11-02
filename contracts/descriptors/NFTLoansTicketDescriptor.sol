@@ -100,7 +100,7 @@ contract NFTLoansTicketDescriptor {
                     ' (',
                     loanAssetSymbol,
                     ')\\n',
-                    'WARNING: Do your own research to verify the legitimacy of the assets releated to this ticket'
+                    'WARNING: Do your own research to verify the legitimacy of the assets related to this ticket'
                 )
             );
     }

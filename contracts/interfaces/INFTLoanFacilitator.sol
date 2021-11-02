@@ -116,14 +116,14 @@ interface INFTLoanFacilitator {
     /**
      * @notice returns the info for this loan
      * @param loanId The id of the loan
-     * @return closed Whether or not the tickte is closed
-     * @return perSecondInterestRate The person second interest rate, scaled by SCALAR
+     * @return closed Whether or not the ticket is closed
+     * @return perSecondInterestRate The per second interest rate, scaled by SCALAR
      * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current underwriter
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
      * @return durationSeconds The loan duration in seconds
      * @return loanAmount The loan amount
-     * @return collateralTokenId The token ID of the NFT collateal
+     * @return collateralTokenId The token ID of the NFT collateral
      * @return collateralContractAddress The contract address of the NFT collateral 
      * @return loanAssetContractAddress The contract address of the loan asset.
      */
@@ -202,7 +202,7 @@ interface INFTLoanFacilitator {
      * from the current holder to `sendLendTicketTo`. Also in the case of a buyout, interestOwed()
      * is transferred from the caller to the facilitator contract, in addition to `amount`, and
      * totalOwed() is paid to the current Lend Ticket holder.
-     * @dev Loan terms must meet or beat loan terms. If a buyout, at least on loan term
+     * @dev Loan terms must meet or beat loan terms. If a buyout, at least one loan term
      * must be improved by at least 10%. E.g. 10% longer duration, 10% lower interest, 
      * 10% higher amount
      * @param loanId The loan id
