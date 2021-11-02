@@ -225,7 +225,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit Close(loanId);
     }
 
-    // === manager state changing
+    // === manger state changing
 
     function setLendTicketContract(address _contract) onlyOwner() external {
         require(lendTicketContract == address(0), 'NFTLoanFacilitator: already set');
