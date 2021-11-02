@@ -118,6 +118,12 @@ describe("NFTLoanFacilitator contract", function () {
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, BorrowTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
             ).to.be.revertedWith('NFTLoanFacilitator: cannot use tickets as collateral')
         })
+        
+        it('reverts if someone else tries to call', async function(){
+            await expect(
+                NFTLoanFacilitator.connect(addr4).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+            ).to.be.revertedWith('NFTLoanFacilitator: caller does not own collateral token')
+        })
     });
 
     describe("closeLoan", function () {

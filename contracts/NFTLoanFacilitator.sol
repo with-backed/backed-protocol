@@ -126,6 +126,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         && collateralContractAddress != borrowTicketContract, 
         'NFTLoanFacilitator: cannot use tickets as collateral');
         
+        require(IERC721(collateralContractAddress).ownerOf(collateralTokenId) == msg.sender, 
+        'NFTLoanFacilitator: caller does not own collateral token');
+
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
 
         id = ++_nonce;
@@ -216,14 +219,21 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     address(this),
                     amount + accumulatedInterest
                 );
-                IERC20(loan.loanAssetContractAddress).safeTransfer(currentLoanOwner, accumulatedInterest + previousLoanAmount);
+                IERC20(loan.loanAssetContractAddress).safeTransfer(
+                    currentLoanOwner,
+                    accumulatedInterest + previousLoanAmount
+                );
                 uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
                 IERC20(loan.loanAssetContractAddress).safeTransfer(
                     IERC721(borrowTicketContract).ownerOf(loanId),
                     amountIncrease - facilitatorTake
                     );
             } else {
-                IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, currentLoanOwner, accumulatedInterest + previousLoanAmount);
+                IERC20(loan.loanAssetContractAddress).safeTransferFrom(
+                    msg.sender,
+                    currentLoanOwner,
+                    accumulatedInterest + previousLoanAmount
+                );
             }
             
 
