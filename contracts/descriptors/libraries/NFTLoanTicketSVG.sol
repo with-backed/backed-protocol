@@ -8,20 +8,31 @@ library NFTLoanTicketSVG {
     struct SVGParams{
         // "Borrow" or "Lend"
         string nftType;
+        // The Token Id, which is also the Id of the associated loan in NFTLoanFacilitator
         string id;
+        // Human readable status, see {PopulateSVGParams-loanStatus}
         string status;
+        // The approximate APR loan interest rate
         string interestRate;
+        // The contract address of the ERC20 loan asset
         string loanAssetContract;
-        // shortened hex address to fit in image
+        // The contract address of the ERC20 loan asset, shortened for display
         string loanAssetContractPartial;
+        // The symbol of the ERC20 loan asset
         string loanAssetSymbol;
+        // The contract address of the ERC721 collateral asset
         string collateralContract;
-        // shortened hex address to fit in image
+        // The contract address of the ERC721 collateral asset, shortened for display
         string collateralContractPartial;
+        // Symbol of the ERC721 collateral asset
         string collateralAssetSymbol;
+        // TokenId of the ERC721 collateral asset
         string collateralId;
+        // The loan amount, in loan asset units
         string loanAmount;
+        // The interest accrued so far on the loan, in loan asset units
         string interestAccrued;
+        // 
         string endDateTime;
     }
 
