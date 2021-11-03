@@ -13,9 +13,7 @@ contract NFTLoansTicketDescriptor {
     string public nftType;
     ITicketTypeSpecificSVGHelper immutable public svgHelper;
 
-    /**
-     * @dev Initializes the contract by setting a `nftType` and `svgHelper`
-     */
+    /// @dev Initializes the contract by setting a `nftType` and `svgHelper`
     constructor(string memory _nftType, ITicketTypeSpecificSVGHelper _svgHelper) {
         nftType = _nftType;
         svgHelper = _svgHelper;
@@ -79,14 +77,10 @@ contract NFTLoansTicketDescriptor {
             );
     }
 
-    /**
-     * @dev Returns string, ticket type (borrow or lend) specific description 
-     */ 
+    /// @dev Returns string, ticket type (borrow or lend) specific description      
     function generateDescription(string memory loanId) internal virtual pure returns (string memory) {}
 
-    /**
-     * @dev Returns string, important info about the loan that this ticket is related to
-     */ 
+    /// @dev Returns string, important info about the loan that this ticket is related to 
     function generateDescriptionDetails(
         string memory loanAsset,
         string memory loanAssetSymbol,

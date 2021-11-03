@@ -14,7 +14,7 @@ contract NFTLoanTicket is ERC721Enumerable, IMintable {
         _; 
     }
 
-    // @dev Sets the values for {name} and {symbol} and {nftLoanFacilitator} and {descriptor}.
+    /// @dev Sets the values for {name} and {symbol} and {nftLoanFacilitator} and {descriptor}.
     constructor(
         string memory name, 
         string memory symbol, 
@@ -26,13 +26,13 @@ contract NFTLoanTicket is ERC721Enumerable, IMintable {
         descriptor = _descriptor;
     }
 
-    // See {IERC721Mintable-mint}.
+    /// See {IERC721Mintable-mint}.
     function mint(address to, uint256 tokenId) loanFacilitatorOnly() override external {
         require(!_exists(tokenId), "NFTLoanTicket: token with tokenId already exists");
         _mint(to, tokenId);
     }
 
-    // @notice returns a base64 encoded data uri containing the token metadata in JSON format
+    /// @notice returns a base64 encoded data uri containing the token metadata in JSON format
     function tokenURI(uint256 tokenId) public override view returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
         return descriptor.uri(nftLoanFacilitator, tokenId);

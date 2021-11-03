@@ -3,9 +3,7 @@ pragma solidity 0.8.6;
 import './NFTLoansTicketDescriptor.sol';
 
 contract LendTicketDescriptor is NFTLoansTicketDescriptor {
-    /**
-     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
-     */
+    /// @dev Initializes the contract by setting a `nftType` and a `svgHelper`
     constructor(ITicketTypeSpecificSVGHelper _svgHelper) NFTLoansTicketDescriptor("Lend", _svgHelper) {
     }
 

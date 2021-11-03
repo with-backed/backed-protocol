@@ -3,12 +3,12 @@ pragma solidity 0.8.6;
 import './TicketTypeSpecificSVGHelper.sol';
 
 contract BorrowTicketSVGHelper is TicketTypeSpecificSVGHelper {
-    // See {TicketTypeSpecificSVGHelper-backgroundColorsStyles}
+    /// See {TicketTypeSpecificSVGHelper-backgroundColorsStyles}
     function backgroundColorsStyles(string memory collateralAsset, string memory loanAsset) external pure override returns (string memory){
         return colorStyles(collateralAsset, loanAsset);
     }
 
-    // See {TicketTypeSpecificSVGHelper-typeSpecificDetails}
+    /// See {TicketTypeSpecificSVGHelper-typeSpecificDetails}
     function typeSpecificDetails(string memory id) external pure override returns (string memory){
         return string(abi.encodePacked(
             '<path class="st1" d="M60,60h360v16.6c-7.8,0-14.2,6.4-14.2,14.2c0,7.8,6.4,14.2,14.2,14.2v14.2c-7.8,0-14.2,6.4-14.2,14.2',

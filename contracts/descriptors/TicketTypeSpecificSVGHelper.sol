@@ -12,14 +12,10 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
     function backgroundColorsStyles(string memory collateralAsset, string memory loanAsset) 
     external pure override virtual returns (string memory) {}
 
-    /**
-     * @dev Returns SVG elements that are specific to this ticket type
-     */
+    /// @dev Returns SVG elements that are specific to this ticket type
     function typeSpecificDetails(string memory id) external pure override virtual returns (string memory) {}
 
-    /**
-     * @dev used by backgroundColorsStyles, returns SVG style classes
-     */
+    /// @dev used by backgroundColorsStyles, returns SVG style classes    
     function colorStyles(string memory primary, string memory secondary) internal pure returns (string memory){
         return string(
             abi.encodePacked(

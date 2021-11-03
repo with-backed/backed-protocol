@@ -12,9 +12,14 @@ import './NFTLoanTicketSVG.sol';
 
 
 library PopulateSVGParams{
-    
-    // @notice Populates and returns the passed `svgParams` with loan info retrieved from
-    // `nftLoanFacilitator` for `id`, the loan id
+    /**
+     * @notice Populates and returns the passed `svgParams` with loan info retrieved from
+     * `nftLoanFacilitator` for `id`, the loan id
+     * @param svgParams The svg params to populate, which already has `nftType` populated from NFTLoansTicketDescriptor
+     * @param nftLoanFacilitator The loan facilitator contract to get loan info from for loan `id`
+     * @param id The id of the loan
+     * @return `svgParams`, with all values now populated
+     */
     function populate(NFTLoanTicketSVG.SVGParams memory svgParams, NFTLoanFacilitator nftLoanFacilitator, uint256 id)
         internal
         view
@@ -99,6 +104,11 @@ library PopulateSVGParams{
         return 'active, accumulating interest';
     }
 
+    /** 
+     * @param endDateSeconds The unix seconds timestamp of the loan end date
+     * @return a string representation of the UTC end date and time of the loan,
+     * in format YYYY-MM-DD HH:MM:SS
+     */
     function endDateTime(uint256 endDateSeconds) private pure returns (string memory){
         (uint year, uint month, 
         uint day, uint hour, 

@@ -36,7 +36,7 @@ library NFTLoanTicketSVG {
         string endDateTime;
     }
 
-    // @notice returns an SVG image as a string. The SVG image is specific to the SVGParams
+    /// @notice returns an SVG image as a string. The SVG image is specific to the SVGParams
     function generateSVG(SVGParams memory params, ITicketTypeSpecificSVGHelper typeSpecificHelper) 
     internal pure 
     returns (string memory svg) 
