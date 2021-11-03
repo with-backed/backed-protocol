@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import './interfaces/INFTLoanFacilitator.sol';
-import './interfaces/IMintable.sol';
+import './interfaces/IERC721Mintable.sol';
 import './interfaces/ILendTicket.sol';
 
 
@@ -134,7 +134,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         loan.perSecondInterestRate = maxPerSecondInterest;
         loan.durationSeconds = minDurationSeconds;
         
-        IMintable(borrowTicketContract).mint(mintBorrowTicketTo, id);
+        IERC721Mintable(borrowTicketContract).mint(mintBorrowTicketTo, id);
         emit CreateLoan(
             id,
             msg.sender,
@@ -189,7 +189,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 IERC721(borrowTicketContract).ownerOf(loanId),
                 amount - facilitatorTake
                 );
-            IMintable(lendTicketContract).mint(sendLendTicketTo, loanId);
+            IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 amountIncrease = amount - loan.loanAmount;
             require((loan.loanAmount * 10 / 100) <= amountIncrease

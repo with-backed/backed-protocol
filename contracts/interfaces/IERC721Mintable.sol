@@ -1,6 +1,6 @@
 pragma solidity 0.8.6;
 
-interface IMintable {
+interface IERC721Mintable {
     /**
      * @notice mints an ERC721 token of tokenId to the to address
      * @dev only callable by nft loan facilitator

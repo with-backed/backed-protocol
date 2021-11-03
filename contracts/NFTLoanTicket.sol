@@ -3,9 +3,9 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 import './descriptors/NFTLoansTicketDescriptor.sol';
-import './interfaces/IMintable.sol';
+import './interfaces/IERC721Mintable.sol';
 
-contract NFTLoanTicket is ERC721Enumerable, IMintable {
+contract NFTLoanTicket is ERC721Enumerable, IERC721Mintable {
     NFTLoanFacilitator public immutable nftLoanFacilitator;
     NFTLoansTicketDescriptor public immutable descriptor;
 
