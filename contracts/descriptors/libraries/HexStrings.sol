@@ -15,6 +15,7 @@ library HexStrings {
             buffer[i] = ALPHABET[value & 0xf];
             value >>= 4;
         }
+        require(value == 0, 'HexStrings: hex length insufficient');
         // uint8 offset 
         buffer[offset + 1] = '.';
         buffer[offset + 2] = '.';
@@ -33,7 +34,7 @@ library HexStrings {
             buffer[i] = ALPHABET[value & 0xf];
             value >>= 4;
         }
-        require(value == 0, 'Strings: hex length insufficient');
+        require(value == 0, 'HexStrings: hex length insufficient');
         return string(buffer);
     }
 }
