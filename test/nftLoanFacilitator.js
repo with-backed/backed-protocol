@@ -307,6 +307,27 @@ describe("NFTLoanFacilitator contract", function () {
                     var valueAfter = await DAI.balanceOf(NFTLoanFacilitator.address)
                     expect(valueBefore).to.equal(valueAfter)
                 })
+
+                it("sets values correctly", async function(){
+                    const newDuration = durationSeconds.add(durationSeconds.mul(10).div(100))
+                    await NFTLoanFacilitator.connect(addr4).underwriteLoan("1", interest, loanAmount, newDuration, addr4.address)
+                    const accumulatedInterest = await interestOwedTotal("1")
+                    const ticket = await NFTLoanFacilitator.loanInfo("1")
+                    expect(ticket.loanAmount).to.equal(loanAmount)
+                    expect(ticket.perSecondInterestRate).to.equal(interest)
+                    expect(ticket.durationSeconds).to.equal(newDuration)
+                    expect(ticket.accumulatedInterest).to.equal(accumulatedInterest)
+                    const block = await provider.getBlock()
+                    expect(ticket.lastAccumulatedTimestamp).to.equal(block.timestamp)
+                })
+
+                it("pays back previous owner", async function(){
+                    const beforeValue = await DAI.balanceOf(daiHolder.address)
+                    await NFTLoanFacilitator.connect(addr4).underwriteLoan("1", interest, loanAmount, durationSeconds.add(durationSeconds.mul(10).div(100)), addr4.address)
+                    const interestOwed = await interestOwedTotal("1")
+                    const afterValue = await DAI.balanceOf(daiHolder.address)
+                    expect(afterValue).to.equal(beforeValue.add(loanAmount).add(interestOwed))
+                })
             })
 
             context('when bought out again', function() {
