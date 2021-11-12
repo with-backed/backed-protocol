@@ -217,7 +217,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
                 IERC20(loan.loanAssetContractAddress).safeTransfer(
                     IERC721(borrowTicketContract).ownerOf(loanId),
-                    amount - previousLoanAmount - facilitatorTake
+                    amountIncrease - facilitatorTake
                     );
             }
 
