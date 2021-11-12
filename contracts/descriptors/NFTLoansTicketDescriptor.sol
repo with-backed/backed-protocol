@@ -9,14 +9,21 @@ import './libraries/NFTLoanTicketSVG.sol';
 import './libraries/PopulateSVGParams.sol';
 
 contract NFTLoansTicketDescriptor {
+    // Lend or Borrow 
     string public nftType;
     ITicketTypeSpecificSVGHelper immutable public svgHelper;
 
+    /// @dev Initializes the contract by setting a `nftType` and `svgHelper`
     constructor(string memory _nftType, ITicketTypeSpecificSVGHelper _svgHelper) {
         nftType = _nftType;
         svgHelper = _svgHelper;
     }
 
+    /**
+     * @dev Returns a string which is a data uri of base64 encoded JSON,
+     * the JSON contains the token metadata: name, description, image
+     * which reflect information about `id` loan in `nftLoanFacilitator`
+     */ 
     function uri(NFTLoanFacilitator nftLoanFacilitator, uint256 id)
         external
         view
@@ -29,6 +36,11 @@ contract NFTLoansTicketDescriptor {
         return generateDescriptor(svgParams);
     }
 
+    /**
+     * @dev Returns a string which is a data uri of base64 encoded JSON,
+     * the JSON contains the token metadata: name, description, image.
+     * The metadata values come from `svgParams`
+     */ 
     function generateDescriptor(NFTLoanTicketSVG.SVGParams memory svgParams)
         private
         view
@@ -65,8 +77,10 @@ contract NFTLoansTicketDescriptor {
             );
     }
 
-    function generateDescription(string memory pawnTicketId) internal virtual pure returns (string memory) {}
+    /// @dev Returns string, ticket type (borrow or lend) specific description      
+    function generateDescription(string memory loanId) internal virtual pure returns (string memory) {}
 
+    /// @dev Returns string, important info about the loan that this ticket is related to 
     function generateDescriptionDetails(
         string memory loanAsset,
         string memory loanAssetSymbol,

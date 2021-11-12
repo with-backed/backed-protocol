@@ -30,26 +30,37 @@ struct Loan {
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeERC20 for IERC20;
 
-    // 10^INTEREST_RATE_DECIMALS = 1 = 100%
+    /// See {INFTLoanFacilitator-INTEREST_RATE_DECIMALS}.     
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
+
+    /// See {INFTLoanFacilitator-SCALAR}.
     uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;
 
-    // 1%
-    uint256 public originationFeeRate = 10 ** (INTEREST_RATE_DECIMALS - 2);
+    /// See {INFTLoanFacilitator-originationFeeRate}.
+    uint256 public override originationFeeRate = 10 ** (INTEREST_RATE_DECIMALS - 2);
+
+    /// @dev tracks loan count
     uint256 private _nonce;
 
-    address public lendTicketContract;
-    address public borrowTicketContract;
+    /// See {INFTLoanFacilitator-lendTicketContract}.
+    address public override lendTicketContract;
 
+    /// See {INFTLoanFacilitator-borrowTicketContract}.
+    address public override borrowTicketContract;
+
+    /// See {INFTLoanFacilitator-loanInfo}.
     mapping(uint256 => Loan) public override loanInfo;
 
-    // ==== modifiers
+    // ==== modifiers ====
+
     modifier loanExists(uint256 loanId) { 
         require(loanId <= _nonce, "NFTLoanFacilitator: loan does not exist");
         _; 
     }
 
     // ==== view ====
+
+    /// See {INFTLoanFacilitator-totalOwed}.
     function totalOwed(uint256 loanId) loanExists(loanId) override view external returns (uint256) {
         Loan storage loan = loanInfo[loanId];
         if(loan.closed || loan.lastAccumulatedTimestamp == 0){
@@ -59,11 +70,13 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         return loanInfo[loanId].loanAmount + _interestOwed(loan);
     }
 
+    /// See {INFTLoanFacilitator-interestOwed}.
     function interestOwed(uint256 loanId) loanExists(loanId) override view public returns (uint256) {
         Loan storage loan = loanInfo[loanId];
         return _interestOwed(loan);
     }
 
+    /// @dev Returns the interest owed, in loan asset units, for `loan`
     function _interestOwed(Loan storage loan) private view returns (uint256) {
         if(loan.closed || loan.lastAccumulatedTimestamp == 0){
             return 0;
@@ -76,6 +89,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             + loan.accumulatedInterest;
     }
 
+    /// See {INFTLoanFacilitator-loanEndSeconds}.
     function loanEndSeconds(uint256 loanId) loanExists(loanId) override view external returns (uint256) {
         Loan storage loan = loanInfo[loanId];
         return loan.durationSeconds + loan.lastAccumulatedTimestamp;
@@ -86,6 +100,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     }
 
     // ==== state changing ====
+
+    /// See {INFTLoanFacilitator-createLoan}.
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
@@ -127,6 +143,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             );
     }
 
+    /// See {INFTLoanFacilitator-closeLoan}.
     function closeLoan(uint256 loanId, address sendCollateralTo) override external {
         require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrower only");
 
@@ -139,6 +156,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit Close(loanId);
     }
 
+    /// See {INFTLoanFacilitator-underwriteLoan}.
     function underwriteLoan(
             uint256 loanId,
             uint256 interestRate,
@@ -206,6 +224,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit UnderwriteLoan(loanId, msg.sender, interestRate, amount, durationSeconds);
     }
 
+    /// See {INFTLoanFacilitator-repayAndCloseLoan}.
     function repayAndCloseLoan(uint256 loanId) loanExists(loanId) override external {
         Loan storage loan = loanInfo[loanId];
         require(!loan.closed, "NFTLoanFacilitator: loan closed");
@@ -223,6 +242,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit Close(loanId);
     }
 
+    /// See {INFTLoanFacilitator-seizeCollateral}.
     function seizeCollateral(uint256 loanId, address sendCollateralTo) override external {
         require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: underwriter only");
 
@@ -239,22 +259,35 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     // === manger state changing
 
+    /**
+     * @notice Sets lendTicketContract to _contract
+     * @dev cannot be set if lendTicketContract is already set
+     */
     function setLendTicketContract(address _contract) onlyOwner() external {
         require(lendTicketContract == address(0), 'NFTLoanFacilitator: already set');
 
         lendTicketContract = _contract;
     }
 
+    /**
+     * @notice Sets borrowTicketContract to _contract
+     * @dev cannot be set if borrowTicketContract is already set
+     */
     function setBorrowTicketContract(address _contract) onlyOwner() external {
         require(borrowTicketContract == address(0), 'NFTLoanFacilitator: already set');
 
         borrowTicketContract = _contract;
     }
 
+    /// @notice Transfers `amount` of loan origination fees for `asset` to `to`
     function withdrawOriginationFees(address asset, uint256 amount, address to) onlyOwner() external {
         IERC20(asset).safeTransfer(to, amount);
     }
 
+    /**
+     * @notice Updates originationFeeRate the faciliator keeps of each loan amount
+     * @dev Cannot be set higher than 5%
+     */
     function updateOriginationFeeRate(uint256 _originationFeeRate) onlyOwner() external {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         

@@ -2,6 +2,14 @@ pragma solidity 0.8.6;
 
 
 library UintStrings {
+    /** 
+     * @notice Converts `number` into a decimal string, with '%' is `isPercent` = true
+     * @param number The number to convert to a string
+     * @param decimals The number of decimals `number` should have when converted to a string
+     * for example, number = 15 and decimals = 0 would yield "15", whereas number = 15 and decimals = 1 would yield "1.5"
+     * @param isPercent Whether the string returned should include '%' at the end
+     * @return string
+     */
     function decimalString(uint256 number, uint8 decimals, bool isPercent) internal pure returns(string memory){
         if(number == 0){
             return isPercent ? "0%" : "0";

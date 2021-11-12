@@ -5,6 +5,7 @@ import './descriptors/NFTLoansTicketDescriptor.sol';
 
 contract BorrowTicket is NFTLoanTicket {
 
+    /// See NFTLoanTicket
     constructor(
         NFTLoanFacilitator _nftLoanFacilitator,
         NFTLoansTicketDescriptor _descriptor) 
