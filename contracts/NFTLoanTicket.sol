@@ -28,7 +28,6 @@ contract NFTLoanTicket is ERC721Enumerable, IERC721Mintable {
 
     /// See {IERC721Mintable-mint}.
     function mint(address to, uint256 tokenId) loanFacilitatorOnly() override external {
-        require(!_exists(tokenId), "NFTLoanTicket: token with tokenId already exists");
         _mint(to, tokenId);
     }
 
