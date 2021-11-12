@@ -34,7 +34,7 @@ contract NFTLoanTicket is ERC721Enumerable, IMintable {
 
     /// @notice returns a base64 encoded data uri containing the token metadata in JSON format
     function tokenURI(uint256 tokenId) public override view returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        require(_exists(tokenId), "NFTLoanTicket: URI query for nonexistent token");
         return descriptor.uri(nftLoanFacilitator, tokenId);
     }
 }
