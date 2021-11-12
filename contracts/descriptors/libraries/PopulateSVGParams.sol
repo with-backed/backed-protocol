@@ -3,7 +3,7 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-import './DateTimeLibrary.sol';
+import './BokkyPooBahsDateTimeLibrary.sol';
 import './UintStrings.sol';
 import '../../NFTLoanFacilitator.sol';
 import '../../interfaces/IERC20Metadata.sol';

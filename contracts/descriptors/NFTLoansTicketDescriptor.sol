@@ -2,9 +2,6 @@ pragma solidity 0.8.6;
 
 import 'base64-sol/base64.sol';
 import './../NFTLoanFacilitator.sol';
-import "hardhat/console.sol";
-import '../interfaces/IERC20Metadata.sol';
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import './libraries/NFTLoanTicketSVG.sol';
 import './libraries/PopulateSVGParams.sol';
 
