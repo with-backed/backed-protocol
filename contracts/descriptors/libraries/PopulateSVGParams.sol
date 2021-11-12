@@ -34,10 +34,10 @@ library PopulateSVGParams{
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
         svgParams.interestRate = interestRateString(nftLoanFacilitator, perSecondInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
-        svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset));
+        svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset), 6, 40);
         svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
         svgParams.collateralContract = HexStrings.toHexString(uint160(collateralAddress), 20);
-        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(collateralAddress));
+        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(collateralAddress), 6, 40);
         svgParams.collateralAssetSymbol = collateralAssetSymbol(collateralAddress);
         svgParams.collateralId = Strings.toString(collateralID);
         svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
