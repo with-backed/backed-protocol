@@ -108,6 +108,16 @@ describe("NFTLoanFacilitator contract", function () {
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
             ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved")
         })
+
+        it('reverts if collateral is loan ticket or borrow ticket', async function(){
+            await expect(
+                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, LendTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+            ).to.be.revertedWith('NFTLoanFacilitator: cannot use tickets as collateral')
+            
+            await expect(
+                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, BorrowTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+            ).to.be.revertedWith('NFTLoanFacilitator: cannot use tickets as collateral')
+        })
     });
 
     describe("closeLoan", function () {
