@@ -147,13 +147,17 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         external 
     {
         Loan storage loan = loanInfo[loanId];
-
         require(!loan.closed, "NFTLoanFacilitator: loan closed");
         require(loan.perSecondInterestRate >= interestRate 
         && loan.durationSeconds <= durationSeconds && loan.loanAmount <= amount, 
         "NFTLoanFacilitator: Proposed terms do not qualify" );
 
         if(loan.lastAccumulatedTimestamp == 0){
+            loan.perSecondInterestRate = interestRate;
+            loan.lastAccumulatedTimestamp = block.timestamp;
+            loan.durationSeconds = durationSeconds;
+            loan.loanAmount = amount;
+
             IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
             uint256 facilitatorTake = amount * originationFeeRate / SCALAR;
             IERC20(loan.loanAssetContractAddress).safeTransfer(
@@ -169,29 +173,32 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             "NFTLoanFacilitator: proposed terms must be better than existing terms");
 
             uint256 accumulatedInterest = _interestOwed(loan);
+            uint256 previousLoanAmount = loan.loanAmount;
+
+            loan.perSecondInterestRate = interestRate;
+            loan.lastAccumulatedTimestamp = block.timestamp;
+            loan.durationSeconds = durationSeconds;
+            loan.loanAmount = amount;
+
             IERC20(loan.loanAssetContractAddress).safeTransferFrom(
                 msg.sender,
                 address(this),
                 amount + accumulatedInterest
                 );
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
-            IERC20(loan.loanAssetContractAddress).safeTransfer(currentLoanOwner, accumulatedInterest + loan.loanAmount);
+            IERC20(loan.loanAssetContractAddress).safeTransfer(currentLoanOwner, accumulatedInterest + previousLoanAmount);
             ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
             if(amountIncrease > 0){
                 uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
                 IERC20(loan.loanAssetContractAddress).safeTransfer(
                     IERC721(borrowTicketContract).ownerOf(loanId),
-                    amount - loan.loanAmount - facilitatorTake
+                    amount - previousLoanAmount - facilitatorTake
                     );
             }
 
             loan.accumulatedInterest = accumulatedInterest;
-            emit BuyoutUnderwriter(loanId, msg.sender, currentLoanOwner, accumulatedInterest, loan.loanAmount);
+            emit BuyoutUnderwriter(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
         }
-        loan.perSecondInterestRate = interestRate;
-        loan.lastAccumulatedTimestamp = block.timestamp;
-        loan.durationSeconds = durationSeconds;
-        loan.loanAmount = amount;
         emit UnderwriteLoan(loanId, msg.sender, interestRate, amount, durationSeconds);
     }
 
