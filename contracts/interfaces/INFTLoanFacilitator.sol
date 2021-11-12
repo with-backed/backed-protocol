@@ -123,9 +123,9 @@ interface INFTLoanFacilitator {
      * i.e. the timestamp of the most recent underwriting
      * @return durationSeconds The loan duration in seconds
      * @return loanAmount The loan amount
-     * @return collateralID The token ID of the NFT collateal
-     * @return collateralAddress The contract address of the NFT collateral 
-     * @return loanAsset The contract address of the loan asset.
+     * @return collateralTokenId The token ID of the NFT collateal
+     * @return collateralContractAddress The contract address of the NFT collateral 
+     * @return loanAssetContractAddress The contract address of the loan asset.
      */
     function loanInfo(uint256 loanId)
     external view 
@@ -170,7 +170,7 @@ interface INFTLoanFacilitator {
      * @param loanAssetContractAddress The address of the loan asset
      * @param minDurationSeconds The minimum duration for this loan
      * @param mintBorrowTicketTo An address to mint the Borrow Ticket corresponding to this loan to
-     * @return uint256, the id of the created loan
+     * @return id of the created loan
      */
     function createLoan(
             uint256 collateralTokenId,
