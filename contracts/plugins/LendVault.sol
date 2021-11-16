@@ -40,6 +40,8 @@ contract LendVault is ERC20 {
         // call to a contract which determines what values to use for lend. 
         // Multiple vaults could share a lendValuesSource contract, which is maybe thought to be good at evaluating asset worth.
         // We could even make `lendValues` a payable method so people could pay for valuations
+        // In some cases a LendValuesSource contract could have its LendValues updated by a DAO. 
+        // A DAO could also update LendVault as to which LendValuesSource to use. 
         LendValues memory lendValues = lendValuesSource.lendValues(collateralTokenId, collateralContractAddress, loanAssetContractAddress);
         facilitator.underwriteLoan(loanId, lendValues.perSecondInterestRate, lendValues.loanAmount, lendValues.durationSeconds, address(this));
     }
