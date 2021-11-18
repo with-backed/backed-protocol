@@ -31,9 +31,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /** 
      * See {INFTLoanFacilitator-INTEREST_RATE_DECIMALS}.     
-     * @dev lowest non-zero rate possible = (1/10^11)*(60*60*24*365) = 0.0003 = 0.03%
+     * @dev lowest non-zero APR possible = (1/10^10)*(60*60*24*365) = 0.003 = 0.3%
      */
-    uint8 public constant override INTEREST_RATE_DECIMALS = 11;
+    uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
     /// See {INFTLoanFacilitator-SCALAR}.
     uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;

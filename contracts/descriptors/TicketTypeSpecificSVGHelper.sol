@@ -54,8 +54,8 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
     function addressStringToHSL(string memory account) private pure returns (string memory){
         bytes32 hs = keccak256(abi.encodePacked(account));
         uint256 h = (uint256(uint8(hs[0])) + uint8(hs[1])) % 360;
-        uint256 s = 100;
-        uint256 l = 95;
+        uint256 s = 80 + (uint8(hs[2]) % 20);
+        uint256 l = 80 + (uint8(hs[3]) % 10);
         return string(
             abi.encodePacked(
                 'hsl(',
