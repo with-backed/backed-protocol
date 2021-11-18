@@ -91,15 +91,15 @@ contract NFTLoansTicketDescriptor {
                     collateralAsset,
                     ' (',
                     collateralAssetSymbol,
-                    ')\\n ',
+                    ')\\n',
                     'Collateral ID: ',
                     collateralAssetId,
-                    '\\n ',
+                    '\\n',
                     'Loan Asset Address: ',
                     loanAsset,
                     ' (',
                     loanAssetSymbol,
-                    ')\\n ',
+                    ')\\n\\n',
                     'WARNING: Do your own research to verify the legitimacy of the assets related to this ticket'
                 )
             );
