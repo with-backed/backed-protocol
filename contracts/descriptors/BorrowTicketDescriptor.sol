@@ -15,7 +15,7 @@ contract BorrowTicketDescriptor is NFTLoansTicketDescriptor {
         return 'This Borrow Ticket NFT was created by the deposit of an NFT into the NFT Loan Faciliator '
                 'contract to serve as collateral for a loan. If the loan is underwritten, funds will be transferred '
                 'to the borrow ticket holder. If the loan is repaid, the NFT collateral is transferred to the borrow '
-                'ticket holder. If the loan is marked closed, the collateral has been withdrawn.\\n';
+                'ticket holder. If the loan is marked closed, the collateral has been withdrawn.';
                 
     }
 

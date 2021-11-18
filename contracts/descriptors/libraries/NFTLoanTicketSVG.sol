@@ -16,8 +16,6 @@ library NFTLoanTicketSVG {
         string interestRate;
         // The contract address of the ERC20 loan asset
         string loanAssetContract;
-        // The contract address of the ERC20 loan asset, shortened for display
-        string loanAssetContractPartial;
         // The symbol of the ERC20 loan asset
         string loanAssetSymbol;
         // The contract address of the ERC721 collateral asset
@@ -32,7 +30,9 @@ library NFTLoanTicketSVG {
         string loanAmount;
         // The interest accrued so far on the loan, in loan asset units
         string interestAccrued;
-        // 
+        // The loan duration in days, 0 if duration is less than 1 day
+        string durationDays;
+        // The UTC end date and time of the loan, 'n/a' if loan does not have lender
         string endDateTime;
     }
 
@@ -43,121 +43,188 @@ library NFTLoanTicketSVG {
     {
         return string(
                 abi.encodePacked(
+                    '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" ',
+                    'xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" ',
+	                'viewBox="0 0 300 300" style="enable-background:new 0 0 300 300;" xml:space="preserve">',
                     stylesAndBackground(
                         typeSpecificHelper,
+                        params.id,
                         params.loanAssetContract,
                         params.collateralContract
                     ),
-                    typeSpecificHelper.typeSpecificDetails(
-                        params.id
-                    ),
-                    collateralInfo(
-                        params.collateralContractPartial,
-                        params.collateralAssetSymbol,
-                        params.collateralId
-                    ),
-                    details(
-                        params.loanAmount,
-                        params.loanAssetSymbol,
-                        params.interestRate,
-                        params.status,
-                        params.interestAccrued,
-                        params.loanAssetContractPartial,
-                        params.endDateTime
-                    ),
-                    '</text></svg>'
+                    staticValues(params.nftType, typeSpecificHelper),
+                    dynamicValues(params, typeSpecificHelper),
+                    dynamicValues2(params, typeSpecificHelper),
+                    '</svg>'
                 )
             );
     }
 
     function stylesAndBackground(
         ITicketTypeSpecificSVGHelper typeSpecificHelper,
+        string memory id, 
         string memory loanAsset,
-        string memory collateralAsset) 
-        private pure returns (string memory) {
+        string memory collateralAsset
+    ) 
+        private pure returns (string memory) 
+    {
         return string(
             abi.encodePacked(
-        '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ',
-        'x="0px" y="0px" viewBox="0 0 480 480" width="480" height="480" xml:space="preserve">',
         '<style type="text/css">',
-            '.st0{fill:url(#wash);fill-opacity:0.7;}',
-            '.st1{opacity:0.8;fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;enable-background:new;}',
-            '.st2{font-family: serif;}',
-            '.st4{margin: 6px; font-size: 36px; letter-spacing: 1.8px;}',
-            '.st5{fill:none;}',
-            '.st6{font-family: sans-serif; font-weight: bold;}',
-            '.st7{font-size:14px;}',
-            '.st8{font-family: sans-serif;}',
-            '.outer {width: 43px; height: 360px; position: relative; display: inline-block; margin: 0 15px;}',
-	        '.inner {position: absolute; top: 50%; left: 50%;}',
+            '.st0{fill:url(#wash);}',
+            '.st1{width: 171px; height: 23px; opacity:0.65; fill:#FFFFFF;}',
+            '.st2{width: 171px; height: 23px; opacity:0.45; fill:#FFFFFF;}',
+            '.st3{width: 98px; height: 23px; opacity:0.2; fill:#FFFFFF;}',
+            '.st4{width: 98px; height: 23px; opacity:0.35; fill:#FFFFFF;}',
+            '.st5{font-family: sans-serif; font-weight: bold;}',
+            '.st6{font-size:44px;}',
+            '.st7{font-family: monospace, monospace; font-size:10px; fill:#000000; opacity: .9;}',
+            '.st8{width: 98px; height: 54px; opacity:0.35; fill:#FFFFFF;}',
+            '.st9{width: 171px; height: 54px; opacity:0.65; fill:#FFFFFF;}',
+            '.right{text-anchor: end;}',
+            '.left{text-anchor: start;}',
             typeSpecificHelper.backgroundColorsStyles(loanAsset, collateralAsset),
         '</style>',
         '<defs>',
-            '<radialGradient id="wash" cx="120" cy="40" r="140" ',
-                'gradientTransform="skewY(5)" gradientUnits="userSpaceOnUse">',
-                '<stop  offset="0%" class="highlight-offset"/>',
-                '<stop  offset="100%" class="highlight-hue"/>',
+            '<radialGradient id="wash" cx="120" cy="40" r="140" gradientTransform="skewY(5)" ',
+            'gradientUnits="userSpaceOnUse">',
+                '<stop  offset="0%" class="highlight-hue"/>',
+                '<stop  offset="100%" class="highlight-offset"/>',
                 '<animate attributeName="r" values="300;520;320;420;300" dur="25s" repeatCount="indefinite"/>',
                 '<animate attributeName="cx" values="120;420;260;120;60;120" dur="25s" repeatCount="indefinite"/>',
                 '<animate attributeName="cy" values="40;300;40;250;390;40" dur="25s" repeatCount="indefinite"/>',
             '</radialGradient>',
+            '<mask id="ticket-id">',
+                '<rect width="171" height="54" fill="white"/>',
+                '<text x="',
+                typeSpecificHelper.ticketIdXCoordinate(),
+                '" y="44" class="st5 st6 ',
+                typeSpecificHelper.alignmentClass(),
+                '" fill="black">',
+                id,
+                '</text>',
+            '</mask>',
         '</defs>',
-        '<rect x="0" class="st0" width="480" height="480"/>'
+        '<rect x="0" class="st0" width="300" height="300"/>'
         ));
     }
 
-    function collateralInfo(
-        string memory collateralAssetPartial,
-        string memory collateralAssetSymbol,
-        string memory collateralId
-        ) internal pure returns (string memory svg) {
-        return string(abi.encodePacked(
-            '<tspan x="0" y="108" class="st6 st7">collateral nft </tspan><tspan x="90" y="108" class="st8 st7"> (',
-            collateralAssetSymbol,
-            ') ',
-            collateralAssetPartial,
-            '</tspan>',
-            '<tspan x="0" y="144" class="st6 st7">collateral ID </tspan><tspan x="86" y="144" class="st8 st7">',
-            collateralId,
-            '</tspan>'
-        ));
-    }
-
-    function details(
-        string memory loanAmount,
-        string memory loanAssetSymbol,
-        string memory interestRate,
-        string memory status,
-        string memory interestAccrued,
-        string memory loanAssetPartial,
-        string memory endDateTime
-    ) private pure returns (string memory){
+    function staticValues(
+        string memory ticketType,
+        ITicketTypeSpecificSVGHelper typeSpecificHelper
+    )
+        internal pure returns (string memory) 
+    {
         return string(
             abi.encodePacked(
-                '<tspan x="0" y="0" class="st6 st7">loan amount</tspan><tspan x="86" y="0" class="st8 st7">',
-                loanAmount,
-                ' ',
-                loanAssetSymbol,
-                '</tspan>',
-                '<tspan x="0" y="36" class="st6 st7">interest rate</tspan><tspan x="83" y="36" class="st8 st7">',
-                interestRate,
-                '</tspan>'
-                '<tspan x="0" y="72" class="st6 st7">status</tspan><tspan x="45" y="72" class="st8 st7">',
-                status,
-                '</tspan>',
-                '<tspan x="0" y="180" class="st6 st7">interest accrued</tspan><tspan x="111" y="180" class="st8 st7">',
-                interestAccrued,
-                ' ',
-                loanAssetSymbol,
-                '</tspan>',
-                '<tspan x="0" y="216" class="st6 st7">loan asset </tspan><tspan x="76" y="216" class="st8 st7"> (',
-                loanAssetSymbol,
-                ') ',
-                loanAssetPartial,
-                '</tspan>',
-                '<tspan x="0" y="252" class="st6 st7">end date</tspan><tspan x="68" y="252" class="st8 st7">',
-                endDateTime,
-                '</tspan>'
+                '<g transform="translate(',
+                typeSpecificHelper.backgroundTitleRectsXTranslate(),
+                ',0)">',
+                    '<rect y="31" class="st8"/>',
+                    '<rect y="85" class="st3"/>',
+                    '<rect y="108" class="st4"/>',
+                    '<rect y="131" class="st3"/>',
+                    '<rect y="154" class="st4"/>',
+                    '<rect y="177" class="st3"/>',
+                    '<rect y="200" class="st4"/>',
+                    '<rect y="223" class="st3"/>',
+                    '<rect y="246" class="st4"/>',
+                '</g>',
+                '<g class="st7 ',
+                typeSpecificHelper.titlesPositionClass(),
+                '" transform="translate(',
+                typeSpecificHelper.titlesXTranslate(),
+                ',0)">',
+                    '<text y="56">',
+                    ticketType,
+                    'er</text>',
+                    '<text y="70">ticket</text>',
+                    '<text y="99">loan amount</text>',
+                    '<text y="122">interest rate</text>',
+                    '<text y="145">status</text>',
+                    '<text y="168">accrued</text>',
+                    '<text y="191">collateral nft</text>',
+                    '<text y="214">collateral ID</text>',
+                    '<text y="237">duration</text>',
+                    '<text y="260">end date</text>',
+                '</g>',
+                '<g transform="translate(',
+                typeSpecificHelper.backgroundValueRectsXTranslate(),
+                ',0)">',
+                    '<rect y="246" class="st1"/>',
+                    '<rect y="223" class="st2"/>',
+                    '<rect y="200" class="st1"/>',
+                    '<rect y="177" class="st2"/>',
+                    '<rect y="154" class="st1"/>',
+                    '<rect y="131" class="st2"/>',
+                    '<rect y="108" class="st1"/>',
+                    '<rect y="85" class="st2"/>',
+                '</g>',
+                '<g transform="translate(',
+                typeSpecificHelper.backgroundValueRectsXTranslate(),
+                ',31)">',
+                    '<rect class="st9" width="171" height="54" mask="url(#ticket-id)"/>',
+                '</g>'
+            )
+        );
+    }
+
+    function dynamicValues(
+        SVGParams memory params, 
+        ITicketTypeSpecificSVGHelper typeSpecificHelper
+    ) 
+        internal pure returns (string memory) 
+    {
+        return string(
+            abi.encodePacked(
+                '<g class="st7 ',
+                typeSpecificHelper.alignmentClass(),
+                '" transform="translate(',
+                typeSpecificHelper.valuesXTranslate(),
+                ',0)">',
+                    '<text y="99">',
+                    params.loanAmount, 
+                    ' ',
+                    params.loanAssetSymbol,
+                    '</text>',
+                    '<text y="122">',
+                    params.interestRate,
+                    '</text>',
+                    '<text y="145">',
+                    params.status,
+                    '</text>',
+                    '<text y="168">'
+            )
+        );
+    }
+
+    function dynamicValues2(
+        SVGParams memory params, 
+        ITicketTypeSpecificSVGHelper typeSpecificHelper
+    ) 
+        internal pure returns (string memory) 
+    {
+        return string(
+            abi.encodePacked(
+                    params.interestAccrued,
+                    ' ',
+                    params.loanAssetSymbol,
+                    '</text>',
+                    '<text y="191">(',
+                    params.collateralAssetSymbol,
+                    ') ',
+                    params.collateralContractPartial,
+                    '</text>',
+                    '<text y="214">',
+                    params.collateralId,
+                    '</text>',
+                    '<text y="237">',
+                    params.durationDays,
+                    ' days </text>',
+                    '<text y="260">',
+                    params.endDateTime,
+                    '</text>',
+                '</g>'
             )
         );
     }

@@ -76,7 +76,7 @@ describe("NFTLoanFacilitator contract", function () {
             await expect(
                 BorrowTicket.tokenURI("1")
             ).not.to.be.reverted
-            // const u = await BorrowTicket.tokenURI("1")
+            const u = await BorrowTicket.tokenURI("1")
             // console.log(u)
         })
     })
