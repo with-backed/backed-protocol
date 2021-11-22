@@ -224,6 +224,31 @@ describe("NFTLoanFacilitator contract", function () {
 
         });
 
+        context("malicious ERC20", function () {
+            beforeEach(async function () {
+                // deploy malicious erc20
+                MaliciousERC20Contract = await ethers.getContractFactory("MaliciousERC20");
+                MAL = await MaliciousERC20Contract.connect(daiHolder).deploy(NFTLoanFacilitator.address);
+                await MAL.deployed();
+        
+                // make sure we mint borrow ticket to the erc20 contract address
+                await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, MAL.address, durationSeconds, MAL.address)
+                await MAL.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
+            })
+        
+            it("does not complete underwrite function if loan asset is malicious", async function () {
+                var value = await MAL.balanceOf(punkHolder.address)
+                expect(value).to.equal(0)
+        
+                await expect(
+                    NFTLoanFacilitator.connect(daiHolder).underwriteLoan("1", interest, loanAmount, durationSeconds, daiHolder.address)
+                ).to.be.revertedWith("NFTLoanFacilitator: underwritten, use repayAndCloseLoan")
+        
+                value = await MAL.balanceOf(punkHolder.address)
+                expect(value).to.equal(0)
+            })
+        })
+
         context("when loan has been underwritten", function () {
             beforeEach(async function() {
                 await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
