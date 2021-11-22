@@ -90,18 +90,18 @@ library PopulateSVGParams{
     returns(string memory)
     {
         if(lastAccumulatedTimestamp == 0){
-            return "awaiting lender";
+            return "Awaiting lender";
         }
 
         if(closed){
-            return "closed";
+            return "Closed";
         }
 
         if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)){
-            return "past due";
+            return "Past due";
         }
 
-        return "accruing interest";
+        return "Accruing interest";
     }
 
     /** 
