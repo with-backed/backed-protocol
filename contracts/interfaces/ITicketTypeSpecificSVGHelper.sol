@@ -14,8 +14,21 @@ interface ITicketTypeSpecificSVGHelper {
         returns (string memory);
 
     /**
-     * @notice returns a string of SVG elements
-     * @param id The tokenId of the NFT thats SVG image is being generated
+     * @dev All the below methods return ticket-type-specific values
+     * used in building the ticket svg image. See NFTLoanTicketSVG for usage.
      */
-    function typeSpecificDetails(string memory id) external pure returns (string memory);
+
+    function ticketIdXCoordinate() external pure returns (string memory);
+
+    function backgroundTitleRectsXTranslate() external pure returns (string memory);
+
+    function titlesPositionClass() external pure returns (string memory);
+
+    function titlesXTranslate() external pure returns (string memory);
+
+    function backgroundValueRectsXTranslate() external pure returns (string memory);
+
+    function alignmentClass() external pure returns (string memory);
+
+    function valuesXTranslate() external pure returns (string memory);
 }

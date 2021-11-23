@@ -87,19 +87,19 @@ contract NFTLoansTicketDescriptor {
         ) private pure returns (string memory){
             return string(
                 abi.encodePacked(
-                    'Collateral Address: ',
+                    '\\n\\nCollateral Address: ',
                     collateralAsset,
                     ' (',
                     collateralAssetSymbol,
-                    ')\\n',
+                    ')\\n\\n',
                     'Collateral ID: ',
                     collateralAssetId,
-                    '\\n',
+                    '\\n\\n',
                     'Loan Asset Address: ',
                     loanAsset,
                     ' (',
                     loanAssetSymbol,
-                    ')\\n',
+                    ')\\n\\n',
                     'WARNING: Do your own research to verify the legitimacy of the assets related to this ticket'
                 )
             );

@@ -16,7 +16,9 @@ contract LendTicketDescriptor is NFTLoansTicketDescriptor {
                 abi.encodePacked(
                     'This Lend Ticket NFT was created when NFT Loan #', 
                     loanId,
-                    ' was underwritten. On loan repayment, funds will be transferred to this ticket. If the loan is not paid back on time, the holder of this ticket is entitled to seize the NFT collateral.\\n'
+                    ' was underwritten. On loan repayment, funds will be transferred to the lend ticket holder. ',
+                    'If the loan is not paid back on time, the lend ticket holder is entitled to ',
+                    'seize the NFT collateral.'
                 )
             );
     }

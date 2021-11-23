@@ -34,14 +34,14 @@ library PopulateSVGParams{
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
         svgParams.interestRate = interestRateString(nftLoanFacilitator, perSecondInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
-        svgParams.loanAssetContractPartial = HexStrings.partialHexString(uint160(loanAsset), 6, 40);
         svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
         svgParams.collateralContract = HexStrings.toHexString(uint160(collateralAddress), 20);
-        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(collateralAddress), 6, 40);
+        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(collateralAddress), 10, 40);
         svgParams.collateralAssetSymbol = collateralAssetSymbol(collateralAddress);
         svgParams.collateralId = Strings.toString(collateralID);
         svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
         svgParams.interestAccrued = accruedInterest(nftLoanFacilitator, id, loanAsset);
+        svgParams.durationDays = Strings.toString(durationSeconds / (24 * 60 * 60));
         svgParams.endDateTime = lastAccumulatedTimestamp == 0 ? "n/a" 
         : endDateTime(lastAccumulatedTimestamp + durationSeconds);
         
@@ -90,18 +90,18 @@ library PopulateSVGParams{
     returns(string memory)
     {
         if(lastAccumulatedTimestamp == 0){
-            return "active, awaiting underwriter";
+            return "Awaiting lender";
         }
 
         if(closed){
-            return "closed";
+            return "Closed";
         }
 
         if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)){
-            return "past due, accumulating interest";
+            return "Past due";
         }
 
-        return 'active, accumulating interest';
+        return "Accruing interest";
     }
 
     /** 
