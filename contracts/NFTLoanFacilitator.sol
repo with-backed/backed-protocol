@@ -29,7 +29,10 @@ struct Loan {
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeERC20 for IERC20;
 
-    /// See {INFTLoanFacilitator-INTEREST_RATE_DECIMALS}.     
+    /** 
+     * See {INFTLoanFacilitator-INTEREST_RATE_DECIMALS}.     
+     * @dev lowest non-zero APR possible = (1/10^10)*(60*60*24*365) = 0.003 = 0.3%
+     */
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
     /// See {INFTLoanFacilitator-SCALAR}.
