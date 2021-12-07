@@ -54,7 +54,7 @@ library NFTLoanTicketSVG {
                     ),
                     staticValues(params.nftType, typeSpecificHelper),
                     dynamicValues(params, typeSpecificHelper),
-                    dynamicValues2(params, typeSpecificHelper),
+                    dynamicValues2(params),
                     '</svg>'
                 )
             );
@@ -199,8 +199,7 @@ library NFTLoanTicketSVG {
     }
 
     function dynamicValues2(
-        SVGParams memory params, 
-        ITicketTypeSpecificSVGHelper typeSpecificHelper
+        SVGParams memory params
     ) 
         internal pure returns (string memory) 
     {
