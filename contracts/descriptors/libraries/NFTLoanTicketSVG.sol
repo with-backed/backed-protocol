@@ -76,8 +76,7 @@ library NFTLoanTicketSVG {
             '.st2{width: 171px; height: 23px; opacity:0.45; fill:#FFFFFF;}',
             '.st3{width: 98px; height: 23px; opacity:0.2; fill:#FFFFFF;}',
             '.st4{width: 98px; height: 23px; opacity:0.35; fill:#FFFFFF;}',
-            '.st5{font-family: sans-serif; font-weight: bold;}',
-            '.st6{font-size:44px;}',
+            '.st5{font-family: monospace, monospace; font-size: 28px;}',
             '.st7{font-family: monospace, monospace; font-size:10px; fill:#000000; opacity: .9;}',
             '.st8{width: 98px; height: 54px; opacity:0.35; fill:#FFFFFF;}',
             '.st9{width: 171px; height: 54px; opacity:0.65; fill:#FFFFFF;}',
@@ -94,18 +93,18 @@ library NFTLoanTicketSVG {
                 '<animate attributeName="cx" values="120;420;260;120;60;120" dur="25s" repeatCount="indefinite"/>',
                 '<animate attributeName="cy" values="40;300;40;250;390;40" dur="25s" repeatCount="indefinite"/>',
             '</radialGradient>',
-            '<mask id="ticket-id">',
-                '<rect width="171" height="54" fill="white"/>',
-                '<text x="',
-                typeSpecificHelper.ticketIdXCoordinate(),
-                '" y="44" class="st5 st6 ',
-                typeSpecificHelper.alignmentClass(),
-                '" fill="black">',
-                id,
-                '</text>',
-            '</mask>',
         '</defs>',
-        '<rect x="0" class="st0" width="300" height="300"/>'
+        '<rect x="0" class="st0" width="300" height="300"/>',
+        '<rect y="31" x="',
+        typeSpecificHelper.backgroundValueRectsXTranslate(),
+        '" width="171" height="54" style="opacity:0.65; fill:#FFFFFF;"/>',
+        '<text x="',
+        typeSpecificHelper.ticketIdXCoordinate(),
+        '" y="69" class="st5 ',
+        typeSpecificHelper.alignmentClass(),
+        '" fill="black">',
+        id,
+        '</text>'
         ));
     }
 
@@ -159,11 +158,6 @@ library NFTLoanTicketSVG {
                     '<rect y="131" class="st2"/>',
                     '<rect y="108" class="st1"/>',
                     '<rect y="85" class="st2"/>',
-                '</g>',
-                '<g transform="translate(',
-                typeSpecificHelper.backgroundValueRectsXTranslate(),
-                ',31)">',
-                    '<rect class="st9" width="171" height="54" mask="url(#ticket-id)"/>',
                 '</g>'
             )
         );

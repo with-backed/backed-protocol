@@ -19,9 +19,9 @@ contract BorrowTicketSVGHelper is TicketTypeSpecificSVGHelper {
 
     /// See {ITicketTypeSpecificSVGHelper}
     function ticketIdXCoordinate() external pure override virtual returns (string memory) {
-        return '7';
+        return '134';
     }
-
+    
     /// See {ITicketTypeSpecificSVGHelper}
     function backgroundTitleRectsXTranslate() external pure override virtual returns (string memory) {
         return '31';

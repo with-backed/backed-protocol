@@ -19,7 +19,7 @@ contract LendTicketSVGHelper is TicketTypeSpecificSVGHelper {
 
     /// See {ITicketTypeSpecificSVGHelper}
     function ticketIdXCoordinate() external pure override virtual returns (string memory) {
-        return '164';
+        return '165';
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
