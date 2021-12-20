@@ -12,7 +12,8 @@ import './interfaces/ILendTicket.sol';
 struct Loan {
     // ==== mutable ======
     bool closed;
-    uint8 perSecondInterestRate;
+    // max = (((2^16)*60*60*24*365) / 10 ^ 10) ~= 20k % APR
+    uint16 perSecondInterestRate;
     // at which block was the accumulated interest most recently calculated
     uint32 lastAccumulatedTimestamp;
     uint32 durationSeconds;
@@ -112,7 +113,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint8 maxPerSecondInterest,
+            uint16 maxPerSecondInterest,
             uint256 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
@@ -165,7 +166,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-underwriteLoan}.
     function underwriteLoan(
             uint256 loanId,
-            uint8 interestRate,
+            uint16 interestRate,
             uint256 amount,
             uint32 durationSeconds,
             address sendLendTicketTo

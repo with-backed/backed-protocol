@@ -131,7 +131,7 @@ interface INFTLoanFacilitator {
     external view 
     returns (
         bool closed,
-        uint8 perSecondInterestRate,
+        uint16 perSecondInterestRate,
         uint32 accumulatedInterest,
         uint32 lastAccumulatedTimestamp,
         uint256 durationSeconds,
@@ -175,7 +175,7 @@ interface INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint8 maxPerSecondInterest,
+            uint16 maxPerSecondInterest,
             uint256 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
@@ -213,7 +213,7 @@ interface INFTLoanFacilitator {
      */
     function underwriteLoan(
             uint256 loanId,
-            uint8 interestRate,
+            uint16 interestRate,
             uint256 amount,
             uint32 durationSeconds,
             address sendLendTicketTo
