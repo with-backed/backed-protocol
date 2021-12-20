@@ -93,13 +93,13 @@ interface INFTLoanFacilitator {
      * @notice The SCALAR for all percentages in the loan facilitator contract
      * @dev Any interest rate passed to a function should already been multiplied by SCALAR
      */
-    function SCALAR() external returns (uint256);
+    function SCALAR() external returns (uint40);
 
     /**
      * @notice The percent of the loan amount that the facilitator will take as a fee, scaled by SCALAR
      * @dev Starts set to 1%. Can only be set to 0 - 5%. 
      */
-    function originationFeeRate() external returns (uint256);
+    function originationFeeRate() external returns (uint40);
 
     /**
      * @notice The lend ticket contract associated with this loan faciliator
@@ -131,9 +131,9 @@ interface INFTLoanFacilitator {
     external view 
     returns (
         bool closed,
-        uint256 perSecondInterestRate,
-        uint256 accumulatedInterest,
-        uint256 lastAccumulatedTimestamp,
+        uint8 perSecondInterestRate,
+        uint32 accumulatedInterest,
+        uint32 lastAccumulatedTimestamp,
         uint256 durationSeconds,
         uint256 loanAmount,
         uint256 collateralTokenId,
@@ -175,10 +175,10 @@ interface INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint256 maxPerSecondInterest,
+            uint8 maxPerSecondInterest,
             uint256 minLoanAmount,
             address loanAssetContractAddress,
-            uint256 minDurationSeconds,
+            uint32 minDurationSeconds,
             address mintBorrowTicketTo
         ) 
         external
@@ -213,9 +213,9 @@ interface INFTLoanFacilitator {
      */
     function underwriteLoan(
             uint256 loanId,
-            uint256 interestRate,
+            uint8 interestRate,
             uint256 amount,
-            uint256 durationSeconds,
+            uint32 durationSeconds,
             address sendLendTicketTo
         ) 
         external;
