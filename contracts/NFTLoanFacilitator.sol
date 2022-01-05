@@ -14,17 +14,16 @@ struct Loan {
     bool closed;
     // max = (((2^16)*60*60*24*365) / 10 ^ 10) ~= 20k % APR
     uint16 perSecondInterestRate;
-    // at which block was the accumulated interest most recently calculated
-    uint32 lastAccumulatedTimestamp;
     uint32 durationSeconds;
+    // at which block was the accumulated interest most recently calculated
+    uint40 lastAccumulatedTimestamp;
+    address collateralContractAddress;
+    address loanAssetContractAddress;
     // used to track loanAsset amount of interest accumulated, incase of interest rate change
     uint256 accumulatedInterest;
     uint256 loanAmount;
     // ==== immutable =====
     uint256 collateralTokenId;
-    address collateralContractAddress;
-    address loanAssetContractAddress;
-    
 }
 
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
@@ -36,11 +35,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      */
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
+    /// See {INFTLoanFacilitator-originationFeeRate}.
+    uint32 public override originationFeeRate = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
+    
     /// See {INFTLoanFacilitator-SCALAR}.
     uint40 public constant override SCALAR = uint40(10) ** INTEREST_RATE_DECIMALS;
-
-    /// See {INFTLoanFacilitator-originationFeeRate}.
-    uint40 public override originationFeeRate = uint40(10) ** (INTEREST_RATE_DECIMALS - uint40(2));
 
     /// @dev tracks loan count
     uint64 private _nonce;
@@ -183,7 +182,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
         if(loan.lastAccumulatedTimestamp == 0){
             loan.perSecondInterestRate = interestRate;
-            loan.lastAccumulatedTimestamp = uint32(block.timestamp);
+            loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
@@ -205,7 +204,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             uint256 previousLoanAmount = loan.loanAmount;
 
             loan.perSecondInterestRate = interestRate;
-            loan.lastAccumulatedTimestamp = uint32(block.timestamp);
+            loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
@@ -296,7 +295,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice Updates originationFeeRate the faciliator keeps of each loan amount
      * @dev Cannot be set higher than 5%
      */
-    function updateOriginationFeeRate(uint40 _originationFeeRate) onlyOwner() external {
+    function updateOriginationFeeRate(uint32 _originationFeeRate) onlyOwner() external {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         
         originationFeeRate = _originationFeeRate;
