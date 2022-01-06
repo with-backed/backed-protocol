@@ -244,14 +244,21 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     address(this),
                     amount + accumulatedInterest
                 );
-                ERC20(loan.loanAssetContractAddress).safeTransfer(currentLoanOwner, accumulatedInterest + previousLoanAmount);
+                ERC20(loan.loanAssetContractAddress).safeTransfer(
+                    currentLoanOwner,
+                    accumulatedInterest + previousLoanAmount
+                );
                 uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
                 ERC20(loan.loanAssetContractAddress).safeTransfer(
                     IERC721(borrowTicketContract).ownerOf(loanId),
                     amountIncrease - facilitatorTake
-                    );
+                );
             } else {
-                ERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, currentLoanOwner, accumulatedInterest + previousLoanAmount);
+                ERC20(loan.loanAssetContractAddress).safeTransferFrom(
+                    msg.sender,
+                    currentLoanOwner,
+                    accumulatedInterest + previousLoanAmount
+                );
             }
             
 

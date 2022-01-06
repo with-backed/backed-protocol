@@ -9,7 +9,13 @@ library HexStrings {
     // @param value The value to return as a hex string
     // @param desiredPartialStringLength How many hex characters of `value` to return in the string
     // @param valueLengthAsHexString The length of `value` as a hex string
-    function partialHexString(uint160 value, uint8 desiredPartialStringLength, uint8 valueLengthAsHexString) internal pure returns (string memory) {
+    function partialHexString(
+        uint160 value,
+        uint8 desiredPartialStringLength,
+        uint8 valueLengthAsHexString
+    ) 
+        internal pure returns (string memory) 
+    {
         bytes memory buffer = new bytes(desiredPartialStringLength + 5);
         buffer[0] = '0';
         buffer[1] = 'x';
