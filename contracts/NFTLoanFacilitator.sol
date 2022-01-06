@@ -12,18 +12,18 @@ import './interfaces/ILendTicket.sol';
 struct Loan {
     // ==== mutable ======
     bool closed;
-    uint256 perSecondInterestRate;
+    // max = (((2^16)*60*60*24*365) / 10 ^ 10) ~= 20k % APR
+    uint16 perSecondInterestRate;
+    uint32 durationSeconds;
+    // at which block was the accumulated interest most recently calculated
+    uint40 lastAccumulatedTimestamp;
+    address collateralContractAddress;
+    address loanAssetContractAddress;
     // used to track loanAsset amount of interest accumulated, incase of interest rate change
     uint256 accumulatedInterest;
-    // at which block was the accumulated interest most recently calculated
-    uint256 lastAccumulatedTimestamp;
-    uint256 durationSeconds;
     uint256 loanAmount;
     // ==== immutable =====
     uint256 collateralTokenId;
-    address collateralContractAddress;
-    address loanAssetContractAddress;
-    
 }
 
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
@@ -35,14 +35,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      */
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
-    /// See {INFTLoanFacilitator-SCALAR}.
-    uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;
-
     /// See {INFTLoanFacilitator-originationFeeRate}.
-    uint256 public override originationFeeRate = 10 ** (INTEREST_RATE_DECIMALS - 2);
+    uint32 public override originationFeeRate = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
+    
+    /// See {INFTLoanFacilitator-SCALAR}.
+    uint40 public constant override SCALAR = uint40(10) ** INTEREST_RATE_DECIMALS;
 
     /// @dev tracks loan count
-    uint256 private _nonce;
+    uint64 private _nonce;
 
     /// See {INFTLoanFacilitator-lendTicketContract}.
     address public override lendTicketContract;
@@ -112,10 +112,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint256 maxPerSecondInterest,
+            uint16 maxPerSecondInterest,
             uint256 minLoanAmount,
             address loanAssetContractAddress,
-            uint256 minDurationSeconds,
+            uint32 minDurationSeconds,
             address mintBorrowTicketTo
         )
         override
@@ -165,9 +165,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-underwriteLoan}.
     function underwriteLoan(
             uint256 loanId,
-            uint256 interestRate,
+            uint16 interestRate,
             uint256 amount,
-            uint256 durationSeconds,
+            uint32 durationSeconds,
             address sendLendTicketTo
         ) 
         override
@@ -182,7 +182,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
         if(loan.lastAccumulatedTimestamp == 0){
             loan.perSecondInterestRate = interestRate;
-            loan.lastAccumulatedTimestamp = block.timestamp;
+            loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
@@ -204,7 +204,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             uint256 previousLoanAmount = loan.loanAmount;
 
             loan.perSecondInterestRate = interestRate;
-            loan.lastAccumulatedTimestamp = block.timestamp;
+            loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
@@ -295,7 +295,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice Updates originationFeeRate the faciliator keeps of each loan amount
      * @dev Cannot be set higher than 5%
      */
-    function updateOriginationFeeRate(uint256 _originationFeeRate) onlyOwner() external {
+    function updateOriginationFeeRate(uint32 _originationFeeRate) onlyOwner() external {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         
         originationFeeRate = _originationFeeRate;

@@ -12,7 +12,7 @@ describe("NFTLoanFacilitator contract", function () {
     var interestRateDecimals
     var originationFeeRate
     var scalar
-    var interest = ethers.BigNumber.from(10).pow(4);
+    var interest = ethers.BigNumber.from(10);
     var durationSeconds = ethers.BigNumber.from(10);
     var loanAmount = ethers.BigNumber.from(505).mul(ethers.BigNumber.from(10).pow(17))
 
