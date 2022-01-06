@@ -50,7 +50,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-borrowTicketContract}.
     address public override borrowTicketContract;
 
-    /// See {INFTLoanFacilitator-_loanInfo}.
     mapping(uint256 => Loan) public _loanInfo;
 
     // ==== modifiers ====
@@ -67,29 +66,30 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     // ==== view ====
 
+    /// See {INFTLoanFacilitator-_loanInfo}.
     function loanInfo(uint256 loanId)
     loanExists(loanId)
     external view override
     returns (bool closed,
-        uint256 perSecondInterestRate,
-        uint256 accumulatedInterest,
-        uint256 lastAccumulatedTimestamp,
-        uint256 durationSeconds,
-        uint256 loanAmount,
-        uint256 collateralTokenId,
+        uint16 perSecondInterestRate,
+        uint32 durationSeconds,
+        uint40 lastAccumulatedTimestamp,
         address collateralContractAddress,
-        address loanAssetContractAddress) 
+        address loanAssetContractAddress,
+        uint256 accumulatedInterest,
+        uint256 loanAmount,
+        uint256 collateralTokenId) 
     {
         Loan memory loan = _loanInfo[loanId];
         return (loan.closed,
          loan.perSecondInterestRate,
-         loan.accumulatedInterest,
-         loan.lastAccumulatedTimestamp,
          loan.durationSeconds,
-         loan.loanAmount,
-         loan.collateralTokenId,
+         loan.lastAccumulatedTimestamp,
          loan.collateralContractAddress,
-         loan.loanAssetContractAddress);
+         loan.loanAssetContractAddress,
+         loan.accumulatedInterest,
+         loan.loanAmount,
+         loan.collateralTokenId);
     }
 
     /// See {INFTLoanFacilitator-totalOwed}.
