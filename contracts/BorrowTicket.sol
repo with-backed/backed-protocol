@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity 0.8.10;
 
 import './NFTLoanTicket.sol';
 import './descriptors/NFTLoansTicketDescriptor.sol';

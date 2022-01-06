@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";

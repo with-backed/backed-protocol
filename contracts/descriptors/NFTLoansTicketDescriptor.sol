@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity 0.8.10;
 
 import 'base64-sol/base64.sol';
 import './../NFTLoanFacilitator.sol';

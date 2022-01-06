@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity 0.8.10;
 
 import '../interfaces/ITicketTypeSpecificSVGHelper.sol';
 import "@openzeppelin/contracts/utils/Strings.sol";

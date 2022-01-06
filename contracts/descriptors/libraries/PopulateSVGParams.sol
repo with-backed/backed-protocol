@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
