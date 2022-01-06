@@ -532,6 +532,21 @@ describe("NFTLoanFacilitator contract", function () {
         })
     })
 
+    describe("updateRequiredImprovementPercentage", function () {
+        it("updates", async function(){ 
+            const newPercentage = ethers.BigNumber.from(5);
+            await NFTLoanFacilitator.connect(manager).updateRequiredImprovementPercentage(newPercentage);
+            const percentage = await NFTLoanFacilitator.requiredImprovementPercentage();
+            expect(percentage).to.eq(newPercentage)
+        })
+
+        it("reverts if not called by manager", async function(){
+            await expect(
+                NFTLoanFacilitator.connect(daiHolder).updateRequiredImprovementPercentage(5)
+            ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
+    })
+
     async function interestOwedTotal(ticketID) {
         const ticket = await NFTLoanFacilitator.loanInfo(ticketID)
         const interest = ticket.perSecondInterestRate

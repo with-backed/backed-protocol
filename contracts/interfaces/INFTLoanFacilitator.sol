@@ -114,6 +114,14 @@ interface INFTLoanFacilitator {
     function borrowTicketContract() external returns (address);
 
     /**
+     * @notice The percent improvement required of at least one loan term when underwriting 
+     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
+     * must be 10% higher or interest rate must be 10% lower.
+     * @dev Starts at 10. Only owner can set.
+     */
+    function requiredImprovementPercentage() external returns (uint256);
+
+    /**
      * @notice returns the info for this loan
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
