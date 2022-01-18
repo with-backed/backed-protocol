@@ -10,19 +10,17 @@ import './interfaces/ILendTicket.sol';
 
 
 struct Loan {
-    // ==== mutable ======
     bool closed;
-    // max = (((2^16)*60*60*24*365) / 10 ^ 10) ~= 20k % APR
+    // max = (((2^16 - 1)*60*60*24*365) / 10 ^ 10) ~= 20k % APR
     uint16 perSecondInterestRate;
     uint32 durationSeconds;
-    // at which block was the accumulated interest most recently calculated
+    // at which timestamp was the accumulated interest most recently calculated
     uint40 lastAccumulatedTimestamp;
     address collateralContractAddress;
     address loanAssetContractAddress;
     // used to track loanAsset amount of interest accumulated, incase of interest rate change
     uint256 accumulatedInterest;
     uint256 loanAmount;
-    // ==== immutable =====
     uint256 collateralTokenId;
 }
 
