@@ -1,7 +1,7 @@
 pragma solidity 0.8.10;
 
 import 'base64-sol/base64.sol';
-import './../NFTLoanFacilitator.sol';
+import '../NFTLoanFacilitator.sol';
 import './libraries/NFTLoanTicketSVG.sol';
 import './libraries/PopulateSVGParams.sol';
 
