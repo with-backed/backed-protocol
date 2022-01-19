@@ -83,6 +83,20 @@ interface INFTLoanFacilitator {
      */
     event SeizeCollateral(uint256 indexed id);
 
+     /**
+     * @notice Emitted when originationFeeRate is updated
+     * @dev only owner, value is scaled by SCALAR, e.g. 5e8 = 5%
+     * @param feeRate the new origination fee rate
+     */
+    event UpdateOriginationFeeRate(uint32 feeRate);
+
+    /**
+     * @notice Emitted when loan NFT collateral is seized 
+     * @dev only owner
+     * @param fee the new origination fee
+     */
+    event UpdateRequiredImprovement(uint256 improvementPercent);
+
     /**
      * @notice The magnitude of SCALAR
      * @dev 10^INTEREST_RATE_DECIMALS = 1 = 100%
