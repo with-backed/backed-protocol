@@ -84,8 +84,8 @@ interface INFTLoanFacilitator {
     event SeizeCollateral(uint256 indexed id);
 
     /**
-     * @notice Emitted when originationFeeRate is updated
-     * @dev only owner, value is scaled by SCALAR, e.g. 5e8 = 5%
+     * @notice Emitted when origination fees are withdrawn
+     * @dev only owner can call
      * @param asset the ERC20 asset withdrawn
      * @param amount the amount withdrawn
      * @param to the address the withdrawn amount was sent to
@@ -100,7 +100,7 @@ interface INFTLoanFacilitator {
     event UpdateOriginationFeePercent(uint32 feePercentage);
 
     /**
-     * @notice Emitted when loan NFT collateral is seized 
+     * @notice Emitted when requiredImprovementPercent is updated
      * @dev only owner can call, value is scaled by SCALAR, 100% = SCALAR
      * @param improvementPercent the new required improvementPercent
      */
