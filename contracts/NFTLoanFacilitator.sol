@@ -35,8 +35,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      */
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
-    /// See {INFTLoanFacilitator-originationFeeRate}.
-    uint32 public override originationFeeRate = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
+    /// See {INFTLoanFacilitator-originationFeePercent}.
+    uint32 public override originationFeePercent = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
     
     /// See {INFTLoanFacilitator-SCALAR}.
     uint40 public constant override SCALAR = uint40(10) ** INTEREST_RATE_DECIMALS;
@@ -50,8 +50,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-borrowTicketContract}.
     address public override borrowTicketContract;
 
-    /// See {INFTLoanFacilitator-requiredImprovementPercentage}.
-    uint256 public override requiredImprovementPercentage = 10;
+    /// See {INFTLoanFacilitator-requiredImprovementPercent}.
+    uint256 public override requiredImprovementPercent = 10 ** (INTEREST_RATE_DECIMALS - 1);
 
     mapping(uint256 => Loan) public _loanInfo;
 
@@ -215,7 +215,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.loanAmount = amount;
 
             ERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
-            uint256 facilitatorTake = amount * originationFeeRate / SCALAR;
+            uint256 facilitatorTake = amount * originationFeePercent / SCALAR;
             ERC20(loan.loanAssetContractAddress).safeTransfer(
                 IERC721(borrowTicketContract).ownerOf(loanId),
                 amount - facilitatorTake
@@ -223,9 +223,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 amountIncrease = amount - loan.loanAmount;
-            require((loan.loanAmount * requiredImprovementPercentage / 100) <= amountIncrease
-            || loan.durationSeconds + (loan.durationSeconds * requiredImprovementPercentage / 100) <= durationSeconds 
-            || loan.perSecondInterestRate - (loan.perSecondInterestRate * requiredImprovementPercentage / 100) >= interestRate, 
+            require((loan.loanAmount * requiredImprovementPercent / SCALAR) <= amountIncrease
+            || loan.durationSeconds + (loan.durationSeconds * requiredImprovementPercent / SCALAR) <= durationSeconds 
+            || loan.perSecondInterestRate - (loan.perSecondInterestRate * requiredImprovementPercent / SCALAR) >= interestRate, 
             "NFTLoanFacilitator: proposed terms must be better than existing terms");
 
             uint256 accumulatedInterest = _interestOwed(loan);
@@ -248,7 +248,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     currentLoanOwner,
                     accumulatedInterest + previousLoanAmount
                 );
-                uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
+                uint256 facilitatorTake = (amountIncrease * originationFeePercent / SCALAR);
                 ERC20(loan.loanAssetContractAddress).safeTransfer(
                     IERC721(borrowTicketContract).ownerOf(loanId),
                     amountIncrease - facilitatorTake
@@ -324,24 +324,30 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// @notice Transfers `amount` of loan origination fees for `asset` to `to`
     function withdrawOriginationFees(address asset, uint256 amount, address to) onlyOwner external {
         ERC20(asset).safeTransfer(to, amount);
+
+        emit WithdrawOriginationFees(asset, amount, to);
     }
 
     /**
-     * @notice Updates originationFeeRate the faciliator keeps of each loan amount
+     * @notice Updates originationFeePercent the faciliator keeps of each loan amount
      * @dev Cannot be set higher than 5%
      */
-    function updateOriginationFeeRate(uint32 _originationFeeRate) onlyOwner external {
-        require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
+    function updateOriginationFeePercent(uint32 _originationFeePercent) onlyOwner external {
+        require(_originationFeePercent <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         
-        originationFeeRate = _originationFeeRate;
+        originationFeePercent = _originationFeePercent;
+
+        emit UpdateOriginationFeePercent(_originationFeePercent);
     }
 
     /**
      * @notice updates the percent improvement required of at least one loan term when underwriting 
-     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
+     * a loan that already has a lender. E.g. setting this value to 10% (10 ** SCALAR) means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
      */
-    function updateRequiredImprovementPercentage(uint256 _improvementPercentage) onlyOwner external {
-        requiredImprovementPercentage = _improvementPercentage;
+    function updateRequiredImprovementPercent(uint256 _improvementPercentage) onlyOwner external {
+        requiredImprovementPercent = _improvementPercentage;
+
+        emit UpdateRequiredImprovementPercent(_improvementPercentage);
     }
 }

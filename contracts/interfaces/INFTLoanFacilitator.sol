@@ -83,19 +83,28 @@ interface INFTLoanFacilitator {
      */
     event SeizeCollateral(uint256 indexed id);
 
-     /**
+    /**
      * @notice Emitted when originationFeeRate is updated
      * @dev only owner, value is scaled by SCALAR, e.g. 5e8 = 5%
-     * @param feeRate the new origination fee rate
+     * @param asset the ERC20 asset withdrawn
+     * @param amount the amount withdrawn
+     * @param to the address the withdrawn amount was sent to
      */
-    event UpdateOriginationFeeRate(uint32 feeRate);
+    event WithdrawOriginationFees(address asset, uint256 amount, address to);
+
+     /**
+     * @notice Emitted when originationFeePercent is updated
+     * @dev only owner can call, value is scaled by SCALAR, 100% = SCALAR
+     * @param feePercentage the new origination fee rate
+     */
+    event UpdateOriginationFeePercent(uint32 feePercentage);
 
     /**
      * @notice Emitted when loan NFT collateral is seized 
-     * @dev only owner
-     * @param fee the new origination fee
+     * @dev only owner can call, value is scaled by SCALAR, 100% = SCALAR
+     * @param improvementPercent the new required improvementPercent
      */
-    event UpdateRequiredImprovement(uint256 improvementPercent);
+    event UpdateRequiredImprovementPercent(uint256 improvementPercent);
 
     /**
      * @notice The magnitude of SCALAR
@@ -107,7 +116,7 @@ interface INFTLoanFacilitator {
      * @notice The percent of the loan amount that the facilitator will take as a fee, scaled by SCALAR
      * @dev Starts set to 1%. Can only be set to 0 - 5%. 
      */
-    function originationFeeRate() external returns (uint32);
+    function originationFeePercent() external returns (uint32);
     
     /**
      * @notice The SCALAR for all percentages in the loan facilitator contract
@@ -133,7 +142,7 @@ interface INFTLoanFacilitator {
      * must be 10% higher or interest rate must be 10% lower.
      * @dev Starts at 10. Only owner can set.
      */
-    function requiredImprovementPercentage() external returns (uint256);
+    function requiredImprovementPercent() external returns (uint256);
 
     /**
      * @notice returns the info for this loan

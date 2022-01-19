@@ -509,40 +509,44 @@ describe("NFTLoanFacilitator contract", function () {
     describe("updateOriginationFee", function () {
         it("updates", async function(){
             const originalTake = ethers.BigNumber.from(1).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
-            var NFTLoanFacilitatorTakeRate = await NFTLoanFacilitator.originationFeeRate();
+            var NFTLoanFacilitatorTakeRate = await NFTLoanFacilitator.originationFeePercent();
             expect(NFTLoanFacilitatorTakeRate).to.equal(originalTake)
             const newTake = ethers.BigNumber.from(5).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
-            await NFTLoanFacilitator.connect(manager).updateOriginationFeeRate(newTake)
-            NFTLoanFacilitatorTakeRate = await NFTLoanFacilitator.originationFeeRate();
+            await expect(
+                NFTLoanFacilitator.connect(manager).updateOriginationFeePercent(newTake)
+            ).to.emit(NFTLoanFacilitator, "UpdateOriginationFeePercent")
+            NFTLoanFacilitatorTakeRate = await NFTLoanFacilitator.originationFeePercent();
             expect(NFTLoanFacilitatorTakeRate).to.equal(newTake)
         })
 
         it("reverts if take > 5%", async function(){
             const newTake = ethers.BigNumber.from(6).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await expect(
-                NFTLoanFacilitator.connect(manager).updateOriginationFeeRate(newTake)
+                NFTLoanFacilitator.connect(manager).updateOriginationFeePercent(newTake)
             ).to.be.revertedWith("NFTLoanFacilitator: max fee 5%")
         })
 
         it("reverts if not called by manager", async function(){
             const newTake = ethers.BigNumber.from(2).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).updateOriginationFeeRate(newTake)
+                NFTLoanFacilitator.connect(daiHolder).updateOriginationFeePercent(newTake)
             ).to.be.revertedWith("Ownable: caller is not the owner")
         })
     })
 
-    describe("updateRequiredImprovementPercentage", function () {
+    describe("updateRequiredImprovementPercent", function () {
         it("updates", async function(){ 
             const newPercentage = ethers.BigNumber.from(5);
-            await NFTLoanFacilitator.connect(manager).updateRequiredImprovementPercentage(newPercentage);
-            const percentage = await NFTLoanFacilitator.requiredImprovementPercentage();
+            await expect(
+                NFTLoanFacilitator.connect(manager).updateRequiredImprovementPercent(newPercentage)
+            ).to.emit(NFTLoanFacilitator, "UpdateRequiredImprovementPercent")
+            const percentage = await NFTLoanFacilitator.requiredImprovementPercent();
             expect(percentage).to.eq(newPercentage)
         })
 
         it("reverts if not called by manager", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).updateRequiredImprovementPercentage(5)
+                NFTLoanFacilitator.connect(daiHolder).updateRequiredImprovementPercent(5)
             ).to.be.revertedWith("Ownable: caller is not the owner")
         })
     })
