@@ -324,6 +324,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// @notice Transfers `amount` of loan origination fees for `asset` to `to`
     function withdrawOriginationFees(address asset, uint256 amount, address to) onlyOwner external {
         ERC20(asset).safeTransfer(to, amount);
+
+        emit WithdrawOriginationFees(asset, amount, to);
     }
 
     /**
@@ -334,6 +336,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         
         originationFeeRate = _originationFeeRate;
+
+        emit UpdateOriginationFeeRate(_originationFeeRate);
     }
 
     /**
@@ -343,5 +347,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      */
     function updateRequiredImprovementPercentage(uint256 _improvementPercentage) onlyOwner external {
         requiredImprovementPercentage = _improvementPercentage;
+
+        emit UpdateRequiredImprovementPercent(_improvementPercentage);
     }
 }
