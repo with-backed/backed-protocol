@@ -261,7 +261,7 @@ interface INFTLoanFacilitator {
     /**
      * @notice Transfers the collateral NFT to `sendCollateralTo` and closes the loan.
      * @dev Can only be called by Lend Ticket holder. Can only be called 
-     * if block.timstamp > loanEndSeconds()
+     * if block.timestamp > loanEndSeconds()
      * @param loanId The loan id
      * @param sendCollateralTo The address to send the collateral NFT to
      */
