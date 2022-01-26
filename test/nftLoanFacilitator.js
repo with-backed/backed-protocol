@@ -513,6 +513,9 @@ describe("NFTLoanFacilitator contract", function () {
             expect(NFTLoanFacilitatorTakeRate).to.equal(originalTake)
             const newTake = ethers.BigNumber.from(5).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await NFTLoanFacilitator.connect(manager).updateOriginationFeeRate(newTake)
+            await expect(
+                NFTLoanFacilitator.connect(manager).updateOriginationFeeRate(newTake)
+            ).to.emit(NFTLoanFacilitator, "UpdateOriginationFeeRate")
             NFTLoanFacilitatorTakeRate = await NFTLoanFacilitator.originationFeeRate();
             expect(NFTLoanFacilitatorTakeRate).to.equal(newTake)
         })
@@ -535,7 +538,9 @@ describe("NFTLoanFacilitator contract", function () {
     describe("updateRequiredImprovementPercentage", function () {
         it("updates", async function(){ 
             const newPercentage = ethers.BigNumber.from(5);
-            await NFTLoanFacilitator.connect(manager).updateRequiredImprovementPercentage(newPercentage);
+            await expect(
+                NFTLoanFacilitator.connect(manager).updateRequiredImprovementPercentage(newPercentage)
+            ).to.emit(NFTLoanFacilitator, "UpdateRequiredImprovementPercent")
             const percentage = await NFTLoanFacilitator.requiredImprovementPercentage();
             expect(percentage).to.eq(newPercentage)
         })
