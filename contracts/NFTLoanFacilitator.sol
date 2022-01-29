@@ -34,13 +34,13 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
     /// See {INFTLoanFacilitator-originationFeeRate}.
-    uint32 public override originationFeeRate = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
+    uint256 public override originationFeeRate = 10 ** (INTEREST_RATE_DECIMALS - 2);
     
     /// See {INFTLoanFacilitator-SCALAR}.
-    uint40 public constant override SCALAR = uint40(10) ** INTEREST_RATE_DECIMALS;
+    uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;
 
     /// @dev tracks loan count
-    uint64 private _nonce;
+    uint256 private _nonce;
 
     /// See {INFTLoanFacilitator-lendTicketContract}.
     address public override lendTicketContract;
@@ -328,7 +328,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice Updates originationFeeRate the faciliator keeps of each loan amount
      * @dev Cannot be set higher than 5%
      */
-    function updateOriginationFeeRate(uint32 _originationFeeRate) onlyOwner external {
+    function updateOriginationFeeRate(uint256 _originationFeeRate) onlyOwner external {
         require(_originationFeeRate <= 5 * (10 ** (INTEREST_RATE_DECIMALS - 2)), "NFTLoanFacilitator: max fee 5%");
         
         originationFeeRate = _originationFeeRate;
