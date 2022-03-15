@@ -67,7 +67,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     // ==== view ====
 
-    /// See {INFTLoanFacilitator-_loanInfo}.
+    /// See {INFTLoanFacilitator-loanInfo}.
     function loanInfo(uint256 loanId)
     loanExists(loanId)
     external view override
