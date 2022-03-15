@@ -98,7 +98,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-totalOwed}.
     function totalOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
         Loan storage loan = _loanInfo[loanId];
-        if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
+        if (loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
 
         return _loanInfo[loanId].loanAmount + _interestOwed(
             loan.loanAmount,

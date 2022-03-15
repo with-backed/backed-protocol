@@ -90,11 +90,11 @@ library PopulateSVGParams{
     view private 
     returns (string memory)
     {
-        if(lastAccumulatedTimestamp == 0) return "awaiting lender";
+        if (lastAccumulatedTimestamp == 0) return "awaiting lender";
 
-        if(closed) return "closed";
+        if (closed) return "closed";
 
-        if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)) return "past due";
+        if (block.timestamp > (lastAccumulatedTimestamp + durationSeconds)) return "past due";
 
         return "accruing interest";
     }
