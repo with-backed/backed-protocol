@@ -60,15 +60,15 @@ library PopulateSVGParams{
             );
     }
 
-    function loanAmountString(uint256 amount, address asset) private view returns (string memory){
+    function loanAmountString(uint256 amount, address asset) private view returns (string memory) {
         return UintStrings.decimalString(amount, IERC20Metadata(asset).decimals(), false);
     }
 
-    function loanAssetSymbol(address asset) private view returns (string memory){
+    function loanAssetSymbol(address asset) private view returns (string memory) {
         return IERC20Metadata(asset).symbol();
     }
 
-    function collateralAssetSymbol(address asset) private view returns (string memory){
+    function collateralAssetSymbol(address asset) private view returns (string memory) {
         return ERC721(asset).symbol();
     }
 
@@ -90,17 +90,11 @@ library PopulateSVGParams{
     view private 
     returns (string memory)
     {
-        if(lastAccumulatedTimestamp == 0){
-            return "awaiting lender";
-        }
+        if(lastAccumulatedTimestamp == 0) return "awaiting lender";
 
-        if(closed){
-            return "closed";
-        }
+        if(closed) return "closed";
 
-        if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)){
-            return "past due";
-        }
+        if(block.timestamp > (lastAccumulatedTimestamp + durationSeconds)) return "past due";
 
         return "accruing interest";
     }
@@ -110,7 +104,7 @@ library PopulateSVGParams{
      * @return a string representation of the UTC end date and time of the loan,
      * in format YYYY-MM-DD HH:MM:SS
      */
-    function endDateTime(uint256 endDateSeconds) private pure returns (string memory){
+    function endDateTime(uint256 endDateSeconds) private pure returns (string memory) {
         (uint year, uint month, 
         uint day, uint hour, 
         uint minute, uint second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(endDateSeconds);

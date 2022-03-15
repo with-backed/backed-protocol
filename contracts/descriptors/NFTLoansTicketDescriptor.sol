@@ -84,7 +84,11 @@ contract NFTLoansTicketDescriptor {
         string memory collateralAsset,
         string memory collateralAssetSymbol,
         string memory collateralAssetId
-        ) private pure returns (string memory){
+    ) 
+        private 
+        pure 
+        returns (string memory) 
+    {
             return string(
                 abi.encodePacked(
                     '\\n\\nCollateral Address: ',

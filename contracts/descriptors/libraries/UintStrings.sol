@@ -12,9 +12,7 @@ library UintStrings {
      * @return string
      */
     function decimalString(uint256 number, uint8 decimals, bool isPercent) internal pure returns (string memory) {
-        if(number == 0){
-            return isPercent ? "0%" : "0";
-        }
+        if(number == 0) return isPercent ? "0%" : "0";
         
         uint8 percentBufferOffset = isPercent ? 1 : 0;
         uint256 tenPowDecimals = 10 ** decimals;
@@ -35,7 +33,7 @@ library UintStrings {
 
         DecimalStringParams memory params;
         params.isPercent = isPercent;
-        if((digits - numSigfigs) >= decimals) {
+        if ((digits - numSigfigs) >= decimals) {
             // no decimals, ensure we preserve all trailing zeros
             params.sigfigs = number / tenPowDecimals;
             params.sigfigIndex = digits - decimals;
@@ -43,7 +41,7 @@ library UintStrings {
         } else {
             // chop all trailing zeros for numbers with decimals
             params.sigfigs = number / (10 ** (digits - numSigfigs));
-            if(tenPowDecimals > number){
+            if (tenPowDecimals > number) {
                 // number is less than one
                 // in this case, there may be leading zeros after the decimal place 
                 // that need to be added

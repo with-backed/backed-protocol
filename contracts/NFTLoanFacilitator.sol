@@ -226,7 +226,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         && loan.durationSeconds <= durationSeconds && loan.loanAmount <= amount, 
         "NFTLoanFacilitator: Proposed terms do not qualify" );
 
-        if(loan.lastAccumulatedTimestamp == 0){
+        if (loan.lastAccumulatedTimestamp == 0) {
             loan.perSecondInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
@@ -269,7 +269,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.accumulatedInterest = accumulatedInterest;
 
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
-            if(amountIncrease > 0){
+            if (amountIncrease > 0) {
                 ERC20(loan.loanAssetContractAddress).safeTransferFrom(
                     msg.sender,
                     address(this),
