@@ -440,7 +440,7 @@ describe("NFTLoanFacilitator contract", function () {
             // 
             await expect(
                 NFTLoanFacilitator.connect(addr4).seizeCollateral("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: loan ticker holder only")
+            ).to.be.revertedWith("NFTLoanFacilitator: loan ticket holder only")
         })
 
         it("reverts if ticket is closed", async function(){
