@@ -11,7 +11,7 @@ library UintStrings {
      * @param isPercent Whether the string returned should include '%' at the end
      * @return string
      */
-    function decimalString(uint256 number, uint8 decimals, bool isPercent) internal pure returns(string memory){
+    function decimalString(uint256 number, uint8 decimals, bool isPercent) internal pure returns (string memory) {
         if(number == 0){
             return isPercent ? "0%" : "0";
         }

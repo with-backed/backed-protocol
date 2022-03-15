@@ -9,7 +9,7 @@ contract NFTLoanTicket is ERC721, IERC721Mintable {
     NFTLoanFacilitator public immutable nftLoanFacilitator;
     NFTLoansTicketDescriptor public immutable descriptor;
 
-    modifier loanFacilitatorOnly(){ 
+    modifier loanFacilitatorOnly() { 
         require(msg.sender == address(nftLoanFacilitator), "NFTLoanTicket: only loan facilitator");
         _; 
     }
@@ -27,12 +27,12 @@ contract NFTLoanTicket is ERC721, IERC721Mintable {
     }
 
     /// See {IERC721Mintable-mint}.
-    function mint(address to, uint256 tokenId) loanFacilitatorOnly() override external {
+    function mint(address to, uint256 tokenId) loanFacilitatorOnly() external override loanFacilitatorOnly {
         _safeMint(to, tokenId);
     }
 
     /// @notice returns a base64 encoded data uri containing the token metadata in JSON format
-    function tokenURI(uint256 tokenId) public override view returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), "NFTLoanTicket: URI query for nonexistent token");
         return descriptor.uri(nftLoanFacilitator, tokenId);
     }

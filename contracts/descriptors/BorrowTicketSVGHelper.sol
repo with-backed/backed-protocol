@@ -12,43 +12,46 @@ contract BorrowTicketSVGHelper is TicketTypeSpecificSVGHelper {
         string memory collateralAsset,
         string memory loanAsset
     ) 
-        external pure override returns (string memory)
+        external 
+        pure
+        override 
+        returns (string memory)
     {
         return colorStyles(collateralAsset, loanAsset);
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function ticketIdXCoordinate() external pure override virtual returns (string memory) {
+    function ticketIdXCoordinate() external pure override returns (string memory) {
         return '134';
     }
     
     /// See {ITicketTypeSpecificSVGHelper}
-    function backgroundTitleRectsXTranslate() external pure override virtual returns (string memory) {
+    function backgroundTitleRectsXTranslate() external pure override returns (string memory) {
         return '31';
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function titlesPositionClass() external pure override virtual returns (string memory) {
+    function titlesPositionClass() external pure override returns (string memory) {
         return 'right';
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function titlesXTranslate() external pure override virtual returns (string memory) {
+    function titlesXTranslate() external pure override returns (string memory) {
         return '121';
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function backgroundValueRectsXTranslate() external pure override virtual returns (string memory) {
+    function backgroundValueRectsXTranslate() external pure override returns (string memory) {
         return '129';
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function alignmentClass() external pure override virtual returns (string memory) {
+    function alignmentClass() external pure override returns (string memory) {
         return 'left';
     }
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function valuesXTranslate() external pure override virtual returns (string memory) {
+    function valuesXTranslate() external pure override returns (string memory) {
         return '136';
     }
 }

@@ -213,7 +213,7 @@ interface INFTLoanFacilitator {
             address mintBorrowTicketTo
         ) 
         external
-        returns(uint256 id);
+        returns (uint256 id);
 
     /**
      * @notice Closes the loan, sends the NFT collateral to sendCollateralTo

@@ -9,29 +9,33 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
         string memory collateralAsset,
         string memory loanAsset
     ) 
-        external pure override virtual returns (string memory) 
+        external 
+        pure 
+        override 
+        virtual 
+        returns (string memory) 
     {}
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function ticketIdXCoordinate() external pure override virtual returns (string memory) {}
+    function ticketIdXCoordinate() external pure virtual override returns (string memory) {}
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function backgroundTitleRectsXTranslate() external pure override virtual returns (string memory) {}
+    function backgroundTitleRectsXTranslate() external pure virtual override returns (string memory) {}
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function titlesPositionClass() external pure override virtual returns (string memory) {}
+    function titlesPositionClass() external pure virtual override returns (string memory) {}
     
     /// See {ITicketTypeSpecificSVGHelper}
-    function titlesXTranslate() external pure override virtual returns (string memory) {}
+    function titlesXTranslate() external pure virtual override returns (string memory) {}
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function backgroundValueRectsXTranslate() external pure override virtual returns (string memory) {}
+    function backgroundValueRectsXTranslate() external pure virtual override returns (string memory) {}
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function alignmentClass() external pure override virtual returns (string memory) {}
+    function alignmentClass() external pure virtual override returns (string memory) {}
 
     /// See {ITicketTypeSpecificSVGHelper}
-    function valuesXTranslate() external pure override virtual returns (string memory) {}
+    function valuesXTranslate() external pure virtual override returns (string memory) {}
 
     /// @dev used by backgroundColorsStyles, returns SVG style classes    
     function colorStyles(string memory primary, string memory secondary) internal pure returns (string memory){

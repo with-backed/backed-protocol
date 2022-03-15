@@ -49,8 +49,9 @@ library PopulateSVGParams{
     }
 
     function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perSecondInterestRate) 
-    private view 
-    returns (string memory)
+        private 
+        view 
+        returns (string memory)
     {
         return UintStrings.decimalString(
             annualInterestRate(perSecondInterestRate),
@@ -73,7 +74,7 @@ library PopulateSVGParams{
 
     function accruedInterest(NFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) 
     private view 
-    returns(string memory)
+    returns (string memory)
     {
         return UintStrings.decimalString(
             nftLoanFacilitator.interestOwed(loanId),
@@ -87,7 +88,7 @@ library PopulateSVGParams{
 
     function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed) 
     view private 
-    returns(string memory)
+    returns (string memory)
     {
         if(lastAccumulatedTimestamp == 0){
             return "awaiting lender";

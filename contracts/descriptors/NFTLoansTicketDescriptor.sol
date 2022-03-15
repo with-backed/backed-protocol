@@ -75,7 +75,7 @@ contract NFTLoansTicketDescriptor {
     }
 
     /// @dev Returns string, ticket type (borrow or lend) specific description      
-    function generateDescription(string memory loanId) internal virtual pure returns (string memory) {}
+    function generateDescription(string memory loanId) internal pure virtual returns (string memory) {}
 
     /// @dev Returns string, important info about the loan that this ticket is related to 
     function generateDescriptionDetails(
