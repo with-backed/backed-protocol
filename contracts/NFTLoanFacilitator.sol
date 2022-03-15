@@ -340,7 +340,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice Sets lendTicketContract to _contract
      * @dev cannot be set if lendTicketContract is already set
      */
-    function setLendTicketContract(address _contract) external onlyOwner() {
+    function setLendTicketContract(address _contract) external onlyOwner {
         require(lendTicketContract == address(0), 'NFTLoanFacilitator: already set');
 
         lendTicketContract = _contract;
@@ -350,7 +350,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice Sets borrowTicketContract to _contract
      * @dev cannot be set if borrowTicketContract is already set
      */
-    function setBorrowTicketContract(address _contract) external onlyOwner() {
+    function setBorrowTicketContract(address _contract) external onlyOwner {
         require(borrowTicketContract == address(0), 'NFTLoanFacilitator: already set');
 
         borrowTicketContract = _contract;
