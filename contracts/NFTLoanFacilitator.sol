@@ -67,7 +67,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     // ==== view ====
 
-    /// See {INFTLoanFacilitator-_loanInfo}.
+    /// See {INFTLoanFacilitator-loanInfo}.
     function loanInfo(uint256 loanId)
     loanExists(loanId)
     external view override
@@ -181,15 +181,15 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrower only");
 
         Loan storage loan = _loanInfo[loanId];
-        require(loan.lastAccumulatedTimestamp == 0, "NFTLoanFacilitator: underwritten, use repayAndCloseLoan");
+        require(loan.lastAccumulatedTimestamp == 0, "NFTLoanFacilitator: has lender, use repayAndCloseLoan");
         
         loan.closed = true;
         IERC721(loan.collateralContractAddress).transferFrom(address(this), sendCollateralTo, loan.collateralTokenId);
         emit Close(loanId);
     }
 
-    /// See {INFTLoanFacilitator-underwriteLoan}.
-    function underwriteLoan(
+    /// See {INFTLoanFacilitator-lend}.
+    function lend(
             uint256 loanId,
             uint16 interestRate,
             uint256 amount,
@@ -259,9 +259,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     accumulatedInterest + previousLoanAmount
                 );
             }
-            emit BuyoutUnderwriter(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
+            emit BuyoutLender(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
         }
-        emit UnderwriteLoan(loanId, msg.sender, interestRate, amount, durationSeconds);
+        emit Lend(loanId, msg.sender, interestRate, amount, durationSeconds);
     }
 
     /// See {INFTLoanFacilitator-repayAndCloseLoan}.
@@ -283,7 +283,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-seizeCollateral}.
     function seizeCollateral(uint256 loanId, address sendCollateralTo) notClosed(loanId) override external {
-        require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: underwriter only");
+        require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: loan ticket holder only");
 
         Loan storage loan = _loanInfo[loanId];
         require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp,
@@ -337,7 +337,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     }
 
     /**
-     * @notice updates the percent improvement required of at least one loan term when underwriting 
+     * @notice updates the percent improvement required of at least one loan term when buying out lender 
      * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
      */

@@ -33,29 +33,29 @@ interface INFTLoanFacilitator {
     /** 
      * @notice Emitted when the loan is underwritten or re-underwritten
      * @param id The id of the ticket which is being underwritten
-     * @param underwriter msg.sender
+     * @param lender msg.sender
      * @param interestRate The per second interest rate, scaled by SCALAR, for the loan
      * @param loanAmount The loan amount
      * @param durationSeconds The loan duration in seconds 
      */
-    event UnderwriteLoan(
+    event Lend(
         uint256 indexed id,
-        address indexed underwriter,
+        address indexed lender,
         uint256 interestRate,
         uint256 loanAmount,
         uint256 durationSeconds
         );
 
     /**
-     * @notice Emitted when a loan is being re-underwritten, the current underwriter is being bought out
-     * @param underwriter msg.sender
-     * @param replacedLoanOwner The previous underwriter
-     * @param interestEarned The amount of interest the loan has accrued from first underwrite to this buyout
+     * @notice Emitted when a loan is being re-underwritten, the current loan ticket holder is being bought out
+     * @param lender msg.sender
+     * @param replacedLoanOwner The current loan ticket holder
+     * @param interestEarned The amount of interest the loan has accrued from first lender to this buyout
      * @param replacedAmount The loan amount prior to buyout
      */    
-    event BuyoutUnderwriter(
+    event BuyoutLender(
         uint256 indexed id,
-        address indexed underwriter,
+        address indexed lender,
         address indexed replacedLoanOwner,
         uint256 interestEarned,
         uint256 replacedAmount
@@ -137,7 +137,7 @@ interface INFTLoanFacilitator {
     function borrowTicketContract() external returns (address);
 
     /**
-     * @notice The percent improvement required of at least one loan term when underwriting 
+     * @notice The percent improvement required of at least one loan term when buying out current lender 
      * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
      * must be 10% higher or interest rate must be 10% lower.
      * @dev Starts at 10. Only owner can set.
@@ -149,7 +149,7 @@ interface INFTLoanFacilitator {
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
      * @return perSecondInterestRate The per second interest rate, scaled by SCALAR
-     * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current underwriter
+     * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
      * @return collateralContractAddress The contract address of the NFT collateral 
@@ -226,7 +226,8 @@ interface INFTLoanFacilitator {
     function closeLoan(uint256 loanId, address sendCollateralTo) external;
 
     /**
-     * @notice Underwrites the loan, transferring `amount` of the loan asset 
+     * @notice Lends, meeting or beating the proposed loan terms, 
+     * transferring `amount` of the loan asset 
      * to the facilitator contract. If the loan has not yet been underwritten, 
      * a Lend Ticket is minted to `sendLendTicketTo`. If the loan has already been 
      * underwritten, then this is a buyout, and the Lend Ticket will be transferred
@@ -242,7 +243,7 @@ interface INFTLoanFacilitator {
      * @param durationSeconds The loan duration in seconds
      * @param sendLendTicketTo The address to send the Lend Ticket to
      */
-    function underwriteLoan(
+    function lend(
             uint256 loanId,
             uint16 interestRate,
             uint256 amount,
