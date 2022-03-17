@@ -148,6 +148,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         external
         returns(uint256 id) 
     {
+        require(minDurationSeconds > 0, 'NFTLoanFacilitator: 0 not allowed');
+        require(minLoanAmount > 0, 'NFTLoanFacilitator: 0 not allowed');
         require(collateralContractAddress != lendTicketContract 
         && collateralContractAddress != borrowTicketContract, 
         'NFTLoanFacilitator: cannot use tickets as collateral');
@@ -223,7 +225,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             uint256 amountIncrease = amount - loan.loanAmount;
             require((loan.loanAmount * requiredImprovementPercentage / 100) <= amountIncrease
             || loan.durationSeconds + (loan.durationSeconds * requiredImprovementPercentage / 100) <= durationSeconds 
-            || loan.perSecondInterestRate - (loan.perSecondInterestRate * requiredImprovementPercentage / 100) >= interestRate, 
+            || (loan.perSecondInterestRate != 0 && loan.perSecondInterestRate - (loan.perSecondInterestRate * requiredImprovementPercentage / 100) >= interestRate), 
             "NFTLoanFacilitator: proposed terms must be better than existing terms");
 
             uint256 accumulatedInterest = _interestOwed(loan);
