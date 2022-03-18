@@ -167,10 +167,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         external
         returns(uint256 id) 
     {
-        require(minDurationSeconds > 0, 'NFTLoanFacilitator: 0 not allowed');
-        require(minLoanAmount > 0, 'NFTLoanFacilitator: 0 not allowed');
-        require(collateralContractAddress != lendTicketContract 
-        && collateralContractAddress != borrowTicketContract, 
+        require(minDurationSeconds != 0, 'NFTLoanFacilitator: 0 not allowed');
+        require(minLoanAmount != 0, 'NFTLoanFacilitator: 0 not allowed');
+        require(collateralContractAddress != lendTicketContract,
+        'NFTLoanFacilitator: cannot use tickets as collateral');
+        require(collateralContractAddress != borrowTicketContract, 
         'NFTLoanFacilitator: cannot use tickets as collateral');
         
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
