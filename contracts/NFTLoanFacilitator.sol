@@ -96,7 +96,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     }
 
     /// See {INFTLoanFacilitator-totalOwed}.
-    function totalOwed(uint256 loanId) loanExists(loanId) external view override returns (uint256) {
+    function totalOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
         Loan storage loan = _loanInfo[loanId];
         if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
 
@@ -109,7 +109,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 }
 
     /// See {INFTLoanFacilitator-interestOwed}.
-    function interestOwed(uint256 loanId) loanExists(loanId) external view override returns (uint256) {
+    function interestOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
         Loan storage loan = _loanInfo[loanId];
         if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
 
@@ -140,7 +140,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     }
 
     /// See {INFTLoanFacilitator-loanEndSeconds}.
-    function loanEndSeconds(uint256 loanId) loanExists(loanId) external view override returns (uint256) {
+    function loanEndSeconds(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
         Loan storage loan = _loanInfo[loanId];
         return loan.durationSeconds + loan.lastAccumulatedTimestamp;
     }
@@ -197,7 +197,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     }
 
     /// See {INFTLoanFacilitator-closeLoan}.
-    function closeLoan(uint256 loanId, address sendCollateralTo) notClosed(loanId) external override {
+    function closeLoan(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
         require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrower only");
 
         Loan storage loan = _loanInfo[loanId];
@@ -299,7 +299,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     }
 
     /// See {INFTLoanFacilitator-repayAndCloseLoan}.
-    function repayAndCloseLoan(uint256 loanId) loanExists(loanId) notClosed(loanId) external override {
+    function repayAndCloseLoan(uint256 loanId) external override loanExists(loanId) notClosed(loanId) {
         Loan storage loan = _loanInfo[loanId];
 
         uint256 interest = _interestOwed(

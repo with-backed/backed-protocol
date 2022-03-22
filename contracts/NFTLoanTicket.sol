@@ -19,7 +19,8 @@ contract NFTLoanTicket is ERC721, IERC721Mintable {
         string memory name, 
         string memory symbol, 
         NFTLoanFacilitator _nftLoanFacilitator, 
-        NFTLoansTicketDescriptor _descriptor) 
+        NFTLoansTicketDescriptor _descriptor
+    ) 
         ERC721(name, symbol) 
     {
         nftLoanFacilitator = _nftLoanFacilitator;
