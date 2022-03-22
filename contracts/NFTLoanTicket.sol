@@ -28,7 +28,7 @@ contract NFTLoanTicket is ERC721, IERC721Mintable {
     }
 
     /// See {IERC721Mintable-mint}.
-    function mint(address to, uint256 tokenId) loanFacilitatorOnly() external override loanFacilitatorOnly {
+    function mint(address to, uint256 tokenId) external override loanFacilitatorOnly {
         _safeMint(to, tokenId);
     }
 
