@@ -236,7 +236,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.accumulatedInterest = accumulatedInterest;
 
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
-            ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
             if(amountIncrease > 0){
                 ERC20(loan.loanAssetContractAddress).safeTransferFrom(
                     msg.sender,
@@ -259,6 +258,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     accumulatedInterest + previousLoanAmount
                 );
             }
+            ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
+            
             emit BuyoutLender(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
         }
         emit Lend(loanId, msg.sender, interestRate, amount, durationSeconds);
