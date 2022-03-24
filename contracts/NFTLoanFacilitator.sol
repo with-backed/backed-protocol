@@ -8,24 +8,10 @@ import './interfaces/INFTLoanFacilitator.sol';
 import './interfaces/IERC721Mintable.sol';
 import './interfaces/ILendTicket.sol';
 
-
-struct Loan {
-    bool closed;
-    // max = (((2^16 - 1)*60*60*24*365) / 10 ^ 10) ~= 20k % APR
-    uint16 perSecondInterestRate;
-    uint32 durationSeconds;
-    // at which timestamp was the accumulated interest most recently calculated
-    uint40 lastAccumulatedTimestamp;
-    address collateralContractAddress;
-    address loanAssetContractAddress;
-    // used to track loanAsset amount of interest accumulated, incase of interest rate change
-    uint256 accumulatedInterest;
-    uint256 loanAmount;
-    uint256 collateralTokenId;
-}
-
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeTransferLib for ERC20;
+
+    // ==== constants ====
 
     /** 
      * See {INFTLoanFacilitator-INTEREST_RATE_DECIMALS}.     
@@ -33,11 +19,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      */
     uint8 public constant override INTEREST_RATE_DECIMALS = 10;
 
-    /// See {INFTLoanFacilitator-originationFeeRate}.
-    uint32 public override originationFeeRate = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
-    
     /// See {INFTLoanFacilitator-SCALAR}.
     uint40 public constant override SCALAR = uint40(10) ** INTEREST_RATE_DECIMALS;
+
+    
+    // ==== state variables ====
+
+    /// See {INFTLoanFacilitator-originationFeeRate}.
+    uint32 public override originationFeeRate = uint32(10) ** (INTEREST_RATE_DECIMALS - 2);
 
     /// @dev tracks loan count
     uint64 private _nonce;
@@ -53,6 +42,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     mapping(uint256 => Loan) public _loanInfo;
 
+    
     // ==== modifiers ====
 
     modifier loanExists(uint256 loanId) { 
@@ -65,91 +55,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         _; 
     }
 
-    // ==== view ====
-
-    /// See {INFTLoanFacilitator-loanInfo}.
-    function loanInfo(uint256 loanId)
-    external 
-    view 
-    override
-    loanExists(loanId)
-    returns (bool closed,
-        uint16 perSecondInterestRate,
-        uint32 durationSeconds,
-        uint40 lastAccumulatedTimestamp,
-        address collateralContractAddress,
-        address loanAssetContractAddress,
-        uint256 accumulatedInterest,
-        uint256 loanAmount,
-        uint256 collateralTokenId) 
-    {
-        Loan memory loan = _loanInfo[loanId];
-        return (loan.closed,
-         loan.perSecondInterestRate,
-         loan.durationSeconds,
-         loan.lastAccumulatedTimestamp,
-         loan.collateralContractAddress,
-         loan.loanAssetContractAddress,
-         loan.accumulatedInterest,
-         loan.loanAmount,
-         loan.collateralTokenId);
-    }
-
-    /// See {INFTLoanFacilitator-totalOwed}.
-    function totalOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
-        Loan storage loan = _loanInfo[loanId];
-        if (loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
-
-        return _loanInfo[loanId].loanAmount + _interestOwed(
-            loan.loanAmount,
-            loan.lastAccumulatedTimestamp,
-            loan.perSecondInterestRate,
-            loan.accumulatedInterest
-        );
-}
-
-    /// See {INFTLoanFacilitator-interestOwed}.
-    function interestOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
-        Loan storage loan = _loanInfo[loanId];
-        if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
-
-        return _interestOwed(
-            loan.loanAmount,
-            loan.lastAccumulatedTimestamp,
-            loan.perSecondInterestRate,
-            loan.accumulatedInterest
-        );
-    }
-
-    /// @dev Returns the interest owed, in loan asset units, for `loan`
-    function _interestOwed(
-        uint256 loanAmount,
-        uint40 lastAccumulatedTimestamp,
-        uint16 perSecondInterestRate,
-        uint256 accumulatedInterest
-    ) 
-        private 
-        view 
-        returns (uint256) 
-    {
-        return loanAmount
-            * (block.timestamp - lastAccumulatedTimestamp)
-            * perSecondInterestRate
-            / SCALAR
-            + accumulatedInterest;
-    }
-
-    /// See {INFTLoanFacilitator-loanEndSeconds}.
-    function loanEndSeconds(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
-        Loan storage loan = _loanInfo[loanId];
-        return loan.durationSeconds + loan.lastAccumulatedTimestamp;
-    }
-
     constructor(address _manager) {
         transferOwnership(_manager);
     }
 
-    // ==== state changing ====
+    
+    // ==== state changing external functions ====
 
     /// See {INFTLoanFacilitator-createLoan}.
     function createLoan(
@@ -295,6 +206,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             
             emit BuyoutLender(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
         }
+
         emit Lend(loanId, msg.sender, interestRate, amount, durationSeconds);
     }
 
@@ -315,7 +227,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             address(this),
             IERC721(borrowTicketContract).ownerOf(loanId),
             loan.collateralTokenId
-            );
+        );
+
         emit Repay(loanId, msg.sender, lender, interest, loan.loanAmount);
         emit Close(loanId);
     }
@@ -334,7 +247,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         emit Close(loanId);
     }
 
-    // === manager state changing
+    
+    // === owner state changing ===
 
     /**
      * @notice Sets lendTicketContract to _contract
@@ -384,5 +298,89 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         requiredImprovementPercentage = _improvementPercentage;
 
         emit UpdateRequiredImprovementPercent(_improvementPercentage);
+    }
+
+    
+    // ==== external view ====
+
+    /// See {INFTLoanFacilitator-loanInfo}.
+    function loanInfo(uint256 loanId)
+        external 
+        view 
+        override
+        loanExists(loanId)
+        returns (bool closed,
+            uint16 perSecondInterestRate,
+            uint32 durationSeconds,
+            uint40 lastAccumulatedTimestamp,
+            address collateralContractAddress,
+            address loanAssetContractAddress,
+            uint256 accumulatedInterest,
+            uint256 loanAmount,
+            uint256 collateralTokenId) 
+    {
+        Loan memory loan = _loanInfo[loanId];
+        return (loan.closed,
+         loan.perSecondInterestRate,
+         loan.durationSeconds,
+         loan.lastAccumulatedTimestamp,
+         loan.collateralContractAddress,
+         loan.loanAssetContractAddress,
+         loan.accumulatedInterest,
+         loan.loanAmount,
+         loan.collateralTokenId);
+    }
+
+    /// See {INFTLoanFacilitator-totalOwed}.
+    function totalOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
+        Loan storage loan = _loanInfo[loanId];
+        if (loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
+
+        return _loanInfo[loanId].loanAmount + _interestOwed(
+            loan.loanAmount,
+            loan.lastAccumulatedTimestamp,
+            loan.perSecondInterestRate,
+            loan.accumulatedInterest
+        );
+    }
+
+    /// See {INFTLoanFacilitator-interestOwed}.
+    function interestOwed(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
+        Loan storage loan = _loanInfo[loanId];
+        if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
+
+        return _interestOwed(
+            loan.loanAmount,
+            loan.lastAccumulatedTimestamp,
+            loan.perSecondInterestRate,
+            loan.accumulatedInterest
+        );
+    }
+
+    /// See {INFTLoanFacilitator-loanEndSeconds}.
+    function loanEndSeconds(uint256 loanId) external view override loanExists(loanId) returns (uint256) {
+        Loan storage loan = _loanInfo[loanId];
+        return loan.durationSeconds + loan.lastAccumulatedTimestamp;
+    }
+
+    
+    // === private ===
+
+    /// @dev Returns the interest owed, in loan asset units, for `loan`
+    function _interestOwed(
+        uint256 loanAmount,
+        uint40 lastAccumulatedTimestamp,
+        uint16 perSecondInterestRate,
+        uint256 accumulatedInterest
+    ) 
+        internal 
+        view 
+        returns (uint256) 
+    {
+        return loanAmount
+            * (block.timestamp - lastAccumulatedTimestamp)
+            * perSecondInterestRate
+            / SCALAR
+            + accumulatedInterest;
     }
 }

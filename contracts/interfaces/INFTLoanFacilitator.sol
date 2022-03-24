@@ -1,6 +1,56 @@
 pragma solidity 0.8.10;
 
 interface INFTLoanFacilitator {
+    /// @notice See loanInfo
+    struct Loan {
+        bool closed;
+        uint16 perSecondInterestRate;
+        uint32 durationSeconds;
+        uint40 lastAccumulatedTimestamp;
+        address collateralContractAddress;
+        address loanAssetContractAddress;
+        uint256 accumulatedInterest;
+        uint256 loanAmount;
+        uint256 collateralTokenId;
+    }
+
+    /**
+     * @notice The magnitude of SCALAR
+     * @dev 10^INTEREST_RATE_DECIMALS = 1 = 100%
+     */
+    function INTEREST_RATE_DECIMALS() external returns (uint8);
+
+    /**
+     * @notice The SCALAR for all percentages in the loan facilitator contract
+     * @dev Any interest rate passed to a function should already been multiplied by SCALAR
+     */
+    function SCALAR() external returns (uint40);
+
+    /**
+     * @notice The percent of the loan amount that the facilitator will take as a fee, scaled by SCALAR
+     * @dev Starts set to 1%. Can only be set to 0 - 5%. 
+     */
+    function originationFeeRate() external returns (uint32);
+
+    /**
+     * @notice The lend ticket contract associated with this loan faciliator
+     * @dev Once set, cannot be modified
+     */
+    function lendTicketContract() external returns (address);
+
+    /**
+     * @notice The borrow ticket contract associated with this loan faciliator
+     * @dev Once set, cannot be modified
+     */
+    function borrowTicketContract() external returns (address);
+
+    /**
+     * @notice The percent improvement required of at least one loan term when buying out current lender 
+     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
+     * must be 10% higher or interest rate must be 10% lower.
+     * @dev Starts at 10. Only owner can set.
+     */
+    function requiredImprovementPercentage() external returns (uint256);
     
     /**
      * @notice Emitted when the loan is created
@@ -107,44 +157,6 @@ interface INFTLoanFacilitator {
      event UpdateRequiredImprovementPercent(uint256 improvementPercent);
 
     /**
-     * @notice The magnitude of SCALAR
-     * @dev 10^INTEREST_RATE_DECIMALS = 1 = 100%
-     */
-    function INTEREST_RATE_DECIMALS() external returns (uint8);
-
-    /**
-     * @notice The percent of the loan amount that the facilitator will take as a fee, scaled by SCALAR
-     * @dev Starts set to 1%. Can only be set to 0 - 5%. 
-     */
-    function originationFeeRate() external returns (uint32);
-    
-    /**
-     * @notice The SCALAR for all percentages in the loan facilitator contract
-     * @dev Any interest rate passed to a function should already been multiplied by SCALAR
-     */
-    function SCALAR() external returns (uint40);
-
-    /**
-     * @notice The lend ticket contract associated with this loan faciliator
-     * @dev Once set, cannot be modified
-     */
-    function lendTicketContract() external returns (address);
-
-    /**
-     * @notice The borrow ticket contract associated with this loan faciliator
-     * @dev Once set, cannot be modified
-     */
-    function borrowTicketContract() external returns (address);
-
-    /**
-     * @notice The percent improvement required of at least one loan term when buying out current lender 
-     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
-     * must be 10% higher or interest rate must be 10% lower.
-     * @dev Starts at 10. Only owner can set.
-     */
-    function requiredImprovementPercentage() external returns (uint256);
-
-    /**
      * @notice returns the info for this loan
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
@@ -171,24 +183,6 @@ interface INFTLoanFacilitator {
         uint256 loanAmount,
         uint256 collateralTokenId
         );
-
-    /**
-     * @notice returns the total amount owed for the loan, i.e. principal + interest
-     * @param loanId The loan id
-     */
-    function totalOwed(uint256 loanId) view external returns (uint256);
-
-    /**
-     * @notice returns the interest owed on the loan, in loan asset units
-     * @param loanId The loan id
-     */
-    function interestOwed(uint256 loanId) view external returns (uint256);
-
-    /**
-     * @notice returns the unix timestamp (seconds) of the loan end
-     * @param loanId The loan id
-     */
-    function loanEndSeconds(uint256 loanId) view external returns (uint256);
 
     /**
      * @notice (1) transfers the collateral NFT to the loan facilitator contract 
@@ -267,4 +261,22 @@ interface INFTLoanFacilitator {
      * @param sendCollateralTo The address to send the collateral NFT to
      */
     function seizeCollateral(uint256 loanId, address sendCollateralTo) external;
+
+    /**
+     * @notice returns the total amount owed for the loan, i.e. principal + interest
+     * @param loanId The loan id
+     */
+    function totalOwed(uint256 loanId) view external returns (uint256);
+
+    /**
+     * @notice returns the interest owed on the loan, in loan asset units
+     * @param loanId The loan id
+     */
+    function interestOwed(uint256 loanId) view external returns (uint256);
+
+    /**
+     * @notice returns the unix timestamp (seconds) of the loan end
+     * @param loanId The loan id
+     */
+    function loanEndSeconds(uint256 loanId) view external returns (uint256);
 }
