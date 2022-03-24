@@ -309,7 +309,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         view 
         override
         loanExists(loanId)
-        returns (bool closed,
+        returns (
+            bool closed,
             uint16 perSecondInterestRate,
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
@@ -317,18 +318,21 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             address loanAssetContractAddress,
             uint256 accumulatedInterest,
             uint256 loanAmount,
-            uint256 collateralTokenId) 
+            uint256 collateralTokenId
+        ) 
     {
         Loan memory loan = _loanInfo[loanId];
-        return (loan.closed,
-         loan.perSecondInterestRate,
-         loan.durationSeconds,
-         loan.lastAccumulatedTimestamp,
-         loan.collateralContractAddress,
-         loan.loanAssetContractAddress,
-         loan.accumulatedInterest,
-         loan.loanAmount,
-         loan.collateralTokenId);
+        return (
+            loan.closed,
+            loan.perSecondInterestRate,
+            loan.durationSeconds,
+            loan.lastAccumulatedTimestamp,
+            loan.collateralContractAddress,
+            loan.loanAssetContractAddress,
+            loan.accumulatedInterest,
+            loan.loanAmount,
+            loan.collateralTokenId
+        );
     }
 
     /// See {INFTLoanFacilitator-totalOwed}.
