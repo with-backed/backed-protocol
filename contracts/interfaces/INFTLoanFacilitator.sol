@@ -171,18 +171,28 @@ interface INFTLoanFacilitator {
      * @return collateralTokenId The token ID of the NFT collateral
      */
     function loanInfo(uint256 loanId)
-    external view 
-    returns (
-        bool closed,
-        uint16 perSecondInterestRate,
-        uint32 accumulatedInterest,
-        uint40 lastAccumulatedTimestamp,
-        address collateralContractAddress,
-        address loanAssetContractAddress,
-        uint256 durationSeconds,
-        uint256 loanAmount,
-        uint256 collateralTokenId
+        external 
+        view 
+        returns (
+            bool closed,
+            uint16 perSecondInterestRate,
+            uint32 accumulatedInterest,
+            uint40 lastAccumulatedTimestamp,
+            address collateralContractAddress,
+            address loanAssetContractAddress,
+            uint256 durationSeconds,
+            uint256 loanAmount,
+            uint256 collateralTokenId
         );
+
+    /**
+     * @notice returns the info for this loan
+     * @dev this is a convenience method for other contracts that would prefer to have the 
+     * Loan object not decomposed. 
+     * @param loanId The id of the loan
+     * @return Loan struct corresponding to loanId
+     */
+    function loanInfoStruct(uint256 loanId) external view returns (Loan memory);
 
     /**
      * @notice (1) transfers the collateral NFT to the loan facilitator contract 
@@ -205,9 +215,7 @@ interface INFTLoanFacilitator {
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
             address mintBorrowTicketTo
-        ) 
-        external
-        returns (uint256 id);
+    ) external returns (uint256 id);
 
     /**
      * @notice Closes the loan, sends the NFT collateral to sendCollateralTo
@@ -243,8 +251,7 @@ interface INFTLoanFacilitator {
             uint256 amount,
             uint32 durationSeconds,
             address sendLendTicketTo
-        ) 
-        external;
+    ) external;
 
     /**
      * @notice repays and closes the loan, transferring totalOwed() to the current Lend Ticket holder
