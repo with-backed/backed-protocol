@@ -90,7 +90,7 @@ describe("NFTLoanFacilitator contract", function () {
             expect(ticket.loanAmount).to.equal(loanAmount)
             expect(ticket.collateralTokenId).to.equal(punkId)
             expect(ticket.collateralContractAddress).to.equal(CryptoPunks.address)
-            expect(ticket.perSecondInterestRate).to.equal(interest)
+            expect(ticket.perAnumInterestRate).to.equal(interest)
             expect(ticket.durationSeconds).to.equal(durationSeconds)
             expect(ticket.accumulatedInterest).to.equal(0)
         })
@@ -220,7 +220,7 @@ describe("NFTLoanFacilitator contract", function () {
                         ).not.to.be.reverted
                 const ticket = await NFTLoanFacilitator.loanInfo("1")
                 expect(ticket.loanAmount).to.equal(loanAmount)
-                expect(ticket.perSecondInterestRate).to.equal(interest)
+                expect(ticket.perAnumInterestRate).to.equal(interest)
                 expect(ticket.durationSeconds).to.equal(durationSeconds)
                 expect(ticket.accumulatedInterest).to.equal(0)
                 const block = await provider.getBlock()
@@ -343,7 +343,7 @@ describe("NFTLoanFacilitator contract", function () {
                 const accumulatedInterest = await interestOwedTotal("1")
                 const ticket = await NFTLoanFacilitator.loanInfo("1")
                 expect(ticket.loanAmount).to.equal(newLoanAmount)
-                expect(ticket.perSecondInterestRate).to.equal(interest)
+                expect(ticket.perAnumInterestRate).to.equal(interest)
                 expect(ticket.durationSeconds).to.equal(durationSeconds)
                 expect(ticket.accumulatedInterest).to.equal(accumulatedInterest)
                 const block = await provider.getBlock()
@@ -372,7 +372,7 @@ describe("NFTLoanFacilitator contract", function () {
                     const accumulatedInterest = await interestOwedTotal("1")
                     const ticket = await NFTLoanFacilitator.loanInfo("1")
                     expect(ticket.loanAmount).to.equal(loanAmount)
-                    expect(ticket.perSecondInterestRate).to.equal(interest)
+                    expect(ticket.perAnumInterestRate).to.equal(interest)
                     expect(ticket.durationSeconds).to.equal(newDuration)
                     expect(ticket.accumulatedInterest).to.equal(accumulatedInterest)
                     const block = await provider.getBlock()
@@ -592,14 +592,16 @@ describe("NFTLoanFacilitator contract", function () {
 
     async function interestOwedTotal(ticketID) {
         const ticket = await NFTLoanFacilitator.loanInfo(ticketID)
-        const interest = ticket.perSecondInterestRate
+        const interest = ticket.perAnumInterestRate
         const startTimestamp = ticket.lastAccumulatedTimestamp
         const height = await provider.getBlockNumber()
         const curBlock = await provider.getBlock(height)
         const curTimestamp = curBlock.timestamp
+        const secondsInYear = 60*60*24*365;
         return ticket.loanAmount
             .mul(ethers.BigNumber.from(curTimestamp - startTimestamp))
-            .mul(interest)
+            .mul(Math.floor(interest * 1e18 / secondsInYear))
+            .div(ethers.BigNumber.from(10).pow(18))
             .div(scalar)
             .add(ticket.accumulatedInterest)
     }

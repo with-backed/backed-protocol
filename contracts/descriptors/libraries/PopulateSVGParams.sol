@@ -25,14 +25,14 @@ library PopulateSVGParams{
         view
         returns (NFTLoanTicketSVG.SVGParams memory)
     {
-        (bool closed, uint256 perSecondInterestRate,
+        (bool closed, uint256 perAnumInterestRate,
         uint256 durationSeconds, uint256 lastAccumulatedTimestamp,
         address collateralAddress, address loanAsset, ,
         uint256 loanAmount, uint256 collateralID) = nftLoanFacilitator.loanInfo(id);
 
         svgParams.id = Strings.toString(id);
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
-        svgParams.interestRate = interestRateString(nftLoanFacilitator, perSecondInterestRate); 
+        svgParams.interestRate = interestRateString(nftLoanFacilitator, perAnumInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
         svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
         svgParams.collateralContract = HexStrings.toHexString(uint160(collateralAddress), 20);
@@ -48,13 +48,13 @@ library PopulateSVGParams{
         return svgParams;
     }
 
-    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perSecondInterestRate) 
+    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perAnumInterestRate) 
         private 
         view 
         returns (string memory)
     {
         return UintStrings.decimalString(
-            annualInterestRate(perSecondInterestRate),
+            perAnumInterestRate,
             nftLoanFacilitator.INTEREST_RATE_DECIMALS() - 2,
             true
             );
@@ -73,8 +73,9 @@ library PopulateSVGParams{
     }
 
     function accruedInterest(NFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) 
-    private view 
-    returns (string memory)
+        private 
+        view 
+        returns (string memory)
     {
         return UintStrings.decimalString(
             nftLoanFacilitator.interestOwed(loanId),
@@ -82,13 +83,10 @@ library PopulateSVGParams{
             false);
     }
 
-    function annualInterestRate(uint256 perSecondInterest) private pure returns(uint256) {
-        return perSecondInterest * 31_536_000;
-    }
-
     function loanStatus(uint256 lastAccumulatedTimestamp, uint256 durationSeconds, bool closed) 
-    view private 
-    returns (string memory)
+        view 
+        private 
+        returns (string memory)
     {
         if (lastAccumulatedTimestamp == 0) return "awaiting lender";
 
