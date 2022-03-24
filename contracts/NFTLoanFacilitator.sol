@@ -356,8 +356,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         return loanAmount
             * (block.timestamp - lastAccumulatedTimestamp)
             * (perAnumInterestRate * 1e18 / SECONDS_IN_YEAR)
-            / 1e18
-            / SCALAR
+            / 1e21 // SCALAR * 1e18
             + accumulatedInterest;
     }
 }
