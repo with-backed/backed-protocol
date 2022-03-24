@@ -128,8 +128,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         notClosed(loanId)
     {
         Loan storage loan = _loanInfo[loanId];
-        address loanAssetContractAddress = loan.loanAssetContractAddress;
-
         require(loan.perSecondInterestRate >= interestRate, 'NFTLoanFacilitator: rate too high');
         require(loan.durationSeconds <= durationSeconds, 'NFTLoanFacilitator: duration too low');
         require(loan.loanAmount <= amount, 'NFTLoanFacilitator: amount too low');
@@ -139,6 +137,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
+
+            address loanAssetContractAddress = loan.loanAssetContractAddress;
 
             ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
             uint256 facilitatorTake = amount * originationFeeRate / SCALAR;
@@ -176,6 +176,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
             if (amountIncrease > 0) {
+                address loanAssetContractAddress = loan.loanAssetContractAddress;
                 ERC20(loanAssetContractAddress).safeTransferFrom(
                     msg.sender,
                     address(this),
@@ -191,7 +192,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     amountIncrease - facilitatorTake
                 );
             } else {
-                ERC20(loanAssetContractAddress).safeTransferFrom(
+                ERC20(loan.loanAssetContractAddress).safeTransferFrom(
                     msg.sender,
                     currentLoanOwner,
                     accumulatedInterest + previousLoanAmount
