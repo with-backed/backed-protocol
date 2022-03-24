@@ -129,7 +129,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     {
         Loan storage loan = _loanInfo[loanId];
         address loanAssetContractAddress = loan.loanAssetContractAddress;
-        // require(loanAssetContractAddress != address(0), 'NFTLoanFacilitator: loan does not exist');
 
         require(loan.perSecondInterestRate >= interestRate, 'NFTLoanFacilitator: rate too high');
         require(loan.durationSeconds <= durationSeconds, 'NFTLoanFacilitator: duration too low');
