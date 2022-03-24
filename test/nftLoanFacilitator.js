@@ -444,6 +444,11 @@ describe("NFTLoanFacilitator contract", function () {
             ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
         })
 
+        it("reverts if ticket does not exist", async function(){
+            await expect(
+                NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("10")
+            ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+        })
     })
 
     describe("seizeCollateral", function () {
