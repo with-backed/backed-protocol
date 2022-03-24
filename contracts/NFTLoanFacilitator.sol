@@ -40,13 +40,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-requiredImprovementPercentage}.
     uint256 public override requiredImprovementPercentage = 10;
 
-    mapping(uint256 => Loan) public _loanInfo;
+    /// See {INFTLoanFacilitator-loanInfo}.
+    mapping(uint256 => Loan) public loanInfo;
 
     
     // ==== modifiers ====
 
     modifier notClosed(uint256 loanId) { 
-        require(!_loanInfo[loanId].closed, "NFTLoanFacilitator: loan closed");
+        require(!loanInfo[loanId].closed, "NFTLoanFacilitator: loan closed");
         _; 
     }
 
@@ -81,7 +82,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
 
         id = _nonce++;
-        Loan storage loan = _loanInfo[id];
+        Loan storage loan = loanInfo[id];
         loan.loanAssetContractAddress = loanAssetContractAddress;
         loan.loanAmount = minLoanAmount;
         loan.collateralTokenId = collateralTokenId;
@@ -106,7 +107,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function closeLoan(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
         require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrower only");
 
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
         require(loan.lastAccumulatedTimestamp == 0, "NFTLoanFacilitator: has lender, use repayAndCloseLoan");
         
         loan.closed = true;
@@ -126,7 +127,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         override
         notClosed(loanId)
     {
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
         require(loan.perSecondInterestRate >= interestRate, 'NFTLoanFacilitator: rate too high');
         require(loan.durationSeconds <= durationSeconds, 'NFTLoanFacilitator: duration too low');
         require(loan.loanAmount <= amount, 'NFTLoanFacilitator: amount too low');
@@ -207,7 +208,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-repayAndCloseLoan}.
     function repayAndCloseLoan(uint256 loanId) external override notClosed(loanId) {
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
 
         uint256 interest = _interestOwed(
             loan.loanAmount,
@@ -232,7 +233,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function seizeCollateral(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
         require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: loan ticket holder only");
 
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
         require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp,
         "NFTLoanFacilitator: payment is not late");
 
@@ -299,43 +300,17 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     
     // ==== external view ====
 
-    /// See {INFTLoanFacilitator-loanInfo}.
-    function loanInfo(uint256 loanId)
-        external 
-        view 
-        override
-        returns (
-            bool closed,
-            uint16 perSecondInterestRate,
-            uint32 durationSeconds,
-            uint40 lastAccumulatedTimestamp,
-            address collateralContractAddress,
-            address loanAssetContractAddress,
-            uint256 accumulatedInterest,
-            uint256 loanAmount,
-            uint256 collateralTokenId
-        ) 
-    {
-        Loan memory loan = _loanInfo[loanId];
-        return (
-            loan.closed,
-            loan.perSecondInterestRate,
-            loan.durationSeconds,
-            loan.lastAccumulatedTimestamp,
-            loan.collateralContractAddress,
-            loan.loanAssetContractAddress,
-            loan.accumulatedInterest,
-            loan.loanAmount,
-            loan.collateralTokenId
-        );
+    /// See {INFTLoanFacilitator-loanInfoStruct}.
+    function loanInfoStruct(uint256 loanId) external view override returns (Loan memory) {
+        return loanInfo[loanId];
     }
 
     /// See {INFTLoanFacilitator-totalOwed}.
     function totalOwed(uint256 loanId) external view override returns (uint256) {
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
         if (loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
 
-        return _loanInfo[loanId].loanAmount + _interestOwed(
+        return loanInfo[loanId].loanAmount + _interestOwed(
             loan.loanAmount,
             loan.lastAccumulatedTimestamp,
             loan.perSecondInterestRate,
@@ -345,7 +320,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-interestOwed}.
     function interestOwed(uint256 loanId) external view override returns (uint256) {
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
         if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
 
         return _interestOwed(
@@ -358,7 +333,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-loanEndSeconds}.
     function loanEndSeconds(uint256 loanId) external view override returns (uint256) {
-        Loan storage loan = _loanInfo[loanId];
+        Loan storage loan = loanInfo[loanId];
         return loan.durationSeconds + loan.lastAccumulatedTimestamp;
     }
 
