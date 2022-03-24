@@ -24,13 +24,13 @@ interface INFTLoanFacilitator {
      * @notice The SCALAR for all percentages in the loan facilitator contract
      * @dev Any interest rate passed to a function should already been multiplied by SCALAR
      */
-    function SCALAR() external returns (uint40);
+    function SCALAR() external returns (uint256);
 
     /**
      * @notice The percent of the loan amount that the facilitator will take as a fee, scaled by SCALAR
      * @dev Starts set to 1%. Can only be set to 0 - 5%. 
      */
-    function originationFeeRate() external returns (uint32);
+    function originationFeeRate() external returns (uint256);
 
     /**
      * @notice The lend ticket contract associated with this loan faciliator
