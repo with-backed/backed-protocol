@@ -223,7 +223,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         address lender = IERC721(lendTicketContract).ownerOf(loanId);
         loan.closed = true;
         ERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, lender, interest + loan.loanAmount);
-        IERC721(loan.collateralContractAddress).transferFrom(
+        IERC721(loan.collateralContractAddress).safeTransferFrom(
             address(this),
             IERC721(borrowTicketContract).ownerOf(loanId),
             loan.collateralTokenId
@@ -242,7 +242,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         "NFTLoanFacilitator: payment is not late");
 
         loan.closed = true;
-        IERC721(loan.collateralContractAddress).transferFrom(address(this), sendCollateralTo, loan.collateralTokenId);
+        IERC721(loan.collateralContractAddress).safeTransferFrom(address(this), sendCollateralTo, loan.collateralTokenId);
+
         emit SeizeCollateral(loanId);
         emit Close(loanId);
     }
