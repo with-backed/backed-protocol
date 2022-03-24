@@ -75,7 +75,7 @@ contract NFTLoansTicketDescriptor {
     }
 
     /// @dev Returns string, ticket type (borrow or lend) specific description      
-    function generateDescription(string memory loanId) internal virtual pure returns (string memory) {}
+    function generateDescription(string memory loanId) internal pure virtual returns (string memory) {}
 
     /// @dev Returns string, important info about the loan that this ticket is related to 
     function generateDescriptionDetails(
@@ -84,7 +84,11 @@ contract NFTLoansTicketDescriptor {
         string memory collateralAsset,
         string memory collateralAssetSymbol,
         string memory collateralAssetId
-        ) private pure returns (string memory){
+    ) 
+        private 
+        pure 
+        returns (string memory) 
+    {
             return string(
                 abi.encodePacked(
                     '\\n\\nCollateral Address: ',

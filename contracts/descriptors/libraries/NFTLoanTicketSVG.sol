@@ -38,7 +38,8 @@ library NFTLoanTicketSVG {
 
     /// @notice returns an SVG image as a string. The SVG image is specific to the SVGParams
     function generateSVG(SVGParams memory params, ITicketTypeSpecificSVGHelper typeSpecificHelper) 
-    internal pure 
+    internal 
+    pure 
     returns (string memory svg) 
     {
         return string(
@@ -66,7 +67,9 @@ library NFTLoanTicketSVG {
         string memory loanAsset,
         string memory collateralAsset
     ) 
-        private pure returns (string memory) 
+        private 
+        pure
+        returns (string memory) 
     {
         return string(
             abi.encodePacked(
@@ -112,7 +115,9 @@ library NFTLoanTicketSVG {
         string memory ticketType,
         ITicketTypeSpecificSVGHelper typeSpecificHelper
     )
-        internal pure returns (string memory) 
+        private
+        pure
+        returns (string memory) 
     {
         return string(
             abi.encodePacked(
@@ -167,7 +172,9 @@ library NFTLoanTicketSVG {
         SVGParams memory params, 
         ITicketTypeSpecificSVGHelper typeSpecificHelper
     ) 
-        internal pure returns (string memory) 
+        private
+        pure
+        returns (string memory) 
     {
         return string(
             abi.encodePacked(
@@ -195,7 +202,9 @@ library NFTLoanTicketSVG {
     function dynamicValues2(
         SVGParams memory params
     ) 
-        internal pure returns (string memory) 
+        private 
+        pure 
+        returns (string memory) 
     {
         return string(
             abi.encodePacked(

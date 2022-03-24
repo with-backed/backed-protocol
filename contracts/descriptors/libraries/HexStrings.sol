@@ -14,7 +14,9 @@ library HexStrings {
         uint8 desiredPartialStringLength,
         uint8 valueLengthAsHexString
     ) 
-        internal pure returns (string memory) 
+        internal 
+        pure 
+        returns (string memory) 
     {
         bytes memory buffer = new bytes(desiredPartialStringLength + 5);
         buffer[0] = '0';
