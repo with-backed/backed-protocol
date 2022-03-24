@@ -4,7 +4,7 @@ interface INFTLoanFacilitator {
     /// @notice See loanInfo
     struct Loan {
         bool closed;
-        uint16 perSecondInterestRate;
+        uint16 perAnumInterestRate;
         uint32 durationSeconds;
         uint40 lastAccumulatedTimestamp;
         address collateralContractAddress;
@@ -160,7 +160,7 @@ interface INFTLoanFacilitator {
      * @notice returns the info for this loan
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
-     * @return perSecondInterestRate The per second interest rate, scaled by SCALAR
+     * @return perAnumInterestRate The per second interest rate, scaled by SCALAR
      * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
@@ -175,7 +175,7 @@ interface INFTLoanFacilitator {
         view 
         returns (
             bool closed,
-            uint16 perSecondInterestRate,
+            uint16 perAnumInterestRate,
             uint32 accumulatedInterest,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
