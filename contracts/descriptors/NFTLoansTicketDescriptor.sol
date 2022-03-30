@@ -43,35 +43,32 @@ contract NFTLoansTicketDescriptor {
         view
         returns (string memory)
     {
-        return
-            string(
-                string.concat(
-                    'data:application/json;base64,',
-                    Base64.encode(
-                        bytes(
-                            string.concat(
-                                '{"name":"',
-                                svgParams.nftType,
-                                ' ticket',
-                                ' #',
-                                svgParams.id,
-                                '", "description":"',
-                                generateDescription(svgParams.id),
-                                generateDescriptionDetails(
-                                    svgParams.loanAssetContract,
-                                    svgParams.loanAssetSymbol,
-                                    svgParams.collateralContract, 
-                                    svgParams.collateralAssetSymbol,
-                                    svgParams.collateralId),
-                                '", "image": "',
-                                'data:image/svg+xml;base64,',
-                                Base64.encode(bytes(NFTLoanTicketSVG.generateSVG(svgParams, svgHelper))),
-                                '"}'
-                            )
-                        )
+        return string.concat(
+            'data:application/json;base64,',
+            Base64.encode(
+                bytes(
+                    string.concat(
+                        '{"name":"',
+                        svgParams.nftType,
+                        ' ticket',
+                        ' #',
+                        svgParams.id,
+                        '", "description":"',
+                        generateDescription(svgParams.id),
+                        generateDescriptionDetails(
+                            svgParams.loanAssetContract,
+                            svgParams.loanAssetSymbol,
+                            svgParams.collateralContract, 
+                            svgParams.collateralAssetSymbol,
+                            svgParams.collateralId),
+                        '", "image": "',
+                        'data:image/svg+xml;base64,',
+                        Base64.encode(bytes(NFTLoanTicketSVG.generateSVG(svgParams, svgHelper))),
+                        '"}'
                     )
                 )
-            );
+            )
+        );
     }
 
     /// @dev Returns string, ticket type (borrow or lend) specific description      
@@ -89,23 +86,21 @@ contract NFTLoansTicketDescriptor {
         pure 
         returns (string memory) 
     {
-            return string(
-                string.concat(
-                    '\\n\\nCollateral Address: ',
-                    collateralAsset,
-                    ' (',
-                    collateralAssetSymbol,
-                    ')\\n\\n',
-                    'Collateral ID: ',
-                    collateralAssetId,
-                    '\\n\\n',
-                    'Loan Asset Address: ',
-                    loanAsset,
-                    ' (',
-                    loanAssetSymbol,
-                    ')\\n\\n',
-                    'WARNING: Do your own research to verify the legitimacy of the assets related to this ticket'
-                )
-            );
+        return string.concat(
+            '\\n\\nCollateral Address: ',
+            collateralAsset,
+            ' (',
+            collateralAssetSymbol,
+            ')\\n\\n',
+            'Collateral ID: ',
+            collateralAssetId,
+            '\\n\\n',
+            'Loan Asset Address: ',
+            loanAsset,
+            ' (',
+            loanAssetSymbol,
+            ')\\n\\n',
+            'WARNING: Do your own research to verify the legitimacy of the assets related to this ticket'
+        );
     }
 }

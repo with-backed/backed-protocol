@@ -39,15 +39,13 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
 
     /// @dev used by backgroundColorsStyles, returns SVG style classes    
     function colorStyles(string memory primary, string memory secondary) internal pure returns (string memory) {
-        return string(
-            string.concat(
-                '.highlight-hue{stop-color:',
-                addressStringToHSL(primary),
-                '}',
-                '.highlight-offset{stop-color:',
-                addressStringToHSL(secondary),
-                '}'
-            )
+        return  string.concat(
+            '.highlight-hue{stop-color:',
+            addressStringToHSL(primary),
+            '}',
+            '.highlight-offset{stop-color:',
+            addressStringToHSL(secondary),
+            '}'
         );
     }
 
@@ -60,16 +58,14 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
         uint256 h = (uint256(uint8(hs[0])) + uint8(hs[1])) % 360;
         uint256 s = 80 + (uint8(hs[2]) % 20);
         uint256 l = 80 + (uint8(hs[3]) % 10);
-        return string(
-            string.concat(
-                'hsl(',
-                Strings.toString(h),
-                ',',
-                Strings.toString(s),
-                '%,',
-                Strings.toString(l),
-                '%)'
-            )
+        return string.concat(
+            'hsl(',
+            Strings.toString(h),
+            ',',
+            Strings.toString(s),
+            '%,',
+            Strings.toString(l),
+            '%)'
         );
     }
 }

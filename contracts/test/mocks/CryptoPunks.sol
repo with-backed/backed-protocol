@@ -28,6 +28,6 @@ contract CryptoPunks is ERC721 {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string(string.concat(baseURI, tokenId.toString())) : "";
+        return bytes(baseURI).length > 0 ? string.concat(baseURI, tokenId.toString()) : "";
     }
 }
