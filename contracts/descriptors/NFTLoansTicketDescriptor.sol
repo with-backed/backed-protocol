@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 
 import 'base64-sol/base64.sol';
 import '../NFTLoanFacilitator.sol';
@@ -45,11 +45,11 @@ contract NFTLoansTicketDescriptor {
     {
         return
             string(
-                abi.encodePacked(
+                string.concat(
                     'data:application/json;base64,',
                     Base64.encode(
                         bytes(
-                            abi.encodePacked(
+                            string.concat(
                                 '{"name":"',
                                 svgParams.nftType,
                                 ' ticket',
@@ -90,7 +90,7 @@ contract NFTLoansTicketDescriptor {
         returns (string memory) 
     {
             return string(
-                abi.encodePacked(
+                string.concat(
                     '\\n\\nCollateral Address: ',
                     collateralAsset,
                     ' (',

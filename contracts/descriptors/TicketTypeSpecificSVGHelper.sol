@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 
 import '../interfaces/ITicketTypeSpecificSVGHelper.sol';
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -40,7 +40,7 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
     /// @dev used by backgroundColorsStyles, returns SVG style classes    
     function colorStyles(string memory primary, string memory secondary) internal pure returns (string memory) {
         return string(
-            abi.encodePacked(
+            string.concat(
                 '.highlight-hue{stop-color:',
                 addressStringToHSL(primary),
                 '}',
@@ -61,7 +61,7 @@ contract TicketTypeSpecificSVGHelper is ITicketTypeSpecificSVGHelper {
         uint256 s = 80 + (uint8(hs[2]) % 20);
         uint256 l = 80 + (uint8(hs[3]) % 10);
         return string(
-            abi.encodePacked(
+            string.concat(
                 'hsl(',
                 Strings.toString(h),
                 ',',

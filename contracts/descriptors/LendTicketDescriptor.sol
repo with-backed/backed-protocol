@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 
 import './NFTLoansTicketDescriptor.sol';
 
@@ -12,7 +12,7 @@ contract LendTicketDescriptor is NFTLoansTicketDescriptor {
      */
     function generateDescription(string memory loanId) internal pure override returns (string memory) {
         return string(
-                abi.encodePacked(
+                string.concat(
                     'This Lend Ticket NFT was created when NFT Loan #', 
                     loanId,
                     ' was underwritten. On loan repayment, funds will be transferred to the lend ticket holder. ',

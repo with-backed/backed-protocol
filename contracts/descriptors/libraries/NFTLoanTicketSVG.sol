@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 import 'base64-sol/base64.sol';
 import '../../interfaces/ITicketTypeSpecificSVGHelper.sol';
 
@@ -43,7 +43,7 @@ library NFTLoanTicketSVG {
     returns (string memory svg) 
     {
         return string(
-                abi.encodePacked(
+                string.concat(
                     '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" ',
                     'xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" ',
 	                'viewBox="0 0 300 300" style="enable-background:new 0 0 300 300;" xml:space="preserve">',
@@ -72,7 +72,7 @@ library NFTLoanTicketSVG {
         returns (string memory) 
     {
         return string(
-            abi.encodePacked(
+            string.concat(
         '<style type="text/css">',
             '.st0{fill:url(#wash);}',
             '.st1{width: 171px; height: 23px; opacity:0.65; fill:#FFFFFF;}',
@@ -120,7 +120,7 @@ library NFTLoanTicketSVG {
         returns (string memory) 
     {
         return string(
-            abi.encodePacked(
+            string.concat(
                 '<g transform="translate(',
                 typeSpecificHelper.backgroundTitleRectsXTranslate(),
                 ',0)">',
@@ -177,7 +177,7 @@ library NFTLoanTicketSVG {
         returns (string memory) 
     {
         return string(
-            abi.encodePacked(
+            string.concat(
                 '<g class="st7 ',
                 typeSpecificHelper.alignmentClass(),
                 '" transform="translate(',
@@ -207,7 +207,7 @@ library NFTLoanTicketSVG {
         returns (string memory) 
     {
         return string(
-            abi.encodePacked(
+            string.concat(
                     params.interestAccrued,
                     ' ',
                     params.loanAssetSymbol,

@@ -1,10 +1,8 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "../interfaces/INFTLoanFacilitator.sol";
-
-import "hardhat/console.sol";
+import "../../interfaces/INFTLoanFacilitator.sol";
 
 contract MaliciousERC20 is ERC20, IERC721Receiver {
     INFTLoanFacilitator nftLoanFacilitator;
