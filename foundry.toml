@@ -8,9 +8,7 @@ remappings = [
     '@rari-capital/=node_modules/@rari-capital/',
     'base64-sol/=node_modules/base64-sol/',
     'eth-gas-reporter/=node_modules/eth-gas-reporter/',
-    'hardhat/=node_modules/hardhat/',
-    'ds-test/=lib/ds-test/src/',
-    'forge-std/=lib/forge-std/src/'
+    'hardhat/=node_modules/hardhat/'
 ]
 
 # See more config options https://github.com/gakonst/foundry/tree/master/config
