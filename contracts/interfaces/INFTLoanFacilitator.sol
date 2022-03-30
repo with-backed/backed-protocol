@@ -46,11 +46,12 @@ interface INFTLoanFacilitator {
 
     /**
      * @notice The percent improvement required of at least one loan term when buying out current lender 
-     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
-     * must be 10% higher or interest rate must be 10% lower.
-     * @dev Starts at 10. Only owner can set.
+     * a loan that already has a lender, scaled by SCALAR. 
+     * E.g. setting this value to 100 (10%) means, when replacing a lender, the new loan terms must have
+     * at least 10% greater duration or loan amount or at least 10% lower interest rate. 
+     * @dev Starts at 100 = 10%. Only owner can set. Cannot be set to 0.
      */
-    function requiredImprovementPercentage() external returns (uint256);
+    function requiredImprovementRate() external returns (uint256);
     
     /**
      * @notice Emitted when the loan is created
@@ -58,7 +59,7 @@ interface INFTLoanFacilitator {
      * @param minter msg.sender
      * @param collateralTokenId The token id of the collateral NFT
      * @param collateralContract The contract address of the collateral NFT
-     * @param maxInterestRate The max per second interest rate, scaled by SCALAR
+     * @param maxInterestRate The max per anum interest rate, scaled by SCALAR
      * @param loanAssetContract The contract address of the loan asset
      * @param minLoanAmount mimimum loan amount
      * @param minDurationSeconds minimum loan duration in seconds
@@ -84,7 +85,7 @@ interface INFTLoanFacilitator {
      * @notice Emitted when the loan is underwritten or re-underwritten
      * @param id The id of the ticket which is being underwritten
      * @param lender msg.sender
-     * @param interestRate The per second interest rate, scaled by SCALAR, for the loan
+     * @param interestRate The per anum interest rate, scaled by SCALAR, for the loan
      * @param loanAmount The loan amount
      * @param durationSeconds The loan duration in seconds 
      */
@@ -150,17 +151,17 @@ interface INFTLoanFacilitator {
      event UpdateOriginationFeeRate(uint32 feeRate);
 
      /**
-      * @notice Emitted when requiredImprovementPercent is updated
-      * @dev only owner can call, 1 = 1%
-      * @param improvementPercent the new required improvementPercent
+      * @notice Emitted when requiredImprovementRate is updated
+      * @dev only owner can call, value is scaled by SCALAR, 100% = SCALAR
+      * @param improvementRate the new required improvementRate
       */
-     event UpdateRequiredImprovementPercent(uint256 improvementPercent);
+     event UpdateRequiredImprovementRate(uint256 improvementRate);
 
     /**
      * @notice returns the info for this loan
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
-     * @return perAnumInterestRate The per second interest rate, scaled by SCALAR
+     * @return perAnumInterestRate The per anum interest rate, scaled by SCALAR
      * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
@@ -200,7 +201,7 @@ interface INFTLoanFacilitator {
      * and (3) mints a Borrow Ticket to mintBorrowTicketTo
      * @param collateralTokenId The token id of the collateral NFT 
      * @param collateralContractAddress The contract address of the collateral NFT
-     * @param maxPerSecondInterest The maximum per second interest rate for this loan, scaled by SCALAR
+     * @param maxPerAnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
      * @param minLoanAmount The minimum acceptable loan amount for this loan
      * @param loanAssetContractAddress The address of the loan asset
      * @param minDurationSeconds The minimum duration for this loan
@@ -210,7 +211,7 @@ interface INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint16 maxPerSecondInterest,
+            uint16 maxPerAnumInterest,
             uint256 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
@@ -240,7 +241,7 @@ interface INFTLoanFacilitator {
      * must be improved by at least 10%. E.g. 10% longer duration, 10% lower interest, 
      * 10% higher amount
      * @param loanId The loan id
-     * @param interestRate The per second interest rate, scaled by SCALAR
+     * @param interestRate The per anum interest rate, scaled by SCALAR
      * @param amount The loan amount
      * @param durationSeconds The loan duration in seconds
      * @param sendLendTicketTo The address to send the Lend Ticket to

@@ -22,16 +22,18 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-SCALAR}.
     uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;
 
-    uint256 private constant SECONDS_IN_YEAR = 60 * 60 * 24 * 365;
+    uint256 private constant SECONDS_IN_YEAR = 365 days;
 
     
     // ==== state variables ====
 
     /// See {INFTLoanFacilitator-originationFeeRate}.
+    /// @dev starts at 1%
     uint256 public override originationFeeRate = 10 ** (INTEREST_RATE_DECIMALS - 2);
 
-    /// @dev tracks loan count
-    uint256 private _nonce = 1;
+    /// See {INFTLoanFacilitator-requiredImprovementRate}.
+    /// @dev starts at 10%
+    uint256 public override requiredImprovementRate = 10 ** (INTEREST_RATE_DECIMALS - 1);
 
     /// See {INFTLoanFacilitator-lendTicketContract}.
     address public override lendTicketContract;
@@ -39,11 +41,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-borrowTicketContract}.
     address public override borrowTicketContract;
 
-    /// See {INFTLoanFacilitator-requiredImprovementPercentage}.
-    uint256 public override requiredImprovementPercentage = 10;
-
     /// See {INFTLoanFacilitator-loanInfo}.
     mapping(uint256 => Loan) public loanInfo;
+
+    /// @dev tracks loan count
+    uint256 private _nonce = 1;
 
     
     // ==== modifiers ====
@@ -52,6 +54,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         require(!loanInfo[loanId].closed, "NFTLoanFacilitator: loan closed");
         _; 
     }
+
+
+    // ==== constructor ====
 
     constructor(address _manager) {
         transferOwnership(_manager);
@@ -62,14 +67,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-createLoan}.
     function createLoan(
-            uint256 collateralTokenId,
-            address collateralContractAddress,
-            uint16 maxPerSecondInterest,
-            uint256 minLoanAmount,
-            address loanAssetContractAddress,
-            uint32 minDurationSeconds,
-            address mintBorrowTicketTo
-        )
+        uint256 collateralTokenId,
+        address collateralContractAddress,
+        uint16 maxPerAnumInterest,
+        uint256 minLoanAmount,
+        address loanAssetContractAddress,
+        uint32 minDurationSeconds,
+        address mintBorrowTicketTo
+    )
         external
         override
         returns (uint256 id) 
@@ -89,7 +94,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         loan.loanAmount = minLoanAmount;
         loan.collateralTokenId = collateralTokenId;
         loan.collateralContractAddress = collateralContractAddress;
-        loan.perAnumInterestRate = maxPerSecondInterest;
+        loan.perAnumInterestRate = maxPerAnumInterest;
         loan.durationSeconds = minDurationSeconds;
         
         IERC721Mintable(borrowTicketContract).mint(mintBorrowTicketTo, id);
@@ -98,11 +103,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             msg.sender,
             collateralTokenId,
             collateralContractAddress,
-            maxPerSecondInterest,
+            maxPerAnumInterest,
             loanAssetContractAddress,
             minLoanAmount,
             minDurationSeconds
-            );
+        );
     }
 
     /// See {INFTLoanFacilitator-closeLoan}.
@@ -147,7 +152,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             ERC20(loanAssetContractAddress).safeTransfer(
                 IERC721(borrowTicketContract).ownerOf(loanId),
                 amount - facilitatorTake
-                );
+            );
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 amountIncrease = amount - loan.loanAmount;
@@ -157,9 +162,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 uint16 previousInterestRate = loan.perAnumInterestRate;
                 uint32 previousDurationSeconds = loan.durationSeconds;
 
-                require((previousLoanAmount * requiredImprovementPercentage / 100) <= amountIncrease
-                || previousDurationSeconds + (previousDurationSeconds * requiredImprovementPercentage / 100) <= durationSeconds 
-                || (previousInterestRate != 0 && previousInterestRate - (previousInterestRate * requiredImprovementPercentage / 100) >= interestRate), 
+                require((previousLoanAmount * requiredImprovementRate / SCALAR) <= amountIncrease
+                || previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds 
+                || (previousInterestRate != 0 && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
                 "NFTLoanFacilitator: proposed terms must be better than existing terms");
             }
 
@@ -293,10 +298,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
      */
-    function updateRequiredImprovementPercentage(uint256 _improvementPercentage) external onlyOwner {
-        requiredImprovementPercentage = _improvementPercentage;
+    function updateRequiredImprovementRate(uint256 _improvementRate) external onlyOwner {
+        require(_improvementRate > 0, 'NFTLoanFacilitator: 0 improvement rate');
 
-        emit UpdateRequiredImprovementPercent(_improvementPercentage);
+        requiredImprovementRate = _improvementRate;
+
+        emit UpdateRequiredImprovementRate(_improvementRate);
     }
 
     

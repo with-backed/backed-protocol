@@ -106,19 +106,21 @@ library PopulateSVGParams{
         (uint year, uint month, 
         uint day, uint hour, 
         uint minute, uint second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(endDateSeconds);
-        return string.concat(
-            Strings.toString(year),
-            '-',
-            Strings.toString(month),
-            '-',
-            Strings.toString(day),
-            ' ',
-            Strings.toString(hour),
-            ':',
-            Strings.toString(minute),
-            ':',
-            Strings.toString(second),
-            ' UTC'
+        return string(
+            string.concat(
+                Strings.toString(year),
+                '-',
+                Strings.toString(month),
+                '-',
+                Strings.toString(day),
+                ' ',
+                Strings.toString(hour),
+                ':',
+                Strings.toString(minute),
+                ':',
+                Strings.toString(second),
+                ' UTC'
+            )
         );
     } 
 }

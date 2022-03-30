@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract CryptoPunks is ERC721 {
     using Strings for uint256;
 
-    uint256 private _nonce = 999;
+    uint256 private _nonce = 1000;
 
 	constructor() ERC721("CryptoPunks", "PUNKS") {
     }
@@ -28,6 +28,6 @@ contract CryptoPunks is ERC721 {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string.concat(baseURI, tokenId.toString()) : "";
+        return bytes(baseURI).length > 0 ? string(string.concat(baseURI, tokenId.toString())) : "";
     }
 }
