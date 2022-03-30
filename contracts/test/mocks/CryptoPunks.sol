@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract CryptoPunks is ERC721 {
     using Strings for uint256;
 
-    uint256 private _nonce = 1000;
+    uint256 private _nonce = 999;
 
 	constructor() ERC721("CryptoPunks", "PUNKS") {
     }
