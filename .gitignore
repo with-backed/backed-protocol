@@ -6,5 +6,10 @@ cache
 artifacts
 scripts
 .env
-deployments
+
+# Apple
 **/.DS_Store
+
+# Tenderly
+tenderly.yaml
+deployments
