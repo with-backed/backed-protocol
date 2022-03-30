@@ -824,7 +824,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function decreaseByMinPercent(uint256 old) public returns (uint256) {
-        return old  - old * facilitator.requiredImprovementRate() / facilitator.SCALAR();
+        return old - old * facilitator.requiredImprovementRate() / facilitator.SCALAR();
     }
 
     function calculateTake(uint256 amount) public returns (uint256) {

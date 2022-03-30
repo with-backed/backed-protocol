@@ -106,8 +106,7 @@ library PopulateSVGParams{
         (uint year, uint month, 
         uint day, uint hour, 
         uint minute, uint second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(endDateSeconds);
-        return string(
-            string.concat(
+        return string.concat(
                 Strings.toString(year),
                 '-',
                 Strings.toString(month),
@@ -120,7 +119,6 @@ library PopulateSVGParams{
                 ':',
                 Strings.toString(second),
                 ' UTC'
-            )
         );
     } 
 }
