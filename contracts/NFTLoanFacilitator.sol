@@ -164,7 +164,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
                 require((previousLoanAmount * requiredImprovementRate / SCALAR) <= amountIncrease
                 || previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds 
-                || (previousInterestRate != 0 && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
+                || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
+                    && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
                 "NFTLoanFacilitator: proposed terms must be better than existing terms");
             }
 
@@ -238,14 +239,19 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-seizeCollateral}.
     function seizeCollateral(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
-        require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: loan ticket holder only");
+        require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, 
+        "NFTLoanFacilitator: loan ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
         require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp,
         "NFTLoanFacilitator: payment is not late");
 
         loan.closed = true;
-        IERC721(loan.collateralContractAddress).safeTransferFrom(address(this), sendCollateralTo, loan.collateralTokenId);
+        IERC721(loan.collateralContractAddress).safeTransferFrom(
+            address(this),
+            sendCollateralTo,
+            loan.collateralTokenId
+        );
 
         emit SeizeCollateral(loanId);
         emit Close(loanId);
