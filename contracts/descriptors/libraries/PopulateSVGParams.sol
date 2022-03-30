@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -106,21 +106,19 @@ library PopulateSVGParams{
         (uint year, uint month, 
         uint day, uint hour, 
         uint minute, uint second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(endDateSeconds);
-        return string(
-            abi.encodePacked(
-                Strings.toString(year),
-                '-',
-                Strings.toString(month),
-                '-',
-                Strings.toString(day),
-                ' ',
-                Strings.toString(hour),
-                ':',
-                Strings.toString(minute),
-                ':',
-                Strings.toString(second),
-                ' UTC'
-            )
+        return string.concat(
+            Strings.toString(year),
+            '-',
+            Strings.toString(month),
+            '-',
+            Strings.toString(day),
+            ' ',
+            Strings.toString(hour),
+            ':',
+            Strings.toString(minute),
+            ':',
+            Strings.toString(second),
+            ' UTC'
         );
     } 
 }

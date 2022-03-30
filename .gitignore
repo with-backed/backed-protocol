@@ -7,3 +7,4 @@ artifacts
 scripts
 .env
 deployments
+**/.DS_Store

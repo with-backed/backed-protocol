@@ -66,8 +66,9 @@ describe("NFTLoanFacilitator contract", function () {
 
 
         DAIContract = await ethers.getContractFactory("DAI");
-        DAI = await DAIContract.connect(daiHolder).deploy();
+        DAI = await DAIContract.deploy();
         await DAI.deployed();  
+        DAI.mint(ethers.BigNumber.from(10).pow(30), daiHolder.address);
       });
       
     describe("tokenURI", function() {

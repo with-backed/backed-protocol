@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -6,17 +6,18 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract CryptoPunks is ERC721 {
     using Strings for uint256;
 
-    uint256 private _nonce = 1000;
+    uint256 private _nonce = 999;
 
 	constructor() ERC721("CryptoPunks", "PUNKS") {
     }
 
-    function mint() external {
-        mintTo(msg.sender);
+    function mint() external returns (uint256 id) {
+        id = mintTo(msg.sender);
     }
 
-    function mintTo(address to) public {
-        _safeMint(to, _nonce++, "");
+    function mintTo(address to) public returns (uint256) {
+        _safeMint(to, ++_nonce, "");
+        return _nonce;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -27,6 +28,6 @@ contract CryptoPunks is ERC721 {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+        return bytes(baseURI).length > 0 ? string.concat(baseURI, tokenId.toString()) : "";
     }
 }
