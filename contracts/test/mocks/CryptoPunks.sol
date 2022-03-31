@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -20,14 +21,9 @@ contract CryptoPunks is ERC721 {
         return _nonce;
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://wrappedpunks.com:3000/api/punks/metadata/";
-    }
-
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string.concat(baseURI, tokenId.toString()) : "";
+        return "";
     }
 }
