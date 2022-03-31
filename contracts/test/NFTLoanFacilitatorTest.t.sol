@@ -4,7 +4,7 @@ import {DSTest} from "./helpers/test.sol";
 import {Vm} from "./helpers/Vm.sol";
 
 import {NFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
-import {NFTLoanFacilitatorFactory} from "./NFTLoanFacilitatorFactory.sol";
+import {NFTLoanFacilitatorFactory} from "./helpers/NFTLoanFacilitatorFactory.sol";
 import {BorrowTicket} from "contracts/BorrowTicket.sol";
 import {LendTicket} from "contracts/LendTicket.sol";
 import {CryptoPunks} from "./mocks/CryptoPunks.sol";
@@ -509,7 +509,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         // 1 year with 1% annual on 10^20 = 10^18
         // tiny loss of precision, 10^18 - 999999999997963200 = 2036800
         // => 0.000000000002037 in the case of currencies with 18 decimals
-        vm.warp(startTimestamp + (60*60*24*365));
+        vm.warp(startTimestamp + 365 days);
         assertEq(facilitator.interestOwed(loanId), 999999999997963200);
     }
 

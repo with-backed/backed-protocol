@@ -1,12 +1,12 @@
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import './interfaces/INFTLoanFacilitator.sol';
-import './interfaces/IERC721Mintable.sol';
-import './interfaces/ILendTicket.sol';
+import {INFTLoanFacilitator} from './interfaces/INFTLoanFacilitator.sol';
+import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
+import {ILendTicket} from './interfaces/ILendTicket.sol';
 
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeTransferLib for ERC20;
@@ -124,12 +124,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-lend}.
     function lend(
-            uint256 loanId,
-            uint16 interestRate,
-            uint256 amount,
-            uint32 durationSeconds,
-            address sendLendTicketTo
-        )
+        uint256 loanId,
+        uint16 interestRate,
+        uint256 amount,
+        uint32 durationSeconds,
+        address sendLendTicketTo
+    )
         external
         override
         notClosed(loanId)
