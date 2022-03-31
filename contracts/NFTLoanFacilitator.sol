@@ -4,7 +4,6 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 import {INFTLoanFacilitator} from './interfaces/INFTLoanFacilitator.sol';
 import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
 import {ILendTicket} from './interfaces/ILendTicket.sol';
