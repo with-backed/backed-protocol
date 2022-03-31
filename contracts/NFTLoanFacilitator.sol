@@ -4,6 +4,7 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+
 import {INFTLoanFacilitator} from './interfaces/INFTLoanFacilitator.sol';
 import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
 import {ILendTicket} from './interfaces/ILendTicket.sol';
@@ -81,6 +82,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     {
         require(minDurationSeconds != 0, 'NFTLoanFacilitator: 0 duration');
         require(minLoanAmount != 0, 'NFTLoanFacilitator: 0 loan amount');
+        require(loanAssetContractAddress != address(0), 'NFTLoanFacilitator: invalid loanAssetContractAddress');
         require(collateralContractAddress != lendTicketContract,
         'NFTLoanFacilitator: cannot use tickets as collateral');
         require(collateralContractAddress != borrowTicketContract, 
@@ -112,7 +114,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-closeLoan}.
     function closeLoan(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
-        require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrower only");
+        require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrow ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
         require(loan.lastAccumulatedTimestamp == 0, "NFTLoanFacilitator: has lender, use repayAndCloseLoan");
@@ -135,9 +137,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         notClosed(loanId)
     {
         Loan storage loan = loanInfo[loanId];
-        require(loan.perAnumInterestRate >= interestRate, 'NFTLoanFacilitator: rate too high');
-        require(loan.durationSeconds <= durationSeconds, 'NFTLoanFacilitator: duration too low');
-        require(loan.loanAmount <= amount, 'NFTLoanFacilitator: amount too low');
+        require(interestRate <= loan.perAnumInterestRate, 'NFTLoanFacilitator: rate too high');
+        require(durationSeconds >= loan.durationSeconds, 'NFTLoanFacilitator: duration too low');
+        require(amount >= loan.loanAmount, 'NFTLoanFacilitator: amount too low');
 
         if (loan.lastAccumulatedTimestamp == 0) {
             loan.perAnumInterestRate = interestRate;
@@ -155,8 +157,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             );
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
-            uint256 amountIncrease = amount - loan.loanAmount;
             uint256 previousLoanAmount = loan.loanAmount;
+            uint256 amountIncrease = amount - previousLoanAmount;
 
             {
                 uint16 previousInterestRate = loan.perAnumInterestRate;
@@ -240,7 +242,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-seizeCollateral}.
     function seizeCollateral(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
         require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, 
-        "NFTLoanFacilitator: loan ticket holder only");
+        "NFTLoanFacilitator: lend ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
         require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp,
@@ -355,7 +357,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     
     // === private ===
 
-    /// @dev Returns the interest owed, in loan asset units, for `loan`
+    /// @dev Returns the total interest owed on loan
     function _interestOwed(
         uint256 loanAmount,
         uint40 lastAccumulatedTimestamp,

@@ -166,7 +166,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if caller is not ticket owner", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).closeLoan("1", addr4.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: borrower only")
+                ).to.be.revertedWith("NFTLoanFacilitator: borrow ticket holder only")
         });
 
         it("reverts if loan closed", async function(){
@@ -479,7 +479,7 @@ describe("NFTLoanFacilitator contract", function () {
             // 
             await expect(
                 NFTLoanFacilitator.connect(addr4).seizeCollateral("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: loan ticket holder only")
+            ).to.be.revertedWith("NFTLoanFacilitator: lend ticket holder only")
         })
 
         it("reverts if ticket is closed", async function(){

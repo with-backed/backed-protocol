@@ -360,7 +360,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
 
         vm.startPrank(address(2));
-        vm.expectRevert("NFTLoanFacilitator: borrower only");
+        vm.expectRevert("NFTLoanFacilitator: borrow ticket holder only");
         facilitator.closeLoan(loanId, borrower);
     }
 
@@ -705,7 +705,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         address randomAddress = address(4);
         vm.prank(randomAddress);
 
-        vm.expectRevert("NFTLoanFacilitator: loan ticket holder only");
+        vm.expectRevert("NFTLoanFacilitator: lend ticket holder only");
         facilitator.seizeCollateral(loanId, randomAddress);
     }
 
