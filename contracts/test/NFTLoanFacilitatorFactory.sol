@@ -16,7 +16,14 @@ interface Vm {
 contract NFTLoanFacilitatorFactory {
     Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-    function newFacilitator(address manager) public returns (BorrowTicket borrowTicket, LendTicket lendTicket, NFTLoanFacilitator facilitator){
+    function newFacilitator(address manager)
+        public 
+        returns (
+            BorrowTicket borrowTicket,
+            LendTicket lendTicket,
+            NFTLoanFacilitator facilitator
+        )
+    {
         BorrowTicketSVGHelper bs = new BorrowTicketSVGHelper();
         BorrowTicketDescriptor bd = new BorrowTicketDescriptor(bs);
 

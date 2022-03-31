@@ -175,7 +175,7 @@ contract NFTLoanFacilitatorFuzzTests is DSTest {
 
     function testCreateAndCloseLoan(
         address caller,
-        uint16 maxPerSecondInterest,
+        uint16 maxPerAnumInterest,
         uint256 minLoanAmount,
         uint32 minDurationSeconds,
         address mintTo
@@ -192,7 +192,7 @@ contract NFTLoanFacilitatorFuzzTests is DSTest {
         uint256 loanId = facilitator.createLoan(
             nftId,
             address(nftContract),
-            maxPerSecondInterest,
+            maxPerAnumInterest,
             minLoanAmount,
             address(erc20Contract),
             minDurationSeconds,
@@ -275,7 +275,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         // verify mutable struct fields were stored on-chain
         (
             bool closed,
-            uint16 perSecondInterestRate,
+            uint16 perAnumInterestRate,
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
@@ -286,7 +286,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         ) = facilitator.loanInfo(loanId);
         assertTrue(!closed);
         assertEq(durationSeconds, loanDuration);
-        assertEq(perSecondInterestRate, interestRate);
+        assertEq(perAnumInterestRate, interestRate);
         assertEq(lastAccumulatedTimestamp, 0);
         assertEq(accumulatedInterest, 0);
         assertEq(collateralContractAddress, address(punks));
@@ -746,19 +746,27 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testUpdateRequiredImprovementPercentageRevertsIfNotCalledByManager()
+    function testUpdateRequiredImprovementRateRevertsIfNotCalledByManager()
         public
     {
         vm.startPrank(address(1));
         vm.expectRevert("Ownable: caller is not the owner");
-        facilitator.updateOriginationFeeRate(1);
+        facilitator.updateRequiredImprovementRate(1);
     }
 
-    function testUpdateRequiredImprovementPercentageWorks() public {
+    function testUpdateRequiredImprovementRateRevertsIf0()
+        public
+    {
         vm.startPrank(address(this));
-        facilitator.updateRequiredImprovementPercentage(20 * facilitator.SCALAR());
+        vm.expectRevert("NFTLoanFacilitator: 0 improvement rate");
+        facilitator.updateRequiredImprovementRate(0);
+    }
+
+    function testUpdateRequiredImprovementRateWorks() public {
+        vm.startPrank(address(this));
+        facilitator.updateRequiredImprovementRate(20 * facilitator.SCALAR());
         assertEq(
-            facilitator.requiredImprovementPercentage(),
+            facilitator.requiredImprovementRate(),
             20 * facilitator.SCALAR()
         );
     }
@@ -811,12 +819,12 @@ contract NFTLoanFacilitatorTest is DSTest {
         return
             old +
             old * 
-            facilitator.requiredImprovementPercentage() /
-            100;
+            facilitator.requiredImprovementRate() /
+            facilitator.SCALAR();
     }
 
     function decreaseByMinPercent(uint256 old) public returns (uint256) {
-        return old  - old * facilitator.requiredImprovementPercentage() / 100;
+        return old - old * facilitator.requiredImprovementRate() / facilitator.SCALAR();
     }
 
     function calculateTake(uint256 amount) public returns (uint256) {
