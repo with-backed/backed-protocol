@@ -186,7 +186,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testCreateLoanEmitsCorrectly() public {
-        vm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, true, true);
         emit CreateLoan(
             1,
             borrower,
@@ -918,7 +918,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         setUpLender(newLender);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration));
 
-        vm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, true, true);
         emit BuyoutLender(
             loanId,
             newLender,
@@ -926,9 +926,11 @@ contract NFTLoanFacilitatorTest is DSTest {
             0,
             loanAmount
         );
+
+        vm.expectEmit(true, true, false, true);
         emit Lend(
             loanId,
-            address(this),
+            newLender,
             interestRate,
             loanAmount,
             newDuration
