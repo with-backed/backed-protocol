@@ -841,6 +841,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testBuyoutPaysPreviousLenderCorrectly(uint256 amount) public {
         vm.assume(amount >= loanAmount);
+        vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
         vm.warp(startTimestamp + 100);
@@ -859,15 +860,16 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(1)
         );
 
-        assertEq(beforeBalance + amount + interest, dai.balanceOf(lender));
+        assertEq(beforeBalance + loanAmount + interest, dai.balanceOf(lender));
     }
 
-    function testBuyoutPaysBorrowerCorrectlyInAmountIncreased(uint256 amount) public {
+    function testBuyoutPaysBorrowerCorrectly(uint256 amount) public {
         vm.assume(amount >= loanAmount);
+        vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
-        dai.mint(loanAmount, address(this));
-        dai.approve(address(facilitator), loanAmount);
+        dai.mint(amount, address(this));
+        dai.approve(address(facilitator), amount);
 
         uint256 beforeBalance = dai.balanceOf(borrower);
         
@@ -881,7 +883,32 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         uint256 amountIncrease = amount - loanAmount;
         uint256 originationFee = amountIncrease * facilitator.originationFeeRate() / facilitator.SCALAR();
-        assertEq(beforeBalance + (amount - originationFee), dai.balanceOf(borrower));
+        assertEq(beforeBalance + (amountIncrease - originationFee), dai.balanceOf(borrower));
+    }
+
+    function testBuyoutPaysFacilitatorCorrectly(uint256 amount) public {
+        vm.assume(amount >= loanAmount);
+        vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        address newLender = address(3);
+        dai.mint(amount, newLender);
+        vm.startPrank(newLender);
+        dai.approve(address(facilitator), amount);
+
+        uint256 beforeBalance = dai.balanceOf(address(facilitator));
+        
+        facilitator.lend(
+            loanId,
+            interestRate,
+            amount,
+            uint32(increaseByMinPercent(loanDuration)),
+            address(1)
+        );
+
+        uint256 amountIncrease = amount - loanAmount;
+        uint256 originationFee = amountIncrease * facilitator.originationFeeRate() / facilitator.SCALAR();
+        assertEq(beforeBalance + originationFee, dai.balanceOf(address(facilitator)));
     }
 
     function testBuyoutEmitsCorrectly() public {
@@ -917,110 +944,6 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testBuyoutSuccessfulWithLowerInterest() public {
-        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-
-        address newLender = address(3);
-        setUpLender(newLender);
-        vm.startPrank(newLender);
-
-        uint256 newTimestamp = startTimestamp + 10;
-        vm.warp(newTimestamp);
-        uint256 interestAccrued = facilitator.interestOwed(loanId);
-        dai.mint(interestAccrued, newLender); // make sure new lender has amount to pay back old lender + interest
-        uint256 balanceOfNewLender = dai.balanceOf(newLender);
-
-        uint16 newInterestRate = uint16(
-            decreaseByMinPercent(uint256(interestRate))
-        );
-        facilitator.lend(
-            loanId,
-            newInterestRate,
-            loanAmount,
-            loanDuration,
-            newLender
-        );
-        (
-            ,
-            uint16 newInterestRateFromLoan,
-            ,
-            uint40 lastAccumulatedTimestamp,
-            ,
-            ,
-            uint256 accumulatedInterest,
-            ,
-
-        ) = facilitator.loanInfo(loanId);
-        assertEq(newInterestRateFromLoan, newInterestRate);
-        assertEq(lastAccumulatedTimestamp, newTimestamp);
-        assertEq(accumulatedInterest, interestAccrued);
-
-        // make sure lend ticket gets transferred
-        assertEq(lendTicket.ownerOf(loanId), newLender);
-
-        // make sure old lender gets their dai + interest back, and new lender has no dai
-        assertEq(dai.balanceOf(lender), loanAmount + interestAccrued);
-        assertEq(
-            dai.balanceOf(newLender),
-            balanceOfNewLender - (loanAmount + interestAccrued)
-        );
-    }
-
-    function testBuyoutSuccessfulWithLowerDuration() public {
-        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-
-        address newLender = address(3);
-        setUpLender(newLender);
-        vm.startPrank(newLender);
-
-        uint32 newDuration = uint32(
-            increaseByMinPercent(uint256(loanDuration))
-        );
-        facilitator.lend(
-            loanId,
-            interestRate,
-            loanAmount,
-            newDuration,
-            newLender
-        );
-        (, , uint32 durationFromLoan, , , , , , ) = facilitator.loanInfo(
-            loanId
-        );
-        assertEq(durationFromLoan, newDuration);
-
-        // make sure lend ticket gets transferred
-        assertEq(lendTicket.ownerOf(loanId), newLender);
-    }
-
-    function testBuyoutSuccessfulWithHigherAmount() public {
-        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-
-        address newLender = address(3);
-        setUpLender(newLender);
-        vm.startPrank(newLender);
-
-        uint256 newAmount = increaseByMinPercent(loanAmount);
-        uint256 amountIncrease = newAmount - loanAmount;
-        dai.mint(amountIncrease, newLender);
-        uint256 balanceOfNewLender = dai.balanceOf(newLender);
-
-        facilitator.lend(
-            loanId,
-            interestRate,
-            newAmount,
-            loanDuration,
-            newLender
-        );
-
-        // make sure lend ticket gets transferred
-        assertEq(lendTicket.ownerOf(loanId), newLender);
-
-        uint256 facilitatorTake = calculateTake(newAmount);
-        assertEq(dai.balanceOf(lender), loanAmount); // make sure ERC20 balances are correct -- we didn't warp timestamp, so no interest was accrued
-        assertEq(dai.balanceOf(newLender), balanceOfNewLender - newAmount); // new lender lent out all their dai to improve terms in loan amount
-        assertEq(dai.balanceOf(borrower), newAmount - facilitatorTake); // borrower gets new improved loan amount, minus facilitator take
-    }
-
     function testBuyoutFailsIfTermsNotImproved() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
@@ -1039,7 +962,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testBuyoutFailsIfLoanAmountNotSufficientlyImrpoved() public {
+    function testBuyoutFailsIfLoanAmountNotSufficientlyImproved() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
         address newLender = address(3);
@@ -1058,7 +981,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testBuyoutFailsIfLoanDurationNotSufficientlyImrpoved() public {
+    function testBuyoutFailsIfLoanDurationNotSufficientlyImproved() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
         address newLender = address(3);
@@ -1077,7 +1000,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testBuyoutFailsIfInterestRateNotSufficientlyImrpoved() public {
+    function testBuyoutFailsIfInterestRateNotSufficientlyImproved() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
         address newLender = address(3);
