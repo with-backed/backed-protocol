@@ -96,7 +96,7 @@ interface INFTLoanFacilitator {
         uint256 interestRate,
         uint256 loanAmount,
         uint256 durationSeconds
-        );
+    );
 
     /**
      * @notice Emitted when a loan is being re-underwritten, the current loan ticket holder is being bought out
@@ -111,7 +111,7 @@ interface INFTLoanFacilitator {
         address indexed replacedLoanOwner,
         uint256 interestEarned,
         uint256 replacedAmount
-        );
+    );
     
     /**
      * @notice Emitted when loan is repaid
@@ -127,7 +127,7 @@ interface INFTLoanFacilitator {
         address indexed loanOwner,
         uint256 interestEarned,
         uint256 loanAmount
-        );
+    );
 
     /**
      * @notice Emitted when loan NFT collateral is seized 

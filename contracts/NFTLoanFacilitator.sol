@@ -82,7 +82,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     {
         require(minDurationSeconds != 0, 'NFTLoanFacilitator: 0 duration');
         require(minLoanAmount != 0, 'NFTLoanFacilitator: 0 loan amount');
-        require(loanAssetContractAddress != address(0), 'NFTLoanFacilitator: invalid loanAssetContractAddress');
+        require(loanAssetContractAddress != address(0), 'NFTLoanFacilitator: invalid loan asset');
         require(collateralContractAddress != lendTicketContract,
         'NFTLoanFacilitator: cannot use tickets as collateral');
         require(collateralContractAddress != borrowTicketContract, 
