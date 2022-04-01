@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 import 'base64-sol/base64.sol';
 import '../../interfaces/ITicketTypeSpecificSVGHelper.sol';

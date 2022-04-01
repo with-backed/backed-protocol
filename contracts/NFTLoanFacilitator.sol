@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import './interfaces/INFTLoanFacilitator.sol';
-import './interfaces/IERC721Mintable.sol';
-import './interfaces/ILendTicket.sol';
+import {INFTLoanFacilitator} from './interfaces/INFTLoanFacilitator.sol';
+import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
+import {ILendTicket} from './interfaces/ILendTicket.sol';
 
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     using SafeTransferLib for ERC20;
@@ -81,6 +82,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     {
         require(minDurationSeconds != 0, 'NFTLoanFacilitator: 0 duration');
         require(minLoanAmount != 0, 'NFTLoanFacilitator: 0 loan amount');
+        require(loanAssetContractAddress != address(0), 'NFTLoanFacilitator: invalid loan asset');
         require(collateralContractAddress != lendTicketContract,
         'NFTLoanFacilitator: cannot use tickets as collateral');
         require(collateralContractAddress != borrowTicketContract, 
@@ -112,7 +114,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-closeLoan}.
     function closeLoan(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
-        require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrower only");
+        require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrow ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
         require(loan.lastAccumulatedTimestamp == 0, "NFTLoanFacilitator: has lender, use repayAndCloseLoan");
@@ -124,22 +126,23 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-lend}.
     function lend(
-            uint256 loanId,
-            uint16 interestRate,
-            uint256 amount,
-            uint32 durationSeconds,
-            address sendLendTicketTo
-        )
+        uint256 loanId,
+        uint16 interestRate,
+        uint256 amount,
+        uint32 durationSeconds,
+        address sendLendTicketTo
+    )
         external
         override
         notClosed(loanId)
     {
         Loan storage loan = loanInfo[loanId];
-        require(loan.perAnumInterestRate >= interestRate, 'NFTLoanFacilitator: rate too high');
-        require(loan.durationSeconds <= durationSeconds, 'NFTLoanFacilitator: duration too low');
-        require(loan.loanAmount <= amount, 'NFTLoanFacilitator: amount too low');
-
+        
         if (loan.lastAccumulatedTimestamp == 0) {
+            require(interestRate <= loan.perAnumInterestRate, 'NFTLoanFacilitator: rate too high');
+            require(durationSeconds >= loan.durationSeconds, 'NFTLoanFacilitator: duration too low');
+            require(amount >= loan.loanAmount, 'NFTLoanFacilitator: amount too low');
+        
             loan.perAnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
@@ -155,12 +158,16 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             );
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
-            uint256 amountIncrease = amount - loan.loanAmount;
             uint256 previousLoanAmount = loan.loanAmount;
+            // will underflow if amount < previousAmount
+            uint256 amountIncrease = amount - previousLoanAmount;
 
             {
                 uint16 previousInterestRate = loan.perAnumInterestRate;
                 uint32 previousDurationSeconds = loan.durationSeconds;
+
+                require(interestRate <= previousInterestRate, 'NFTLoanFacilitator: rate too high');
+                require(durationSeconds >= previousDurationSeconds, 'NFTLoanFacilitator: duration too low');
 
                 require((previousLoanAmount * requiredImprovementRate / SCALAR) <= amountIncrease
                 || previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds 
@@ -240,7 +247,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-seizeCollateral}.
     function seizeCollateral(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
         require(IERC721(lendTicketContract).ownerOf(loanId) == msg.sender, 
-        "NFTLoanFacilitator: loan ticket holder only");
+        "NFTLoanFacilitator: lend ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
         require(block.timestamp > loan.durationSeconds + loan.lastAccumulatedTimestamp,
@@ -303,6 +310,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice updates the percent improvement required of at least one loan term when buying out lender 
      * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
+     * @dev Cannot be 0.
      */
     function updateRequiredImprovementRate(uint256 _improvementRate) external onlyOwner {
         require(_improvementRate > 0, 'NFTLoanFacilitator: 0 improvement rate');
@@ -355,7 +363,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     
     // === private ===
 
-    /// @dev Returns the interest owed, in loan asset units, for `loan`
+    /// @dev Returns the total interest owed on loan
     function _interestOwed(
         uint256 loanAmount,
         uint40 lastAccumulatedTimestamp,

@@ -1,5 +1,6 @@
 node_modules
 .idea
+.VSCodeCounter
 
 #Hardhat files
 cache

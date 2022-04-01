@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.12;
 
 
@@ -63,8 +64,9 @@ library UintStrings {
         return generateDecimalString(params);
     }
 
-    // With modifications, 
-    // From https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/NFTDescriptor.sol#L189-L231
+    /// @dev the below is from
+    /// https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/NFTDescriptor.sol#L189-L231
+    // with modifications
 
     struct DecimalStringParams {
         // significant figures of decimal
