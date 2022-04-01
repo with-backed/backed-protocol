@@ -137,11 +137,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         notClosed(loanId)
     {
         Loan storage loan = loanInfo[loanId];
-        require(interestRate <= loan.perAnumInterestRate, 'NFTLoanFacilitator: rate too high');
-        require(durationSeconds >= loan.durationSeconds, 'NFTLoanFacilitator: duration too low');
-        require(amount >= loan.loanAmount, 'NFTLoanFacilitator: amount too low');
-
+        
         if (loan.lastAccumulatedTimestamp == 0) {
+            require(interestRate <= loan.perAnumInterestRate, 'NFTLoanFacilitator: rate too high');
+            require(durationSeconds >= loan.durationSeconds, 'NFTLoanFacilitator: duration too low');
+            require(amount >= loan.loanAmount, 'NFTLoanFacilitator: amount too low');
+        
             loan.perAnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
@@ -158,11 +159,15 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 previousLoanAmount = loan.loanAmount;
+            // will underflow if amount < previousAmount
             uint256 amountIncrease = amount - previousLoanAmount;
 
             {
                 uint16 previousInterestRate = loan.perAnumInterestRate;
                 uint32 previousDurationSeconds = loan.durationSeconds;
+
+                require(interestRate <= previousInterestRate, 'NFTLoanFacilitator: rate too high');
+                require(durationSeconds >= previousDurationSeconds, 'NFTLoanFacilitator: duration too low');
 
                 require((previousLoanAmount * requiredImprovementRate / SCALAR) <= amountIncrease
                 || previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds 
@@ -305,6 +310,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
      * @notice updates the percent improvement required of at least one loan term when buying out lender 
      * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
+     * @dev Cannot be 0.
      */
     function updateRequiredImprovementRate(uint256 _improvementRate) external onlyOwner {
         require(_improvementRate > 0, 'NFTLoanFacilitator: 0 improvement rate');

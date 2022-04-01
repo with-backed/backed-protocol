@@ -303,7 +303,7 @@ describe("NFTLoanFacilitator contract", function () {
             it("reverts if one value does not meet or beat exisiting, even if others are improved", async function(){
                 await expect(
                         NFTLoanFacilitator.connect(addr4).lend("1", interest.mul(90).div(100), loanAmount.sub(1), durationSeconds, addr4.address)
-                        ).to.be.revertedWith("NFTLoanFacilitator: amount too low")
+                        ).to.be.reverted
             })
 
             it("does not revert if interest is less", async function(){
