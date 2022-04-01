@@ -159,47 +159,18 @@ interface INFTLoanFacilitator {
      event UpdateRequiredImprovementRate(uint256 improvementRate);
 
     /**
-     * @notice returns the info for this loan
-     * @param loanId The id of the loan
-     * @return closed Whether or not the ticket is closed
-     * @return perAnumInterestRate The per anum interest rate, scaled by SCALAR
-     * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
-     * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
-     * i.e. the timestamp of the most recent underwriting
-     * @return collateralContractAddress The contract address of the NFT collateral 
-     * @return loanAssetContractAddress The contract address of the loan asset.
-     * @return durationSeconds The loan duration in seconds
-     * @return loanAmount The loan amount
-     * @return collateralTokenId The token ID of the NFT collateral
-     */
-    function loanInfo(uint256 loanId)
-        external 
-        view 
-        returns (
-            bool closed,
-            uint16 perAnumInterestRate,
-            uint32 accumulatedInterest,
-            uint40 lastAccumulatedTimestamp,
-            address collateralContractAddress,
-            address loanAssetContractAddress,
-            uint256 durationSeconds,
-            uint256 loanAmount,
-            uint256 collateralTokenId
-        );
-
-    /**
-     * @notice returns the info for this loan
-     * @dev this is a convenience method for other contracts that would prefer to have the 
-     * Loan object not decomposed. 
-     * @param loanId The id of the loan
-     * @return Loan struct corresponding to loanId
-     */
-    function loanInfoStruct(uint256 loanId) external view returns (Loan memory);
-
-    /**
      * @notice (1) transfers the collateral NFT to the loan facilitator contract 
      * (2) creates the loan, populating loanInfo in the facilitator contract,
      * and (3) mints a Borrow Ticket to mintBorrowTicketTo
+     * @dev loan duration or loan amount cannot be 0, 
+     * this is done to protect borrowers from accidentally passing a default value
+     * and also because it creates odd lending and buyout behavior: possible to lend
+     * for 0 value or 0 duration, and possible to buyout with no improvement because, for example
+     * previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds
+     * evaluates to true if previousDurationSeconds is 0 and durationSeconds is 0.
+     * loanAssetContractAddress cannot be address(0), we check this because Solmate SafeTransferLib
+     * does not revert with address(0) and this could cause odd behavior.
+     * collateralContractAddress cannot be address(borrowTicket) or address(lendTicket).
      * @param collateralTokenId The token id of the collateral NFT 
      * @param collateralContractAddress The contract address of the collateral NFT
      * @param maxPerAnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
@@ -270,6 +241,44 @@ interface INFTLoanFacilitator {
      * @param sendCollateralTo The address to send the collateral NFT to
      */
     function seizeCollateral(uint256 loanId, address sendCollateralTo) external;
+
+    /**
+     * @notice returns the info for this loan
+     * @param loanId The id of the loan
+     * @return closed Whether or not the ticket is closed
+     * @return perAnumInterestRate The per anum interest rate, scaled by SCALAR
+     * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
+     * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
+     * i.e. the timestamp of the most recent underwriting
+     * @return collateralContractAddress The contract address of the NFT collateral 
+     * @return loanAssetContractAddress The contract address of the loan asset.
+     * @return durationSeconds The loan duration in seconds
+     * @return loanAmount The loan amount
+     * @return collateralTokenId The token ID of the NFT collateral
+     */
+    function loanInfo(uint256 loanId)
+        external 
+        view 
+        returns (
+            bool closed,
+            uint16 perAnumInterestRate,
+            uint32 accumulatedInterest,
+            uint40 lastAccumulatedTimestamp,
+            address collateralContractAddress,
+            address loanAssetContractAddress,
+            uint256 durationSeconds,
+            uint256 loanAmount,
+            uint256 collateralTokenId
+        );
+
+    /**
+     * @notice returns the info for this loan
+     * @dev this is a convenience method for other contracts that would prefer to have the 
+     * Loan object not decomposed. 
+     * @param loanId The id of the loan
+     * @return Loan struct corresponding to loanId
+     */
+    function loanInfoStruct(uint256 loanId) external view returns (Loan memory);
 
     /**
      * @notice returns the total amount owed for the loan, i.e. principal + interest
