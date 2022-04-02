@@ -23,8 +23,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-SCALAR}.
     uint256 public constant override SCALAR = 10 ** INTEREST_RATE_DECIMALS;
 
-    uint256 private constant SECONDS_IN_YEAR = 365 days;
-
     
     // ==== state variables ====
 
@@ -366,8 +364,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// @dev Returns the total interest owed on loan
     function _interestOwed(
         uint256 loanAmount,
-        uint40 lastAccumulatedTimestamp,
-        uint16 perAnumInterestRate,
+        uint256 lastAccumulatedTimestamp,
+        uint256 perAnumInterestRate,
         uint256 accumulatedInterest
     ) 
         internal 
@@ -376,7 +374,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     {
         return loanAmount
             * (block.timestamp - lastAccumulatedTimestamp)
-            * (perAnumInterestRate * 1e18 / SECONDS_IN_YEAR)
+            * (perAnumInterestRate * 1e18 / 365 days)
             / 1e21 // SCALAR * 1e18
             + accumulatedInterest;
     }
