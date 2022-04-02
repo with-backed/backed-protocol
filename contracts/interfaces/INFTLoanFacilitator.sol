@@ -220,9 +220,9 @@ interface INFTLoanFacilitator {
      */
     function lend(
             uint256 loanId,
-            uint16 interestRate,
+            uint256 interestRate,
             uint256 amount,
-            uint32 durationSeconds,
+            uint256 durationSeconds,
             address sendLendTicketTo
     ) external;
 
