@@ -161,8 +161,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             uint256 amountIncrease = amount - previousLoanAmount;
 
             {
-                uint16 previousInterestRate = loan.perAnumInterestRate;
-                uint32 previousDurationSeconds = loan.durationSeconds;
+                uint256 previousInterestRate = loan.perAnumInterestRate;
+                uint256 previousDurationSeconds = loan.durationSeconds;
 
                 require(interestRate <= previousInterestRate, 'NFTLoanFacilitator: rate too high');
                 require(durationSeconds >= previousDurationSeconds, 'NFTLoanFacilitator: duration too low');
