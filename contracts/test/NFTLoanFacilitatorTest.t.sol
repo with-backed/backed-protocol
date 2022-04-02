@@ -468,7 +468,6 @@ contract NFTLoanFacilitatorTest is DSTest {
         uint32 duration,
         address sendTo
     ) public {
-        vm.assume(amount < type(uint128).max);
         vm.assume(rate <= interestRate);
         vm.assume(amount >= loanAmount);
         vm.assume(duration >= loanDuration);
@@ -509,8 +508,6 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(collateralContractAddress, address(punks));
         assertEq(loanAssetContractAddress, address(dai));
         assertEq(collateralTokenId, tokenId);
-        vm.warp(startTimestamp + 1000);
-        facilitator.interestOwed(loanId);
     }
 
     function testLendEmitsCorrectly() public {

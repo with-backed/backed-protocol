@@ -125,9 +125,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-lend}.
     function lend(
         uint256 loanId,
-        uint256 interestRate,
+        uint16 interestRate,
         uint256 amount,
-        uint256 durationSeconds,
+        uint32 durationSeconds,
         address sendLendTicketTo
     )
         external
@@ -141,9 +141,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             require(durationSeconds >= loan.durationSeconds, 'NFTLoanFacilitator: duration too low');
             require(amount >= loan.loanAmount, 'NFTLoanFacilitator: amount too low');
         
-            loan.perAnumInterestRate = safe16(interestRate);
+            loan.perAnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
-            loan.durationSeconds = safe32(durationSeconds);
+            loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
             address loanAssetContractAddress = loan.loanAssetContractAddress;
@@ -181,9 +181,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 loan.accumulatedInterest
             );
 
-            loan.perAnumInterestRate = safe16(interestRate);
+            loan.perAnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
-            loan.durationSeconds = safe32(durationSeconds);
+            loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
             loan.accumulatedInterest = accumulatedInterest;
 
@@ -377,15 +377,5 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             * (perAnumInterestRate * 1e18 / 365 days)
             / 1e21 // SCALAR * 1e18
             + accumulatedInterest;
-    }
-
-    function safe16(uint n) private pure returns (uint16) {
-        if(n > type(uint16).max) revert();
-        return uint16(n);
-    }
-
-    function safe32(uint n) private pure returns (uint32) {
-        if(n > type(uint32).max) revert();
-        return uint32(n);
     }
 }
