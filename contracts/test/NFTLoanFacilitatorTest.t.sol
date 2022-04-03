@@ -18,7 +18,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     DAI dai = new DAI();
     uint256 punkId;
     uint16 interestRate = 15;
-    uint256 loanAmount = 1e20;
+    uint128 loanAmount = 1e20;
     uint32 loanDuration = 1000;
     uint256 startTimestamp = 5;
 

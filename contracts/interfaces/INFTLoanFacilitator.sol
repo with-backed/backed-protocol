@@ -10,8 +10,8 @@ interface INFTLoanFacilitator {
         uint40 lastAccumulatedTimestamp;
         address collateralContractAddress;
         address loanAssetContractAddress;
-        uint256 accumulatedInterest;
-        uint256 loanAmount;
+        uint128 accumulatedInterest;
+        uint128 loanAmount;
         uint256 collateralTokenId;
     }
 
@@ -184,7 +184,7 @@ interface INFTLoanFacilitator {
             uint256 collateralTokenId,
             address collateralContractAddress,
             uint16 maxPerAnumInterest,
-            uint256 minLoanAmount,
+            uint128 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
             address mintBorrowTicketTo
@@ -221,7 +221,7 @@ interface INFTLoanFacilitator {
     function lend(
             uint256 loanId,
             uint16 interestRate,
-            uint256 amount,
+            uint128 amount,
             uint32 durationSeconds,
             address sendLendTicketTo
     ) external;
@@ -247,12 +247,13 @@ interface INFTLoanFacilitator {
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
      * @return perAnumInterestRate The per anum interest rate, scaled by SCALAR
-     * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
+     * @return durationSeconds The loan duration in seconds
+     
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
      * @return collateralContractAddress The contract address of the NFT collateral 
      * @return loanAssetContractAddress The contract address of the loan asset.
-     * @return durationSeconds The loan duration in seconds
+     * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
      * @return loanAmount The loan amount
      * @return collateralTokenId The token ID of the NFT collateral
      */
@@ -262,12 +263,12 @@ interface INFTLoanFacilitator {
         returns (
             bool closed,
             uint16 perAnumInterestRate,
-            uint32 accumulatedInterest,
+            uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
             address loanAssetContractAddress,
-            uint256 durationSeconds,
-            uint256 loanAmount,
+            uint128 accumulatedInterest,
+            uint128 loanAmount,
             uint256 collateralTokenId
         );
 
