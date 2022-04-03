@@ -311,20 +311,6 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testCreateLoanAddressZeroLoanAssetNotAllowed() public {
-        vm.startPrank(borrower);
-        vm.expectRevert("NFTLoanFacilitator: invalid loan asset");
-        facilitator.createLoan(
-            punkId,
-            address(punks),
-            interestRate,
-            loanAmount,
-            address(0),
-            loanDuration,
-            borrower
-        );
-    }
-
     function testCreateLoanAddressZeroCollateralFails() public {
         vm.startPrank(borrower);
         vm.expectRevert(bytes(""));
