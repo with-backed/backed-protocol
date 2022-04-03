@@ -2,7 +2,8 @@
 pragma solidity 0.8.12;
 
 import './NFTLoanTicket.sol';
-import './descriptors/NFTLoansTicketDescriptor.sol';
+import {NFTLoanFacilitator} from './NFTLoanFacilitator.sol';
+import {NFTLoansTicketDescriptor} from './descriptors/NFTLoansTicketDescriptor.sol';
 
 contract BorrowTicket is NFTLoanTicket {
 
