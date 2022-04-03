@@ -17,6 +17,6 @@ contract LendTicket is NFTLoanTicket, ILendTicket {
 
     /// See {ILendTicket-loanFacilitatorTransfer}
     function loanFacilitatorTransfer(address from, address to, uint256 loanId) external override loanFacilitatorOnly {
-        _safeTransfer(from, to, loanId, "");
+        _transfer(from, to, loanId);
     }
 }
