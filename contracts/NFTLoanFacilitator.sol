@@ -2,8 +2,6 @@
 pragma solidity 0.8.12;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -12,7 +10,7 @@ import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
 import {ILendTicket} from './interfaces/ILendTicket.sol';
 
 contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
-    using SafeERC20 for IERC20;
+    using SafeTransferLib for ERC20;
 
     // ==== constants ====
 
@@ -154,9 +152,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
-            IERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
+            ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
             uint256 facilitatorTake = amount * originationFeeRate / SCALAR;
-            IERC20(loanAssetContractAddress).safeTransfer(
+            ERC20(loanAssetContractAddress).safeTransfer(
                 IERC721(borrowTicketContract).ownerOf(loanId),
                 amount - facilitatorTake
             );
@@ -196,22 +194,22 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
             if (amountIncrease > 0) {
                 address loanAssetContractAddress = loan.loanAssetContractAddress;
-                IERC20(loanAssetContractAddress).safeTransferFrom(
+                ERC20(loanAssetContractAddress).safeTransferFrom(
                     msg.sender,
                     address(this),
                     amount + accumulatedInterest
                 );
-                IERC20(loanAssetContractAddress).safeTransfer(
+                ERC20(loanAssetContractAddress).safeTransfer(
                     currentLoanOwner,
                     accumulatedInterest + previousLoanAmount
                 );
                 uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
-                IERC20(loanAssetContractAddress).safeTransfer(
+                ERC20(loanAssetContractAddress).safeTransfer(
                     IERC721(borrowTicketContract).ownerOf(loanId),
                     amountIncrease - facilitatorTake
                 );
             } else {
-                IERC20(loan.loanAssetContractAddress).safeTransferFrom(
+                ERC20(loan.loanAssetContractAddress).safeTransferFrom(
                     msg.sender,
                     currentLoanOwner,
                     accumulatedInterest + previousLoanAmount
@@ -237,7 +235,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         );
         address lender = IERC721(lendTicketContract).ownerOf(loanId);
         loan.closed = true;
-        IERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, lender, interest + loan.loanAmount);
+        ERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, lender, interest + loan.loanAmount);
         IERC721(loan.collateralContractAddress).safeTransferFrom(
             address(this),
             IERC721(borrowTicketContract).ownerOf(loanId),
@@ -293,7 +291,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// @notice Transfers `amount` of loan origination fees for `asset` to `to`
     function withdrawOriginationFees(address asset, uint256 amount, address to) external onlyOwner {
-        IERC20(asset).safeTransfer(to, amount);
+        ERC20(asset).safeTransfer(to, amount);
 
         emit WithdrawOriginationFees(asset, amount, to);
     }
