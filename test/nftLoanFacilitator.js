@@ -160,7 +160,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).closeLoan("2", addr4.address)
-                ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+                ).to.be.revertedWith("NFTLoanFacilitator: borrow ticket holder only")
         });
 
         it("reverts if caller is not ticket owner", async function(){
@@ -194,7 +194,7 @@ describe("NFTLoanFacilitator contract", function () {
             it("reverts if loan does not exist", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("2", 0, 0, 0, daiHolder.address)
-                    ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+                    ).to.be.revertedWith("NFTLoanFacilitator: invalid loan")
             })
 
             it("reverts if amount is too low", async function(){
@@ -448,7 +448,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if ticket does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("10")
-            ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+            ).to.be.revertedWith("Address: call to non-contract")
         })
     })
 
@@ -503,7 +503,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).seizeCollateral("2", addr4.address)
-            ).to.be.revertedWith("ERC721: owner query for nonexistent token")
+            ).to.be.revertedWith("NFTLoanFacilitator: lend ticket holder only")
         })
     })
 
@@ -605,14 +605,6 @@ describe("NFTLoanFacilitator contract", function () {
             .div(ethers.BigNumber.from(10).pow(18))
             .div(scalar)
             .add(ticket.accumulatedInterest)
-    }
-
-    function drawableBalance() {
-        return loanAmount
-        .mul(
-            scalar.sub(originationFeeRate)
-        )
-        .div(scalar)
     }
 });
     

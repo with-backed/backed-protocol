@@ -80,7 +80,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     {
         require(minDurationSeconds != 0, 'NFTLoanFacilitator: 0 duration');
         require(minLoanAmount != 0, 'NFTLoanFacilitator: 0 loan amount');
-        require(loanAssetContractAddress != address(0), 'NFTLoanFacilitator: invalid loan asset');
         require(collateralContractAddress != lendTicketContract,
         'NFTLoanFacilitator: cannot use tickets as collateral');
         require(collateralContractAddress != borrowTicketContract, 
@@ -141,6 +140,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         Loan storage loan = loanInfo[loanId];
         
         if (loan.lastAccumulatedTimestamp == 0) {
+            address loanAssetContractAddress = loan.loanAssetContractAddress;
+            require(loanAssetContractAddress != address(0), "NFTLoanFacilitator: invalid loan");
+
             require(interestRate <= loan.perAnumInterestRate, 'NFTLoanFacilitator: rate too high');
             require(durationSeconds >= loan.durationSeconds, 'NFTLoanFacilitator: duration too low');
             require(amount >= loan.loanAmount, 'NFTLoanFacilitator: amount too low');
@@ -149,8 +151,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
-
-            address loanAssetContractAddress = loan.loanAssetContractAddress;
 
             ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
             uint256 facilitatorTake = amount * originationFeeRate / SCALAR;

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721} from "@rari-capital/solmate/src/tokens/ERC721.sol";
 
-import './descriptors/NFTLoansTicketDescriptor.sol';
-import './interfaces/IERC721Mintable.sol';
+import {NFTLoanFacilitator} from './NFTLoanFacilitator.sol';
+import {NFTLoansTicketDescriptor} from './descriptors/NFTLoansTicketDescriptor.sol';
+import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
 
 contract NFTLoanTicket is ERC721, IERC721Mintable {
     NFTLoanFacilitator public immutable nftLoanFacilitator;
@@ -35,7 +36,6 @@ contract NFTLoanTicket is ERC721, IERC721Mintable {
 
     /// @notice returns a base64 encoded data uri containing the token metadata in JSON format
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "NFTLoanTicket: URI query for nonexistent token");
         return descriptor.uri(nftLoanFacilitator, tokenId);
     }
 }
