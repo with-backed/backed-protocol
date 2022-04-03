@@ -167,7 +167,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     DAI dai = new DAI();
 
     uint16 interestRate = 15;
-    uint256 loanAmount = 1e20;
+    uint128 loanAmount = 1e20;
     uint32 loanDuration = 1000;
     uint256 startTimestamp = 5;
     uint256 punkId;
@@ -242,7 +242,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testCreateLoanSetsValuesCorrectly(
         uint16 maxPerAnumInterest,
-        uint256 minLoanAmount,
+        uint128 minLoanAmount,
         uint32 minDurationSeconds,
         address mintTo
     ) public {
@@ -267,8 +267,8 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
             address loanAssetContractAddress,
-            uint256 accumulatedInterest,
-            uint256 loanAmountFromLoan,
+            uint128 accumulatedInterest,
+            uint128 loanAmountFromLoan,
             uint256 collateralTokenId
         ) = facilitator.loanInfo(loanId);
 
@@ -449,7 +449,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testLendUpdatesValuesCorrectly(
         uint16 rate,
-        uint256 amount,
+        uint128 amount,
         uint32 duration,
         address sendTo
     ) public {
@@ -478,8 +478,8 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
             address loanAssetContractAddress,
-            uint256 accumulatedInterest,
-            uint256 loanAmountFromLoan,
+            uint128 accumulatedInterest,
+            uint128 loanAmountFromLoan,
             uint256 collateralTokenId
         ) = facilitator.loanInfo(loanId);
 
@@ -580,8 +580,8 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
             address loanAssetContractAddress,
-            uint256 accumulatedInterest,
-            uint256 loanAmountFromLoan,
+            uint128 accumulatedInterest,
+            uint128 loanAmountFromLoan,
             uint256 collateralTokenId
         ) = facilitator.loanInfo(loanId);
 
@@ -596,7 +596,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(collateralTokenId, tokenId);
     }
 
-    function testLendFailsIfHigherInterestRate(uint16 rate, uint32 duration, uint256 amount) public {
+    function testLendFailsIfHigherInterestRate(uint16 rate, uint32 duration, uint128 amount) public {
         vm.assume(rate > interestRate);
         vm.assume(duration >= loanDuration);
         vm.assume(amount >= loanAmount);
@@ -614,7 +614,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testLendFailsIfLowerAmount(uint16 rate, uint32 duration, uint256 amount) public {
+    function testLendFailsIfLowerAmount(uint16 rate, uint32 duration, uint128 amount) public {
         vm.assume(rate <= interestRate);
         vm.assume(duration >= loanDuration);
         vm.assume(amount < loanAmount);
@@ -632,7 +632,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testLendFailsIfLowerDuration(uint16 rate, uint32 duration, uint256 amount) public {
+    function testLendFailsIfLowerDuration(uint16 rate, uint32 duration, uint128 amount) public {
         vm.assume(rate <= interestRate);
         vm.assume(duration < loanDuration);
         vm.assume(amount >= loanAmount);
@@ -696,7 +696,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
-    function testBuyoutSucceedsIfAmountImproved(uint256 amount) public {
+    function testBuyoutSucceedsIfAmountImproved(uint128 amount) public {
         vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         vm.assume(amount >= increaseByMinPercent(loanAmount));
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
@@ -755,8 +755,8 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
             address loanAssetContractAddress,
-            uint256 accumulatedInterest,
-            uint256 loanAmountFromLoan,
+            uint128 accumulatedInterest,
+            uint128 loanAmountFromLoan,
             uint256 collateralTokenId
         ) = facilitator.loanInfo(loanId);
 
@@ -825,7 +825,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(lendTicket.ownerOf(loanId), newLender);
     }
 
-    function testBuyoutPaysPreviousLenderCorrectly(uint256 amount) public {
+    function testBuyoutPaysPreviousLenderCorrectly(uint128 amount) public {
         vm.assume(amount >= loanAmount);
         vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
@@ -849,7 +849,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(beforeBalance + loanAmount + interest, dai.balanceOf(lender));
     }
 
-    function testBuyoutPaysBorrowerCorrectly(uint256 amount) public {
+    function testBuyoutPaysBorrowerCorrectly(uint128 amount) public {
         vm.assume(amount >= loanAmount);
         vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
@@ -872,7 +872,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(beforeBalance + (amountIncrease - originationFee), dai.balanceOf(borrower));
     }
 
-    function testBuyoutPaysFacilitatorCorrectly(uint256 amount) public {
+    function testBuyoutPaysFacilitatorCorrectly(uint128 amount) public {
         vm.assume(amount >= loanAmount);
         vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
@@ -963,7 +963,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(
             loanId,
             interestRate,
-            newAmount,
+            uint128(newAmount),
             loanDuration,
             newLender
         );
@@ -1020,7 +1020,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(
             loanId,
             newRate,
-            newAmount,
+            uint128(newAmount),
             newDuration,
             newLender
         );
@@ -1039,7 +1039,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(
             loanId,
             newRate,
-            newAmount,
+            uint128(newAmount),
             newDuration,
             newLender
         );
@@ -1058,7 +1058,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(
             loanId,
             newRate,
-            newAmount,
+            uint128(newAmount),
             newDuration,
             newLender
         );
