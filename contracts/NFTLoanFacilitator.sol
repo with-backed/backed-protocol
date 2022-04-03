@@ -112,7 +112,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     /// See {INFTLoanFacilitator-closeLoan}.
     function closeLoan(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
-        require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender, "NFTLoanFacilitator: borrow ticket holder only");
+        require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender,
+        "NFTLoanFacilitator: borrow ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
         require(loan.lastAccumulatedTimestamp == 0, "NFTLoanFacilitator: has lender, use repayAndCloseLoan");
