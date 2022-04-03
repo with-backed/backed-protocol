@@ -4,7 +4,6 @@ pragma solidity 0.8.12;
 import {DSTest} from "./helpers/test.sol";
 import {Vm} from "./helpers/Vm.sol";
 
-import {INFTLoanFacilitator} from "contracts/interfaces/INFTLoanFacilitator.sol";
 import {NFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
 import {NFTLoanFacilitatorFactory} from "./helpers/NFTLoanFacilitatorFactory.sol";
 import {BorrowTicket} from "contracts/BorrowTicket.sol";
@@ -199,7 +198,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             loanDuration
         );
         vm.prank(borrower);
-        uint256 loanId = facilitator.createLoan(
+        facilitator.createLoan(
             punkId,
             address(punks),
             interestRate,
@@ -212,7 +211,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testCreateLoanTransfersCollateralToSelf() public {
         vm.prank(borrower);
-        uint256 loanId = facilitator.createLoan(
+        facilitator.createLoan(
             punkId,
             address(punks),
             interestRate,
@@ -287,7 +286,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testCreateLoanZeroDurationNotAllowed() public {
         vm.startPrank(borrower);
         vm.expectRevert("NFTLoanFacilitator: 0 duration");
-        uint256 loanId = facilitator.createLoan(
+        facilitator.createLoan(
             punkId,
             address(punks),
             interestRate,
@@ -301,7 +300,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testCreateLoanZeroAmountNotAllowed() public {
         vm.startPrank(borrower);
         vm.expectRevert("NFTLoanFacilitator: 0 loan amount");
-        uint256 loanId = facilitator.createLoan(
+        facilitator.createLoan(
             punkId,
             address(punks),
             interestRate,
@@ -315,7 +314,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testCreateLoanAddressZeroLoanAssetNotAllowed() public {
         vm.startPrank(borrower);
         vm.expectRevert("NFTLoanFacilitator: invalid loan asset");
-        uint256 loanId = facilitator.createLoan(
+        facilitator.createLoan(
             punkId,
             address(punks),
             interestRate,
@@ -329,7 +328,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testCreateLoanAddressZeroCollateralFails() public {
         vm.startPrank(borrower);
         vm.expectRevert(bytes(""));
-        uint256 loanId = facilitator.createLoan(
+        facilitator.createLoan(
             punkId,
             address(0),
             interestRate,
@@ -511,7 +510,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testLendEmitsCorrectly() public {
-        (uint256 tokenId, uint256 loanId) = setUpLoanForTest(borrower);
+        (, uint256 loanId) = setUpLoanForTest(borrower);
 
         dai.mint(loanAmount, address(this));
         dai.approve(address(facilitator), loanAmount);
@@ -789,7 +788,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testBuyoutUpdatesAccumulatedInterestCorrectly() public {
         
-        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
         uint256 elapsedTime = 100;
         vm.warp(startTimestamp + elapsedTime);
         uint256 interest = facilitator.interestOwed(loanId);
