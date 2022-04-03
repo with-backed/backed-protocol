@@ -88,7 +88,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
 
-        id = _nonce++;
+        unchecked {
+            id = _nonce++;
+        }
+        
         Loan storage loan = loanInfo[id];
         loan.loanAssetContractAddress = loanAssetContractAddress;
         loan.loanAmount = minLoanAmount;
