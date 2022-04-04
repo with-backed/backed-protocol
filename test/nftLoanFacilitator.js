@@ -445,10 +445,10 @@ describe("NFTLoanFacilitator contract", function () {
             ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
         })
 
-        it("reverts if ticket does not exist", async function(){
+        it("reverts if loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("10")
-            ).to.be.revertedWith("Address: call to non-contract")
+            ).to.be.revertedWith("function call to a non-contract account")
         })
     })
 

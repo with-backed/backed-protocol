@@ -69,7 +69,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         uint256 collateralTokenId,
         address collateralContractAddress,
         uint16 maxPerAnumInterest,
-        uint256 minLoanAmount,
+        uint128 minLoanAmount,
         address loanAssetContractAddress,
         uint32 minDurationSeconds,
         address mintBorrowTicketTo
@@ -90,7 +90,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         unchecked {
             id = _nonce++;
         }
-        
+
         Loan storage loan = loanInfo[id];
         loan.loanAssetContractAddress = loanAssetContractAddress;
         loan.loanAmount = minLoanAmount;
@@ -129,7 +129,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function lend(
         uint256 loanId,
         uint16 interestRate,
-        uint256 amount,
+        uint128 amount,
         uint32 durationSeconds,
         address sendLendTicketTo
     )
@@ -185,11 +185,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 loan.accumulatedInterest
             );
 
+            require(accumulatedInterest <= type(uint128).max,
+            "NFTLoanFacilitator: accumulated interest exceeds uint128");
+
             loan.perAnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
-            loan.accumulatedInterest = accumulatedInterest;
+            loan.accumulatedInterest = uint128(accumulatedInterest);
 
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
             if (amountIncrease > 0) {
