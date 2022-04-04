@@ -411,6 +411,41 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.closeLoan(loanId, borrower);
     }
 
+    function testInterestExceedingUint128BuyoutReverts() public {
+        loanAmount = type(uint128).max;
+        // 100% APR
+        interestRate = 1000;
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+        facilitator.interestOwed(loanId);
+        vm.warp(startTimestamp + 366 days);
+        
+        vm.expectRevert("NFTLoanFacilitator: accumulated interest exceeds uint128");
+        facilitator.lend(loanId, 0, loanAmount, loanDuration, address(4));
+    }
+
+    function testInterestExceedingUint128InterestOwed() public {
+        loanAmount = type(uint128).max;
+        // 100% APR
+        interestRate = 1000;
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+        vm.warp(startTimestamp + 366 days);
+        facilitator.interestOwed(loanId); 
+    }
+
+    function testRepayInterestOwedExceedingUint128() public {
+        loanAmount = type(uint128).max;
+        // 100% APR
+        interestRate = 1000;
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+        vm.warp(startTimestamp + 366 days);
+        uint256 t = facilitator.totalOwed(loanId);
+        vm.startPrank(address(3));
+        dai.mint(t, address(3));
+        dai.approve(address(facilitator), t);
+        facilitator.repayAndCloseLoan(loanId);
+        vm.stopPrank();
+    }
+
     function testLendMintsLendTicketCorrectly() public {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         setUpLender(lender);
