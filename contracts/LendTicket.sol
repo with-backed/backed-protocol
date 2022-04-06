@@ -29,8 +29,6 @@ contract LendTicket is NFTLoanTicket, ILendTicket {
         address to,
         uint256 id
     ) internal {
-        require(from == ownerOf[id], "WRONG_FROM");
-
         require(to != address(0), "INVALID_RECIPIENT");
 
         // Underflow of the sender's balance is impossible because we check for
