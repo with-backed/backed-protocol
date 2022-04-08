@@ -408,6 +408,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(address(2));
         vm.expectRevert("NFTLoanFacilitator: borrow ticket holder only");
         facilitator.closeLoan(loanId, borrower);
+        vm.stopPrank();
     }
 
     function testInterestExceedingUint128BuyoutReverts() public {
@@ -417,8 +418,10 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
         facilitator.interestOwed(loanId);
         vm.warp(startTimestamp + 366 days);
-        
-        vm.expectRevert("NFTLoanFacilitator: accumulated interest exceeds uint128");
+
+        vm.expectRevert(
+            "NFTLoanFacilitator: accumulated interest exceeds uint128"
+        );
         facilitator.lend(loanId, 0, loanAmount, loanDuration, address(4));
     }
 
@@ -428,7 +431,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         interestRate = 1000;
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
         vm.warp(startTimestamp + 366 days);
-        facilitator.interestOwed(loanId); 
+        facilitator.interestOwed(loanId);
     }
 
     function testRepayInterestOwedExceedingUint128() public {
@@ -449,7 +452,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         setUpLender(lender);
         vm.startPrank(lender);
-         facilitator.lend(
+        facilitator.lend(
             loanId,
             interestRate,
             loanAmount,
@@ -467,7 +470,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         uint256 lenderBalance = dai.balanceOf(lender);
 
         vm.startPrank(lender);
-         facilitator.lend(
+        facilitator.lend(
             loanId,
             interestRate,
             loanAmount,
@@ -476,7 +479,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
 
         assertEq(dai.balanceOf(lender), lenderBalance - loanAmount);
-        uint256 facilitatorTake = loanAmount * facilitator.originationFeeRate() / facilitator.SCALAR();
+        uint256 facilitatorTake = (loanAmount *
+            facilitator.originationFeeRate()) / facilitator.SCALAR();
         assertEq(dai.balanceOf(address(facilitator)), facilitatorTake);
         assertEq(dai.balanceOf(borrower), loanAmount - facilitatorTake);
     }
@@ -498,13 +502,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         dai.mint(amount, address(this));
         dai.approve(address(facilitator), amount);
 
-        facilitator.lend(
-            loanId,
-            rate,
-            amount,
-            duration,
-            sendTo
-        );
+        facilitator.lend(loanId, rate, amount, duration, sendTo);
         (
             bool closed,
             uint16 interest,
@@ -630,7 +628,11 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(collateralTokenId, tokenId);
     }
 
-    function testLendFailsIfHigherInterestRate(uint16 rate, uint32 duration, uint128 amount) public {
+    function testLendFailsIfHigherInterestRate(
+        uint16 rate,
+        uint32 duration,
+        uint128 amount
+    ) public {
         vm.assume(rate > interestRate);
         vm.assume(duration >= loanDuration);
         vm.assume(amount >= loanAmount);
@@ -639,16 +641,14 @@ contract NFTLoanFacilitatorTest is DSTest {
         setUpLender(lender);
         vm.startPrank(lender);
         vm.expectRevert("NFTLoanFacilitator: rate too high");
-        facilitator.lend(
-            loanId,
-            rate,
-            amount,
-            duration,
-            lender
-        );
+        facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
-    function testLendFailsIfLowerAmount(uint16 rate, uint32 duration, uint128 amount) public {
+    function testLendFailsIfLowerAmount(
+        uint16 rate,
+        uint32 duration,
+        uint128 amount
+    ) public {
         vm.assume(rate <= interestRate);
         vm.assume(duration >= loanDuration);
         vm.assume(amount < loanAmount);
@@ -657,16 +657,14 @@ contract NFTLoanFacilitatorTest is DSTest {
         setUpLender(lender);
         vm.startPrank(lender);
         vm.expectRevert("NFTLoanFacilitator: amount too low");
-        facilitator.lend(
-            loanId,
-            rate,
-            amount,
-            duration,
-            lender
-        );
+        facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
-    function testLendFailsIfLowerDuration(uint16 rate, uint32 duration, uint128 amount) public {
+    function testLendFailsIfLowerDuration(
+        uint16 rate,
+        uint32 duration,
+        uint128 amount
+    ) public {
         vm.assume(rate <= interestRate);
         vm.assume(duration < loanDuration);
         vm.assume(amount >= loanAmount);
@@ -675,13 +673,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         setUpLender(lender);
         vm.startPrank(lender);
         vm.expectRevert("NFTLoanFacilitator: duration too low");
-        facilitator.lend(
-            loanId,
-            rate,
-            amount,
-            duration,
-            lender
-        );
+        facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
     function testInterestAccruesCorrectly() public {
@@ -716,60 +708,45 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testBuyoutSucceedsIfRateImproved(uint16 rate) public {
         vm.assume(rate <= decreaseByMinPercent(interestRate));
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-        
+
         address newLender = address(3);
         setUpLender(newLender);
         vm.startPrank(newLender);
 
-        facilitator.lend(
-            loanId,
-            rate,
-            loanAmount,
-            loanDuration,
-            newLender
-        );
+        facilitator.lend(loanId, rate, loanAmount, loanDuration, newLender);
     }
 
     function testBuyoutSucceedsIfAmountImproved(uint128 amount) public {
         vm.assume(amount < type(uint256).max / 10); // else origination fee multiplication overflows
         vm.assume(amount >= increaseByMinPercent(loanAmount));
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-        
+
         address newLender = address(3);
         setUpLender(newLender);
         uint256 amountIncrease = amount - loanAmount;
         dai.mint(amountIncrease, newLender);
 
         vm.startPrank(newLender);
-        facilitator.lend(
-            loanId,
-            interestRate,
-            amount,
-            loanDuration,
-            newLender
-        );
+        facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
     }
 
     function testBuyoutSucceedsIfDurationImproved(uint32 duration) public {
         vm.assume(duration >= increaseByMinPercent(loanDuration));
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-        
+
         address newLender = address(3);
         setUpLender(newLender);
         vm.startPrank(newLender);
 
-        facilitator.lend(
-            loanId,
-            interestRate,
-            loanAmount,
-            duration,
-            newLender
-        );
+        facilitator.lend(loanId, interestRate, loanAmount, duration, newLender);
     }
 
     function testBuyoutUpdatesValuesCorrectly() public {
-        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-        
+        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+            borrower,
+            lender
+        );
+
         address newLender = address(3);
         setUpLender(newLender);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration));
@@ -807,7 +784,6 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testBuyoutUpdatesAccumulatedInterestCorrectly() public {
-        
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
         uint256 elapsedTime = 100;
         vm.warp(startTimestamp + elapsedTime);
@@ -833,7 +809,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             ,
             uint256 accumulatedInterest,
             ,
-            
+
         ) = facilitator.loanInfo(loanId);
 
         assertEq(lastAccumulatedTimestamp, startTimestamp + elapsedTime);
@@ -842,7 +818,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testBuyoutTransfersLendTicket() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-        
+
         address newLender = address(3);
         setUpLender(newLender);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration));
@@ -871,7 +847,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         dai.approve(address(facilitator), amount + interest);
 
         uint256 beforeBalance = dai.balanceOf(lender);
-        
+
         facilitator.lend(
             loanId,
             interestRate,
@@ -892,7 +868,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         dai.approve(address(facilitator), amount);
 
         uint256 beforeBalance = dai.balanceOf(borrower);
-        
+
         facilitator.lend(
             loanId,
             interestRate,
@@ -902,8 +878,12 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
 
         uint256 amountIncrease = amount - loanAmount;
-        uint256 originationFee = amountIncrease * facilitator.originationFeeRate() / facilitator.SCALAR();
-        assertEq(beforeBalance + (amountIncrease - originationFee), dai.balanceOf(borrower));
+        uint256 originationFee = (amountIncrease *
+            facilitator.originationFeeRate()) / facilitator.SCALAR();
+        assertEq(
+            beforeBalance + (amountIncrease - originationFee),
+            dai.balanceOf(borrower)
+        );
     }
 
     function testBuyoutPaysFacilitatorCorrectly(uint128 amount) public {
@@ -917,7 +897,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         dai.approve(address(facilitator), amount);
 
         uint256 beforeBalance = dai.balanceOf(address(facilitator));
-        
+
         facilitator.lend(
             loanId,
             interestRate,
@@ -927,34 +907,26 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
 
         uint256 amountIncrease = amount - loanAmount;
-        uint256 originationFee = amountIncrease * facilitator.originationFeeRate() / facilitator.SCALAR();
-        assertEq(beforeBalance + originationFee, dai.balanceOf(address(facilitator)));
+        uint256 originationFee = (amountIncrease *
+            facilitator.originationFeeRate()) / facilitator.SCALAR();
+        assertEq(
+            beforeBalance + originationFee,
+            dai.balanceOf(address(facilitator))
+        );
     }
 
     function testBuyoutEmitsCorrectly() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
-        
+
         address newLender = address(3);
         setUpLender(newLender);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration));
 
         vm.expectEmit(true, true, true, true);
-        emit BuyoutLender(
-            loanId,
-            newLender,
-            lender,
-            0,
-            loanAmount
-        );
+        emit BuyoutLender(loanId, newLender, lender, 0, loanAmount);
 
         vm.expectEmit(true, true, false, true);
-        emit Lend(
-            loanId,
-            newLender,
-            interestRate,
-            loanAmount,
-            newDuration
-        );
+        emit Lend(loanId, newLender, interestRate, loanAmount, newDuration);
 
         vm.prank(newLender);
         facilitator.lend(
@@ -1001,6 +973,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             loanDuration,
             newLender
         );
+        vm.stopPrank();
     }
 
     function testBuyoutFailsIfLoanDurationNotSufficientlyImproved() public {
@@ -1020,6 +993,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             newDuration,
             newLender
         );
+        vm.stopPrank();
     }
 
     function testBuyoutFailsIfInterestRateNotSufficientlyImproved() public {
@@ -1032,16 +1006,15 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.expectRevert(
             "NFTLoanFacilitator: proposed terms must be better than existing terms"
         );
-        facilitator.lend(
-            loanId,
-            newRate,
-            loanAmount,
-            loanDuration,
-            newLender
-        );
+        facilitator.lend(loanId, newRate, loanAmount, loanDuration, newLender);
+        vm.stopPrank();
     }
 
-    function testBuyoutFailsIfLoanAmountRegressed(uint16 newRate, uint32 newDuration, uint128 newAmount) public {
+    function testBuyoutFailsIfLoanAmountRegressed(
+        uint16 newRate,
+        uint32 newDuration,
+        uint128 newAmount
+    ) public {
         vm.assume(newRate <= interestRate);
         vm.assume(newDuration >= loanDuration);
         vm.assume(newAmount < loanAmount);
@@ -1058,9 +1031,14 @@ contract NFTLoanFacilitatorTest is DSTest {
             newDuration,
             newLender
         );
+        vm.stopPrank();
     }
 
-    function testBuyoutFailsIfInterestRateRegressed(uint16 newRate, uint32 newDuration, uint128 newAmount) public {
+    function testBuyoutFailsIfInterestRateRegressed(
+        uint16 newRate,
+        uint32 newDuration,
+        uint128 newAmount
+    ) public {
         vm.assume(newRate > interestRate);
         vm.assume(newDuration >= loanDuration);
         vm.assume(newAmount >= loanAmount);
@@ -1077,9 +1055,14 @@ contract NFTLoanFacilitatorTest is DSTest {
             newDuration,
             newLender
         );
+        vm.stopPrank();
     }
 
-    function testBuyoutFailsIfDurationRegressed(uint16 newRate, uint32 newDuration, uint128 newAmount) public {
+    function testBuyoutFailsIfDurationRegressed(
+        uint16 newRate,
+        uint32 newDuration,
+        uint128 newAmount
+    ) public {
         vm.assume(newRate <= interestRate);
         vm.assume(newDuration < loanDuration);
         vm.assume(newAmount >= loanAmount);
@@ -1096,6 +1079,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             newDuration,
             newLender
         );
+        vm.stopPrank();
     }
 
     function testRepayAndCloseSuccessful() public {
@@ -1149,10 +1133,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testSeizeCollateralFailsIfLoanNotOverdue() public {
-        (, uint256 loanId) = setUpLoanWithLenderForTest(
-            borrower,
-            lender
-        );
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
         vm.warp(startTimestamp + loanDuration); // fast forward to timestamp where loan would not be overdue
         vm.prank(lender);
 
@@ -1161,10 +1142,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testSeizeCollateralFailsIfNonLoanOwnerCalls() public {
-        (, uint256 loanId) = setUpLoanWithLenderForTest(
-            borrower,
-            lender
-        );
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
         address randomAddress = address(4);
         vm.prank(randomAddress);
 
@@ -1180,6 +1158,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(lender);
         vm.expectRevert("NFTLoanFacilitator: loan closed");
         facilitator.seizeCollateral(loanId, lender);
+        vm.stopPrank();
     }
 
     function testUpdateOriginationFeeRevertsIfNotCalledByManager() public {
@@ -1217,9 +1196,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.updateRequiredImprovementRate(1);
     }
 
-    function testUpdateRequiredImprovementRateRevertsIf0()
-        public
-    {
+    function testUpdateRequiredImprovementRateRevertsIf0() public {
         vm.startPrank(address(this));
         vm.expectRevert("NFTLoanFacilitator: 0 improvement rate");
         facilitator.updateRequiredImprovementRate(0);
@@ -1282,19 +1259,20 @@ contract NFTLoanFacilitatorTest is DSTest {
     function increaseByMinPercent(uint256 old) public view returns (uint256) {
         return
             old +
-            old * 
-            facilitator.requiredImprovementRate() /
+            (old * facilitator.requiredImprovementRate()) /
             facilitator.SCALAR();
     }
 
     function decreaseByMinPercent(uint256 old) public view returns (uint256) {
-        return old - old * facilitator.requiredImprovementRate() / facilitator.SCALAR();
+        return
+            old -
+            (old * facilitator.requiredImprovementRate()) /
+            facilitator.SCALAR();
     }
 
     function calculateTake(uint256 amount) public view returns (uint256) {
         return
-            (amount * facilitator.originationFeeRate()) /
-            facilitator.SCALAR();
+            (amount * facilitator.originationFeeRate()) / facilitator.SCALAR();
     }
 }
 
