@@ -9,6 +9,7 @@ interface INFTLoanFacilitator {
         uint32 durationSeconds;
         uint40 lastAccumulatedTimestamp;
         address collateralContractAddress;
+        uint96 originationFeeRate;
         address loanAssetContractAddress;
         uint128 accumulatedInterest;
         uint128 loanAmount;
@@ -252,6 +253,7 @@ interface INFTLoanFacilitator {
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
      * @return collateralContractAddress The contract address of the NFT collateral 
+     * @return originationFeeRate
      * @return loanAssetContractAddress The contract address of the loan asset.
      * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
      * @return loanAmount The loan amount
@@ -266,6 +268,7 @@ interface INFTLoanFacilitator {
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
+            uint96 originationFeeRate,
             address loanAssetContractAddress,
             uint128 accumulatedInterest,
             uint128 loanAmount,

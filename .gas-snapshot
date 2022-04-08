@@ -1,5 +1,3 @@
-NFTLendTicketTest:testLoanFacilitatorTransferRevertsIfNotFacilitator() (gas: 11317)
-NFTLendTicketTest:testLoanFacilitatorTransferSuccessful() (gas: 70045)
 NFTLoanFacilitatorGasBenchMarkTest:testCloseLoan() (gas: 48308)
 NFTLoanFacilitatorGasBenchMarkTest:testCreateLoan() (gas: 170215)
 NFTLoanFacilitatorGasBenchMarkTest:testLend() (gas: 93132)
