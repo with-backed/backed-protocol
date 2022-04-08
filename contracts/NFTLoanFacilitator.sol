@@ -154,9 +154,17 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
 
+<<<<<<< HEAD
             ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), amount);
             uint256 facilitatorTake = amount * uint256(loan.originationFeeRate) / SCALAR;
             ERC20(loanAssetContractAddress).safeTransfer(
+=======
+            
+            uint256 facilitatorTake = amount * originationFeeRate / SCALAR;
+            ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), facilitatorTake);
+            ERC20(loanAssetContractAddress).safeTransferFrom(
+                msg.sender,
+>>>>>>> 2dbaac2 (a solution)
                 IERC721(borrowTicketContract).ownerOf(loanId),
                 amount - facilitatorTake
             );
@@ -198,35 +206,65 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.accumulatedInterest = uint128(accumulatedInterest);
 
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
-            if (amountIncrease > 0) {
-                address loanAssetContractAddress = loan.loanAssetContractAddress;
-                ERC20(loanAssetContractAddress).safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    amount + accumulatedInterest
-                );
-                ERC20(loanAssetContractAddress).safeTransfer(
-                    currentLoanOwner,
-                    accumulatedInterest + previousLoanAmount
-                );
-                uint256 facilitatorTake = (amountIncrease * uint256(loan.originationFeeRate) / SCALAR);
-                ERC20(loanAssetContractAddress).safeTransfer(
-                    IERC721(borrowTicketContract).ownerOf(loanId),
-                    amountIncrease - facilitatorTake
-                );
-            } else {
-                ERC20(loan.loanAssetContractAddress).safeTransferFrom(
-                    msg.sender,
-                    currentLoanOwner,
-                    accumulatedInterest + previousLoanAmount
-                );
-            }
             ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
+            // if (amountIncrease > 0) {
+            //     address loanAssetContractAddress = loan.loanAssetContractAddress;
+            //     uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
+            //     ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), facilitatorTake);
+            //     ERC20(loanAssetContractAddress).safeTransferFrom(
+            //         msg.sender,
+            //         currentLoanOwner,
+            //         accumulatedInterest + previousLoanAmount
+            //     );
+            //     ERC20(loanAssetContractAddress).safeTransferFrom(
+            //         msg.sender,
+            //         IERC721(borrowTicketContract).ownerOf(loanId),
+            //         amountIncrease - facilitatorTake
+            //     );
+            // } else {
+            //     ERC20(loan.loanAssetContractAddress).safeTransferFrom(
+            //         msg.sender,
+            //         currentLoanOwner,
+            //         accumulatedInterest + previousLoanAmount
+            //     );
+            // }
+            handleBuyoutPayments(loanId, loan.loanAssetContractAddress, amountIncrease, currentLoanOwner, accumulatedInterest, previousLoanAmount);
+            
             
             emit BuyoutLender(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
         }
 
         emit Lend(loanId, msg.sender, interestRate, amount, durationSeconds);
+    }
+
+    function handleBuyoutPayments(
+        uint256 loanId,
+        address loanAssetContractAddress,
+        uint256 amountIncrease,
+        address currentLoanOwner,
+        uint256 accumulatedInterest,
+        uint256 previousLoanAmount
+    ) private {
+        if (amountIncrease > 0) {
+            uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
+            ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), facilitatorTake);
+            ERC20(loanAssetContractAddress).safeTransferFrom(
+                msg.sender,
+                currentLoanOwner,
+                accumulatedInterest + previousLoanAmount
+            );
+            ERC20(loanAssetContractAddress).safeTransferFrom(
+                msg.sender,
+                IERC721(borrowTicketContract).ownerOf(loanId),
+                amountIncrease - facilitatorTake
+            );
+        } else {
+            ERC20(loanAssetContractAddress).safeTransferFrom(
+                msg.sender,
+                currentLoanOwner,
+                accumulatedInterest + previousLoanAmount
+            );
+        }
     }
 
     /// See {INFTLoanFacilitator-repayAndCloseLoan}.
