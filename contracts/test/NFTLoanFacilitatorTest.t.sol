@@ -4,9 +4,8 @@ pragma solidity 0.8.12;
 import {DSTest} from "./helpers/test.sol";
 import {Vm} from "./helpers/Vm.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/math.sol";
-import {FixedPointMathLib} from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 
-import {NFTLoanFacilitator, INFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
+import {NFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
 import {NFTLoanFacilitatorFactory} from "./helpers/NFTLoanFacilitatorFactory.sol";
 import {BorrowTicket} from "contracts/BorrowTicket.sol";
 import {LendTicket} from "contracts/LendTicket.sol";
