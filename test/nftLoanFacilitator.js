@@ -180,7 +180,7 @@ describe("NFTLoanFacilitator contract", function () {
             await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            ).to.be.revertedWith("has lender, use repayAndCloseLoan")
+            ).to.be.revertedWith("has lender")
         });
     })
 
@@ -269,7 +269,7 @@ describe("NFTLoanFacilitator contract", function () {
         
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-                ).to.be.revertedWith("has lender, use repayAndCloseLoan")
+                ).to.be.revertedWith("has lender")
         
                 value = await MAL.balanceOf(punkHolder.address)
                 expect(value).to.equal(0)
@@ -290,14 +290,14 @@ describe("NFTLoanFacilitator contract", function () {
             it("reverts if terms are not improved", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-                ).to.be.revertedWith("proposed terms must be better than existing terms")
+                ).to.be.revertedWith("insufficient improvement")
             })
 
             it("reverts interest is already 0", async function(){
                 await NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, daiHolder.address)
                 await expect(
                     NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, daiHolder.address)
-                ).to.be.revertedWith("proposed terms must be better than existing terms")
+                ).to.be.revertedWith("insufficient improvement")
             })
 
             it("reverts if one value does not meet or beat exisiting, even if others are improved", async function(){

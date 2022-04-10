@@ -81,9 +81,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         require(minDurationSeconds != 0, '0 duration');
         require(minLoanAmount != 0, '0 loan amount');
         require(collateralContractAddress != lendTicketContract,
-        'cannot use tickets as collateral');
+        'lend ticket collateral');
         require(collateralContractAddress != borrowTicketContract, 
-        'cannot use tickets as collateral');
+        'borrow ticket collateral');
         
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
 
@@ -118,7 +118,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         "borrow ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
-        require(loan.lastAccumulatedTimestamp == 0, "has lender, use repayAndCloseLoan");
+        require(loan.lastAccumulatedTimestamp == 0, "has lender");
         
         loan.closed = true;
         IERC721(loan.collateralContractAddress).transferFrom(address(this), sendCollateralTo, loan.collateralTokenId);
@@ -175,7 +175,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 || previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds 
                 || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
                     && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
-                "proposed terms must be better than existing terms");
+                "insufficient improvement");
             }
 
             uint256 accumulatedInterest = _interestOwed(
@@ -186,7 +186,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             );
 
             require(accumulatedInterest <= type(uint128).max,
-            "accumulated interest exceeds uint128");
+            "interest exceeds uint128");
 
             loan.perAnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);

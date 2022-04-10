@@ -330,7 +330,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
 
         borrowTicket.approve(address(facilitator), loanId);
-        vm.expectRevert("cannot use tickets as collateral");
+        vm.expectRevert("borrow ticket collateral");
         facilitator.createLoan(
             loanId,
             address(borrowTicket),
@@ -347,7 +347,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(lender);
 
         lendTicket.approve(address(facilitator), loanId);
-        vm.expectRevert("cannot use tickets as collateral");
+        vm.expectRevert("lend ticket collateral");
         facilitator.createLoan(
             loanId,
             address(lendTicket),
@@ -397,7 +397,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         // loan has lender, should now revert
         vm.expectRevert(
-            "has lender, use repayAndCloseLoan"
+            "has lender"
         );
         facilitator.closeLoan(loanId, borrower);
     }
@@ -420,7 +420,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.warp(startTimestamp + 366 days);
 
         vm.expectRevert(
-            "accumulated interest exceeds uint128"
+            "interest exceeds uint128"
         );
         facilitator.lend(loanId, 0, loanAmount, loanDuration, address(4));
     }
@@ -945,7 +945,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         setUpLender(newLender);
         vm.startPrank(newLender);
         vm.expectRevert(
-            "proposed terms must be better than existing terms"
+            "insufficient improvement"
         );
         facilitator.lend(
             loanId,
@@ -964,7 +964,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(newLender);
         uint256 newAmount = increaseByMinPercent(loanAmount) - 1;
         vm.expectRevert(
-            "proposed terms must be better than existing terms"
+            "insufficient improvement"
         );
         facilitator.lend(
             loanId,
@@ -984,7 +984,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(newLender);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration) - 1);
         vm.expectRevert(
-            "proposed terms must be better than existing terms"
+            "insufficient improvement"
         );
         facilitator.lend(
             loanId,
@@ -1004,7 +1004,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(newLender);
         uint16 newRate = uint16(decreaseByMinPercent(interestRate) + 1);
         vm.expectRevert(
-            "proposed terms must be better than existing terms"
+            "insufficient improvement"
         );
         facilitator.lend(loanId, newRate, loanAmount, loanDuration, newLender);
         vm.stopPrank();
