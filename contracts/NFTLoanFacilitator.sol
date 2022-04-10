@@ -163,6 +163,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             uint256 previousLoanAmount = loan.loanAmount;
             // will underflow if amount < previousAmount
             uint256 amountIncrease = amount - previousLoanAmount;
+            uint256 accumulatedInterest;
 
             {
                 uint256 previousInterestRate = loan.perAnumInterestRate;
@@ -176,14 +177,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
                     && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
                 "insufficient improvement");
-            }
 
-            uint256 accumulatedInterest = _interestOwed(
-                previousLoanAmount,
-                loan.lastAccumulatedTimestamp,
-                loan.perAnumInterestRate,
-                loan.accumulatedInterest
-            );
+                 _interestOwed(
+                    previousLoanAmount,
+                    loan.lastAccumulatedTimestamp,
+                    previousInterestRate,
+                    loan.accumulatedInterest
+                );
+            }
 
             require(accumulatedInterest <= type(uint128).max,
             "interest exceeds uint128");
