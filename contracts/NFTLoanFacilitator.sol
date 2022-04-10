@@ -221,7 +221,9 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         address currentLoanOwner,
         uint256 accumulatedInterest,
         uint256 previousLoanAmount
-    ) private {
+    ) 
+        private 
+    {
         if (amountIncrease > 0) {
             uint256 facilitatorTake = (amountIncrease * originationFeeRate / SCALAR);
             ERC20(loanAssetContractAddress).safeTransferFrom(msg.sender, address(this), facilitatorTake);
