@@ -114,11 +114,11 @@ describe("NFTLoanFacilitator contract", function () {
         it('reverts if collateral is loan ticket or borrow ticket', async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, LendTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
-            ).to.be.revertedWith('cannot use tickets as collateral')
+            ).to.be.revertedWith('lend ticket collateral')
             
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, BorrowTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
-            ).to.be.revertedWith('cannot use tickets as collateral')
+            ).to.be.revertedWith('borrow ticket collateral')
         })
 
         it('reverts if duration is 0', async function(){
