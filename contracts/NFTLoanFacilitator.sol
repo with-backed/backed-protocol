@@ -338,11 +338,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-totalOwed}.
     function totalOwed(uint256 loanId) external view override returns (uint256) {
         Loan storage loan = loanInfo[loanId];
-        if (loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
+        uint256 lastAccumulated = loan.lastAccumulatedTimestamp;
+        if (loan.closed || lastAccumulated == 0) return 0;
 
         return loanInfo[loanId].loanAmount + _interestOwed(
             loan.loanAmount,
-            loan.lastAccumulatedTimestamp,
+            lastAccumulated,
             loan.perAnumInterestRate,
             loan.accumulatedInterest
         );
@@ -351,11 +352,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     /// See {INFTLoanFacilitator-interestOwed}.
     function interestOwed(uint256 loanId) external view override returns (uint256) {
         Loan storage loan = loanInfo[loanId];
-        if(loan.closed || loan.lastAccumulatedTimestamp == 0) return 0;
+        uint256 lastAccumulated = loan.lastAccumulatedTimestamp;
+        if (loan.closed || lastAccumulated == 0) return 0;
 
         return _interestOwed(
             loan.loanAmount,
-            loan.lastAccumulatedTimestamp,
+            lastAccumulated,
             loan.perAnumInterestRate,
             loan.accumulatedInterest
         );
