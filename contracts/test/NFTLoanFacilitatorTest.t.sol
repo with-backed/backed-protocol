@@ -285,7 +285,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testCreateLoanZeroDurationNotAllowed() public {
         vm.startPrank(borrower);
-        vm.expectRevert("NFTLoanFacilitator: 0 duration");
+        vm.expectRevert("0 duration");
         facilitator.createLoan(
             punkId,
             address(punks),
@@ -299,7 +299,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testCreateLoanZeroAmountNotAllowed() public {
         vm.startPrank(borrower);
-        vm.expectRevert("NFTLoanFacilitator: 0 loan amount");
+        vm.expectRevert("0 loan amount");
         facilitator.createLoan(
             punkId,
             address(punks),
@@ -330,7 +330,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
 
         borrowTicket.approve(address(facilitator), loanId);
-        vm.expectRevert("NFTLoanFacilitator: cannot use tickets as collateral");
+        vm.expectRevert("cannot use tickets as collateral");
         facilitator.createLoan(
             loanId,
             address(borrowTicket),
@@ -347,7 +347,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(lender);
 
         lendTicket.approve(address(facilitator), loanId);
-        vm.expectRevert("NFTLoanFacilitator: cannot use tickets as collateral");
+        vm.expectRevert("cannot use tickets as collateral");
         facilitator.createLoan(
             loanId,
             address(lendTicket),
@@ -376,7 +376,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.closeLoan(loanId, borrower);
 
         // closing an already closed loan should revert
-        vm.expectRevert("NFTLoanFacilitator: loan closed");
+        vm.expectRevert("loan closed");
         facilitator.closeLoan(loanId, borrower);
     }
 
@@ -397,7 +397,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         // loan has lender, should now revert
         vm.expectRevert(
-            "NFTLoanFacilitator: has lender, use repayAndCloseLoan"
+            "has lender, use repayAndCloseLoan"
         );
         facilitator.closeLoan(loanId, borrower);
     }
@@ -406,7 +406,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanForTest(borrower);
 
         vm.startPrank(address(2));
-        vm.expectRevert("NFTLoanFacilitator: borrow ticket holder only");
+        vm.expectRevert("borrow ticket holder only");
         facilitator.closeLoan(loanId, borrower);
         vm.stopPrank();
     }
@@ -420,7 +420,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.warp(startTimestamp + 366 days);
 
         vm.expectRevert(
-            "NFTLoanFacilitator: accumulated interest exceeds uint128"
+            "accumulated interest exceeds uint128"
         );
         facilitator.lend(loanId, 0, loanAmount, loanDuration, address(4));
     }
@@ -640,7 +640,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         setUpLender(lender);
         vm.startPrank(lender);
-        vm.expectRevert("NFTLoanFacilitator: rate too high");
+        vm.expectRevert("rate too high");
         facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
@@ -656,7 +656,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         setUpLender(lender);
         vm.startPrank(lender);
-        vm.expectRevert("NFTLoanFacilitator: amount too low");
+        vm.expectRevert("amount too low");
         facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
@@ -672,7 +672,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         setUpLender(lender);
         vm.startPrank(lender);
-        vm.expectRevert("NFTLoanFacilitator: duration too low");
+        vm.expectRevert("duration too low");
         facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
@@ -945,7 +945,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         setUpLender(newLender);
         vm.startPrank(newLender);
         vm.expectRevert(
-            "NFTLoanFacilitator: proposed terms must be better than existing terms"
+            "proposed terms must be better than existing terms"
         );
         facilitator.lend(
             loanId,
@@ -964,7 +964,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(newLender);
         uint256 newAmount = increaseByMinPercent(loanAmount) - 1;
         vm.expectRevert(
-            "NFTLoanFacilitator: proposed terms must be better than existing terms"
+            "proposed terms must be better than existing terms"
         );
         facilitator.lend(
             loanId,
@@ -984,7 +984,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(newLender);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration) - 1);
         vm.expectRevert(
-            "NFTLoanFacilitator: proposed terms must be better than existing terms"
+            "proposed terms must be better than existing terms"
         );
         facilitator.lend(
             loanId,
@@ -1004,7 +1004,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(newLender);
         uint16 newRate = uint16(decreaseByMinPercent(interestRate) + 1);
         vm.expectRevert(
-            "NFTLoanFacilitator: proposed terms must be better than existing terms"
+            "proposed terms must be better than existing terms"
         );
         facilitator.lend(loanId, newRate, loanAmount, loanDuration, newLender);
         vm.stopPrank();
@@ -1047,7 +1047,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         address newLender = address(3);
         setUpLender(newLender);
         vm.startPrank(newLender);
-        vm.expectRevert("NFTLoanFacilitator: rate too high");
+        vm.expectRevert("rate too high");
         facilitator.lend(
             loanId,
             newRate,
@@ -1071,7 +1071,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         address newLender = address(3);
         setUpLender(newLender);
         vm.startPrank(newLender);
-        vm.expectRevert("NFTLoanFacilitator: duration too low");
+        vm.expectRevert("duration too low");
         facilitator.lend(
             loanId,
             newRate,
@@ -1113,7 +1113,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         vm.startPrank(borrower);
         facilitator.closeLoan(loanId, borrower);
-        vm.expectRevert("NFTLoanFacilitator: loan closed");
+        vm.expectRevert("loan closed");
         facilitator.repayAndCloseLoan(loanId);
     }
 
@@ -1137,7 +1137,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.warp(startTimestamp + loanDuration); // fast forward to timestamp where loan would not be overdue
         vm.prank(lender);
 
-        vm.expectRevert("NFTLoanFacilitator: payment is not late");
+        vm.expectRevert("payment is not late");
         facilitator.seizeCollateral(loanId, lender);
     }
 
@@ -1146,7 +1146,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         address randomAddress = address(4);
         vm.prank(randomAddress);
 
-        vm.expectRevert("NFTLoanFacilitator: lend ticket holder only");
+        vm.expectRevert("lend ticket holder only");
         facilitator.seizeCollateral(loanId, randomAddress);
     }
 
@@ -1156,7 +1156,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.closeLoan(loanId, borrower);
 
         vm.startPrank(lender);
-        vm.expectRevert("NFTLoanFacilitator: loan closed");
+        vm.expectRevert("loan closed");
         facilitator.seizeCollateral(loanId, lender);
         vm.stopPrank();
     }
@@ -1170,7 +1170,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testUpdateOriginationFeeRevertsIfGreaterThanFivePercent() public {
         uint256 interestRateDecimals = facilitator.INTEREST_RATE_DECIMALS();
         vm.startPrank(address(this));
-        vm.expectRevert("NFTLoanFacilitator: max fee 5%");
+        vm.expectRevert("max fee 5%");
         facilitator.updateOriginationFeeRate(
             uint32(6 * (10**(interestRateDecimals - 2)))
         );
@@ -1198,7 +1198,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
     function testUpdateRequiredImprovementRateRevertsIf0() public {
         vm.startPrank(address(this));
-        vm.expectRevert("NFTLoanFacilitator: 0 improvement rate");
+        vm.expectRevert("0 improvement rate");
         facilitator.updateRequiredImprovementRate(0);
     }
 

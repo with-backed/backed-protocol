@@ -114,23 +114,23 @@ describe("NFTLoanFacilitator contract", function () {
         it('reverts if collateral is loan ticket or borrow ticket', async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, LendTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
-            ).to.be.revertedWith('NFTLoanFacilitator: cannot use tickets as collateral')
+            ).to.be.revertedWith('cannot use tickets as collateral')
             
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, BorrowTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
-            ).to.be.revertedWith('NFTLoanFacilitator: cannot use tickets as collateral')
+            ).to.be.revertedWith('cannot use tickets as collateral')
         })
 
         it('reverts if duration is 0', async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, 0, addr4.address)
-            ).to.be.revertedWith('NFTLoanFacilitator: 0 duration')
+            ).to.be.revertedWith('0 duration')
         })
 
         it('reverts if loan amount is 0', async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, 0, DAI.address, durationSeconds, addr4.address)
-            ).to.be.revertedWith('NFTLoanFacilitator: 0 loan amount')
+            ).to.be.revertedWith('0 loan amount')
         })
 
         it('does not reverts if interest rate is 0', async function(){
@@ -160,27 +160,27 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).closeLoan("2", addr4.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: borrow ticket holder only")
+                ).to.be.revertedWith("borrow ticket holder only")
         });
 
         it("reverts if caller is not ticket owner", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).closeLoan("1", addr4.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: borrow ticket holder only")
+                ).to.be.revertedWith("borrow ticket holder only")
         });
 
         it("reverts if loan closed", async function(){
             await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
+            ).to.be.revertedWith("loan closed")
         });
 
         it("reverts if ticket has lender", async function(){
             await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: has lender, use repayAndCloseLoan")
+            ).to.be.revertedWith("has lender, use repayAndCloseLoan")
         });
     })
 
@@ -194,25 +194,25 @@ describe("NFTLoanFacilitator contract", function () {
             it("reverts if loan does not exist", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("2", 0, 0, 0, daiHolder.address)
-                    ).to.be.revertedWith("NFTLoanFacilitator: invalid loan")
+                    ).to.be.revertedWith("invalid loan")
             })
 
             it("reverts if amount is too low", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount.sub(1), durationSeconds, daiHolder.address)
-                    ).to.be.revertedWith("NFTLoanFacilitator: amount too low")
+                    ).to.be.revertedWith("amount too low")
             })
 
             it("reverts if interest is too high", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("1", interest.add(1), loanAmount, durationSeconds, daiHolder.address)
-                    ).to.be.revertedWith("NFTLoanFacilitator: rate too high")
+                    ).to.be.revertedWith("rate too high")
             })
 
             it("reverts if block duration is too low", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds.sub(1), daiHolder.address)
-                    ).to.be.revertedWith("NFTLoanFacilitator: duration too low")
+                    ).to.be.revertedWith("duration too low")
             })
 
             it("sets values correctly", async function(){
@@ -269,7 +269,7 @@ describe("NFTLoanFacilitator contract", function () {
         
                 await expect(
                     NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: has lender, use repayAndCloseLoan")
+                ).to.be.revertedWith("has lender, use repayAndCloseLoan")
         
                 value = await MAL.balanceOf(punkHolder.address)
                 expect(value).to.equal(0)
@@ -290,14 +290,14 @@ describe("NFTLoanFacilitator contract", function () {
             it("reverts if terms are not improved", async function(){
                 await expect(
                     NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: proposed terms must be better than existing terms")
+                ).to.be.revertedWith("proposed terms must be better than existing terms")
             })
 
             it("reverts interest is already 0", async function(){
                 await NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, daiHolder.address)
                 await expect(
                     NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, daiHolder.address)
-                ).to.be.revertedWith("NFTLoanFacilitator: proposed terms must be better than existing terms")
+                ).to.be.revertedWith("proposed terms must be better than existing terms")
             })
 
             it("reverts if one value does not meet or beat exisiting, even if others are improved", async function(){
@@ -442,7 +442,7 @@ describe("NFTLoanFacilitator contract", function () {
             await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
-            ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
+            ).to.be.revertedWith("loan closed")
         })
 
         it("reverts if loan does not exist", async function(){
@@ -479,7 +479,7 @@ describe("NFTLoanFacilitator contract", function () {
             // 
             await expect(
                 NFTLoanFacilitator.connect(addr4).seizeCollateral("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: lend ticket holder only")
+            ).to.be.revertedWith("lend ticket holder only")
         })
 
         it("reverts if ticket is closed", async function(){
@@ -491,19 +491,19 @@ describe("NFTLoanFacilitator contract", function () {
             // 
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: loan closed")
+            ).to.be.revertedWith("loan closed")
         })
 
         it("reverts if payment is not late", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: payment is not late")
+            ).to.be.revertedWith("payment is not late")
         })
 
         it("reverts loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(daiHolder).seizeCollateral("2", addr4.address)
-            ).to.be.revertedWith("NFTLoanFacilitator: lend ticket holder only")
+            ).to.be.revertedWith("lend ticket holder only")
         })
     })
 
@@ -563,7 +563,7 @@ describe("NFTLoanFacilitator contract", function () {
             const newTake = ethers.BigNumber.from(6).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await expect(
                 NFTLoanFacilitator.connect(manager).updateOriginationFeeRate(newTake)
-            ).to.be.revertedWith("NFTLoanFacilitator: max fee 5%")
+            ).to.be.revertedWith("max fee 5%")
         })
 
         it("reverts if not called by manager", async function(){
