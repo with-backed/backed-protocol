@@ -231,22 +231,23 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function repayAndCloseLoan(uint256 loanId) external override notClosed(loanId) {
         Loan storage loan = loanInfo[loanId];
 
+        uint256 loanAmount = loan.loanAmount;
         uint256 interest = _interestOwed(
-            loan.loanAmount,
+            loanAmount,
             loan.lastAccumulatedTimestamp,
             loan.perAnumInterestRate,
             loan.accumulatedInterest
         );
         address lender = IERC721(lendTicketContract).ownerOf(loanId);
         loan.closed = true;
-        ERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, lender, interest + loan.loanAmount);
+        ERC20(loan.loanAssetContractAddress).safeTransferFrom(msg.sender, lender, interest + loanAmount);
         IERC721(loan.collateralContractAddress).safeTransferFrom(
             address(this),
             IERC721(borrowTicketContract).ownerOf(loanId),
             loan.collateralTokenId
         );
 
-        emit Repay(loanId, msg.sender, lender, interest, loan.loanAmount);
+        emit Repay(loanId, msg.sender, lender, interest, loanAmount);
         emit Close(loanId);
     }
 
