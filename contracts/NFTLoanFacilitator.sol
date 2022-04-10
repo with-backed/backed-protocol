@@ -4,6 +4,7 @@ pragma solidity 0.8.12;
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/math.sol";
 
 import {INFTLoanFacilitator} from './interfaces/INFTLoanFacilitator.sol';
 import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
@@ -172,10 +173,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 require(interestRate <= previousInterestRate, 'rate too high');
                 require(durationSeconds >= previousDurationSeconds, 'duration too low');
 
-                require((previousLoanAmount * requiredImprovementRate / SCALAR) <= amountIncrease
-                || previousDurationSeconds + (previousDurationSeconds * requiredImprovementRate / SCALAR) <= durationSeconds 
+                require(Math.ceilDiv(previousLoanAmount * requiredImprovementRate, SCALAR) <= amountIncrease
+                || previousDurationSeconds + Math.ceilDiv(previousDurationSeconds * requiredImprovementRate, SCALAR) <= durationSeconds 
                 || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
-                    && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
+                    && previousInterestRate - Math.ceilDiv(previousInterestRate * requiredImprovementRate, SCALAR) >= interestRate), 
                 "insufficient improvement");
 
                  accumulatedInterest = _interestOwed(
