@@ -178,7 +178,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     && previousInterestRate - (previousInterestRate * requiredImprovementRate / SCALAR) >= interestRate), 
                 "insufficient improvement");
 
-                 _interestOwed(
+                 accumulatedInterest = _interestOwed(
                     previousLoanAmount,
                     loan.lastAccumulatedTimestamp,
                     previousInterestRate,
