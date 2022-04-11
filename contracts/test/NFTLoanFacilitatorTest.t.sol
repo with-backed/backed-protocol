@@ -501,7 +501,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         assertTrue(!loan.closed);
         assertEq(loan.durationSeconds, duration);
-        assertEq(loan.perAnumInterestRate, interestRate);
+        assertEq(loan.perAnumInterestRate, rate);
         assertEq(loan.loanAmount, amount);
         assertEq(loan.lastAccumulatedTimestamp, block.timestamp);
         assertEq(loan.accumulatedInterest, 0);
@@ -1172,15 +1172,22 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testUpdateOriginationFeeWorks() public {
+        uint256 oldRate = facilitator.originationFeeRate();
+        (, uint256 loanId) = setUpLoanForTest(address(this));
+
         uint256 interestRateDecimals = facilitator.INTEREST_RATE_DECIMALS();
-        vm.startPrank(address(this));
+        uint256 newRate = 2 * (10**(interestRateDecimals - 2));
         facilitator.updateOriginationFeeRate(
-            uint32(2 * (10**(interestRateDecimals - 2)))
+            uint32(newRate)
         );
         assertEq(
             facilitator.originationFeeRate(),
-            uint32(2 * (10**(interestRateDecimals - 2)))
+            uint32(newRate)
         );
+
+        (, uint256 loanId2) = setUpLoanForTest(address(this));
+        assertEq(facilitator.loanInfoStruct(loanId2).originationFeeRate, uint96(newRate));
+        assertEq(facilitator.loanInfoStruct(loanId).originationFeeRate, uint96(oldRate));
     }
 
     function testUpdateRequiredImprovementRateRevertsIfNotCalledByManager()
@@ -1246,7 +1253,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             loanAmount,
             address(dai),
             loanDuration,
-            borrower
+            borrowerAddress
         );
         vm.stopPrank();
     }
