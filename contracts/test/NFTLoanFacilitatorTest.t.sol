@@ -5,6 +5,7 @@ import {DSTest} from "./helpers/test.sol";
 import {Vm} from "./helpers/Vm.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/math.sol";
 
+import {INFTLoanFacilitator} from "contracts/interfaces/INFTLoanFacilitator.sol";
 import {NFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
 import {NFTLoanFacilitatorFactory} from "./helpers/NFTLoanFacilitatorFactory.sol";
 import {BorrowTicket} from "contracts/BorrowTicket.sol";
@@ -261,27 +262,19 @@ contract NFTLoanFacilitatorTest is DSTest {
             minDurationSeconds,
             mintTo
         );
-        (
-            bool closed,
-            uint16 perAnumInterestRate,
-            uint32 durationSeconds,
-            uint40 lastAccumulatedTimestamp,
-            address collateralContractAddress,
-            address loanAssetContractAddress,
-            uint128 accumulatedInterest,
-            uint128 loanAmountFromLoan,
-            uint256 collateralTokenId
-        ) = facilitator.loanInfo(loanId);
+     
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
 
-        assertTrue(!closed);
-        assertEq(durationSeconds, minDurationSeconds);
-        assertEq(perAnumInterestRate, maxPerAnumInterest);
-        assertEq(loanAmountFromLoan, minLoanAmount);
-        assertEq(lastAccumulatedTimestamp, 0);
-        assertEq(accumulatedInterest, 0);
-        assertEq(collateralContractAddress, address(punks));
-        assertEq(collateralTokenId, punkId);
-        assertEq(loanAssetContractAddress, address(dai));
+        assertTrue(!loan.closed);
+        assertEq(loan.durationSeconds, minDurationSeconds);
+        assertEq(loan.perAnumInterestRate, maxPerAnumInterest);
+        assertEq(loan.loanAmount, minLoanAmount);
+        assertEq(loan.lastAccumulatedTimestamp, 0);
+        assertEq(loan.accumulatedInterest, 0);
+        assertEq(loan.collateralContractAddress, address(punks));
+        assertEq(loan.collateralTokenId, punkId);
+        assertEq(loan.loanAssetContractAddress, address(dai));
+        assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
     }
 
     function testCreateLoanZeroDurationNotAllowed() public {
@@ -366,7 +359,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         facilitator.closeLoan(loanId, borrower);
         assertEq(punks.ownerOf(tokenId), borrower); // make sure borrower gets their NFT back
-        (bool closed, , , , , , , , ) = facilitator.loanInfo(loanId);
+        (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId);
         assertTrue(closed); // make sure loan was closed
     }
 
@@ -503,28 +496,19 @@ contract NFTLoanFacilitatorTest is DSTest {
         dai.approve(address(facilitator), amount);
 
         facilitator.lend(loanId, rate, amount, duration, sendTo);
-        (
-            bool closed,
-            uint16 interest,
-            uint32 durationSeconds,
-            uint40 lastAccumulatedTimestamp,
-            address collateralContractAddress,
-            address loanAssetContractAddress,
-            uint128 accumulatedInterest,
-            uint128 loanAmountFromLoan,
-            uint256 collateralTokenId
-        ) = facilitator.loanInfo(loanId);
+       
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
 
-        assertTrue(!closed);
-        assertEq(rate, interest);
-        assertEq(duration, durationSeconds);
-        assertEq(amount, loanAmountFromLoan);
-        assertEq(lastAccumulatedTimestamp, startTimestamp);
-        assertEq(accumulatedInterest, 0);
-        // does not change immutable values
-        assertEq(collateralContractAddress, address(punks));
-        assertEq(loanAssetContractAddress, address(dai));
-        assertEq(collateralTokenId, tokenId);
+        assertTrue(!loan.closed);
+        assertEq(loan.durationSeconds, duration);
+        assertEq(loan.perAnumInterestRate, interestRate);
+        assertEq(loan.loanAmount, amount);
+        assertEq(loan.lastAccumulatedTimestamp, block.timestamp);
+        assertEq(loan.accumulatedInterest, 0);
+        assertEq(loan.collateralContractAddress, address(punks));
+        assertEq(loan.collateralTokenId, tokenId);
+        assertEq(loan.loanAssetContractAddress, address(dai));
+        assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
     }
 
     function testLendEmitsCorrectly() public {
@@ -572,6 +556,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint40 lastAccumulatedTimestamp,
             ,
             ,
+            ,
             uint256 accumulatedInterest,
             ,
 
@@ -611,6 +596,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
+            uint96 originationFeeRate,
             address loanAssetContractAddress,
             uint128 accumulatedInterest,
             uint128 loanAmountFromLoan,
@@ -764,6 +750,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
+            uint96 originationFeeRate,
             address loanAssetContractAddress,
             uint128 accumulatedInterest,
             uint128 loanAmountFromLoan,
@@ -804,6 +791,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             ,
             ,
             uint40 lastAccumulatedTimestamp,
+            ,
             ,
             ,
             uint256 accumulatedInterest,
@@ -1112,7 +1100,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(dai.balanceOf(lender), loanAmount + interestAccrued);
 
         assertEq(punks.ownerOf(tokenId), borrower); // ensure borrower gets their NFT back
-        (bool closed, , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
+        (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
         assertTrue(closed);
     }
 
@@ -1135,7 +1123,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.seizeCollateral(loanId, lender);
         assertEq(punks.ownerOf(tokenId), lender); // ensure lender seized collateral
 
-        (bool closed, , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
+        (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
         assertTrue(closed);
     }
 
