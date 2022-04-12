@@ -899,6 +899,36 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
     }
 
+    function testBuyoutPaysFacilitatorCorrectlyWhenFeeChanged(uint128 amount) public {
+        vm.assume(amount >= loanAmount);
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+        uint256 oldOriginationFee = facilitator.originationFeeRate();
+        facilitator.updateOriginationFeeRate(50);
+
+        address newLender = address(3);
+        dai.mint(amount, newLender);
+        vm.startPrank(newLender);
+        dai.approve(address(facilitator), amount);
+
+        uint256 beforeBalance = dai.balanceOf(address(facilitator));
+
+        facilitator.lend(
+            loanId,
+            interestRate,
+            amount,
+            uint32(increaseByMinPercent(loanDuration)),
+            address(1)
+        );
+
+        uint256 amountIncrease = amount - loanAmount;
+        uint256 originationFee = (amountIncrease *
+            oldOriginationFee) / facilitator.SCALAR();
+        assertEq(
+            beforeBalance + originationFee,
+            dai.balanceOf(address(facilitator))
+        );
+    }
+
     function testBuyoutEmitsCorrectly() public {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
