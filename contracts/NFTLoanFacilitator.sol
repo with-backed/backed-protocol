@@ -207,7 +207,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     amountIncrease,
                     loan.originationFeeRate,
                     currentLoanOwner,
-                    accumulatedInterest, previousLoanAmount
+                    accumulatedInterest,
+                    previousLoanAmount
                 );
             } else {
                 ERC20(loan.loanAssetContractAddress).safeTransferFrom(
