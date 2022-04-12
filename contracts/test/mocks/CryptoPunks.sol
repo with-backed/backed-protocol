@@ -17,7 +17,7 @@ contract CryptoPunks is ERC721 {
     }
 
     function mintTo(address to) public returns (uint256) {
-        _safeMint(to, ++_nonce, "");
+        _mint(to, ++_nonce);
         return _nonce;
     }
 

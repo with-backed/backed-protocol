@@ -28,7 +28,7 @@ library PopulateSVGParams{
     {
         (bool closed, uint256 perAnumInterestRate,
         uint256 durationSeconds, uint256 lastAccumulatedTimestamp,
-        address collateralAddress, address loanAsset, ,
+        address collateralAddress, , address loanAsset, ,
         uint256 loanAmount, uint256 collateralID) = nftLoanFacilitator.loanInfo(id);
 
         svgParams.id = Strings.toString(id);
