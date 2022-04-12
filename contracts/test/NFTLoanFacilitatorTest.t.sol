@@ -11,13 +11,14 @@ import {NFTLoanFacilitatorFactory} from "./helpers/NFTLoanFacilitatorFactory.sol
 import {BorrowTicket} from "contracts/BorrowTicket.sol";
 import {LendTicket} from "contracts/LendTicket.sol";
 import {CryptoPunks} from "./mocks/CryptoPunks.sol";
-import {DAI} from "./mocks/DAI.sol";
+import {TestERC20} from "./mocks/TestERC20.sol";
+import {FeeOnTransferERC20} from "./mocks/FeeOnTransferERC20.sol";
 
 contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     Vm vm = Vm(HEVM_ADDRESS);
     NFTLoanFacilitator facilitator;
     CryptoPunks punks = new CryptoPunks();
-    DAI dai = new DAI();
+    TestERC20 erc20 = new TestERC20();
     uint256 punkId;
     uint16 interestRate = 15;
     uint128 loanAmount = 1e20;
@@ -29,8 +30,8 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
         (, , facilitator) = factory.newFacilitator(address(this));
 
         // approve for lending
-        dai.mint(loanAmount * 3, address(this));
-        dai.approve(address(facilitator), loanAmount * 3);
+        erc20.mint(address(this), loanAmount * 3);
+        erc20.approve(address(facilitator), loanAmount * 3);
 
         // create a loan so we can close it or lend against it
         punkId = punks.mint();
@@ -40,7 +41,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             address(this)
         );
@@ -60,7 +61,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             address(this)
         );
@@ -79,7 +80,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             address(this)
         );
@@ -166,7 +167,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     address lender = address(2);
 
     CryptoPunks punks = new CryptoPunks();
-    DAI dai = new DAI();
+    TestERC20 erc20 = new TestERC20();
 
     uint16 interestRate = 15;
     uint128 loanAmount = 1e20;
@@ -195,7 +196,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             punkId,
             address(punks),
             interestRate,
-            address(dai),
+            address(erc20),
             loanAmount,
             loanDuration
         );
@@ -205,7 +206,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrower
         );
@@ -218,7 +219,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrower
         );
@@ -234,7 +235,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             mintBorrowTicketTo
         );
@@ -258,7 +259,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             maxPerAnumInterest,
             minLoanAmount,
-            address(dai),
+            address(erc20),
             minDurationSeconds,
             mintTo
         );
@@ -273,7 +274,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(loan.accumulatedInterest, 0);
         assertEq(loan.collateralContractAddress, address(punks));
         assertEq(loan.collateralTokenId, punkId);
-        assertEq(loan.loanAssetContractAddress, address(dai));
+        assertEq(loan.loanAssetContractAddress, address(erc20));
         assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
     }
 
@@ -285,7 +286,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             0,
             borrower
         );
@@ -299,7 +300,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             interestRate,
             0,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrower
         );
@@ -313,7 +314,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(0),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrower
         );
@@ -330,7 +331,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(borrowTicket),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrower
         );
@@ -347,7 +348,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(lendTicket),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrower
         );
@@ -378,8 +379,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         vm.startPrank(borrower);
 
-        dai.mint(loanAmount, borrower);
-        dai.approve(address(facilitator), loanAmount); // approve for lending
+        erc20.mint(borrower, loanAmount);
+        erc20.approve(address(facilitator), loanAmount); // approve for lending
         vm.warp(startTimestamp); // make sure there's a non-zero timestamp
         facilitator.lend(
             loanId,
@@ -436,8 +437,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.warp(startTimestamp + 366 days);
         uint256 t = facilitator.totalOwed(loanId);
         vm.startPrank(address(3));
-        dai.mint(t, address(3));
-        dai.approve(address(facilitator), t);
+        erc20.mint(address(3), t);
+        erc20.approve(address(facilitator), t);
         facilitator.repayAndCloseLoan(loanId);
         vm.stopPrank();
     }
@@ -461,7 +462,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         setUpLender(lender);
 
-        uint256 lenderBalance = dai.balanceOf(lender);
+        uint256 lenderBalance = erc20.balanceOf(lender);
 
         vm.startPrank(lender);
         facilitator.lend(
@@ -472,11 +473,11 @@ contract NFTLoanFacilitatorTest is DSTest {
             lender
         );
 
-        assertEq(dai.balanceOf(lender), lenderBalance - loanAmount);
+        assertEq(erc20.balanceOf(lender), lenderBalance - loanAmount);
         uint256 facilitatorTake = (loanAmount *
             facilitator.originationFeeRate()) / facilitator.SCALAR();
-        assertEq(dai.balanceOf(address(facilitator)), facilitatorTake);
-        assertEq(dai.balanceOf(borrower), loanAmount - facilitatorTake);
+        assertEq(erc20.balanceOf(address(facilitator)), facilitatorTake);
+        assertEq(erc20.balanceOf(borrower), loanAmount - facilitatorTake);
     }
 
     function testLendUpdatesValuesCorrectly(
@@ -492,8 +493,8 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         (uint256 tokenId, uint256 loanId) = setUpLoanForTest(borrower);
 
-        dai.mint(amount, address(this));
-        dai.approve(address(facilitator), amount);
+        erc20.mint(address(this), amount);
+        erc20.approve(address(facilitator), amount);
 
         facilitator.lend(loanId, rate, amount, duration, sendTo);
        
@@ -507,15 +508,15 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(loan.accumulatedInterest, 0);
         assertEq(loan.collateralContractAddress, address(punks));
         assertEq(loan.collateralTokenId, tokenId);
-        assertEq(loan.loanAssetContractAddress, address(dai));
+        assertEq(loan.loanAssetContractAddress, address(erc20));
         assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
     }
 
     function testLendEmitsCorrectly() public {
         (, uint256 loanId) = setUpLoanForTest(borrower);
 
-        dai.mint(loanAmount, address(this));
-        dai.approve(address(facilitator), loanAmount);
+        erc20.mint(address(this), loanAmount);
+        erc20.approve(address(facilitator), loanAmount);
 
         vm.expectEmit(true, true, false, true);
         emit Lend(
@@ -540,7 +541,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         setUpLender(lender);
         vm.startPrank(lender);
-        uint256 lenderBalance = dai.balanceOf(lender);
+        uint256 lenderBalance = erc20.balanceOf(lender);
 
         facilitator.lend(
             loanId,
@@ -564,17 +565,17 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(lastAccumulatedTimestamp, startTimestamp);
         assertEq(accumulatedInterest, 0);
 
-        // make sure lenders dai is transfered and lender gets lend ticket
-        assertEq(dai.balanceOf(lender), lenderBalance - loanAmount);
+        // make sure lenders erc20 is transfered and lender gets lend ticket
+        assertEq(erc20.balanceOf(lender), lenderBalance - loanAmount);
         assertEq(lendTicket.ownerOf(loanId), lender);
 
         // make sure Facilitator subtracted origination fee
         uint256 facilitatorTake = (loanAmount *
             facilitator.originationFeeRate()) / facilitator.SCALAR();
-        assertEq(dai.balanceOf(address(facilitator)), facilitatorTake);
+        assertEq(erc20.balanceOf(address(facilitator)), facilitatorTake);
 
-        // make sure borrower got their loan in DAI
-        assertEq(dai.balanceOf(borrower), loanAmount - facilitatorTake);
+        // make sure borrower got their loan in TestERC20
+        assertEq(erc20.balanceOf(borrower), loanAmount - facilitatorTake);
     }
 
     function testLoanValuesNotChangedAfterLend() public {
@@ -610,7 +611,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(accumulatedInterest, 0);
         assertEq(loanAmountFromLoan, loanAmount);
         assertEq(collateralContractAddress, address(punks));
-        assertEq(loanAssetContractAddress, address(dai));
+        assertEq(loanAssetContractAddress, address(erc20));
         assertEq(collateralTokenId, tokenId);
     }
 
@@ -662,6 +663,36 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(loanId, rate, amount, duration, lender);
     }
 
+    function testLendWithFeeOnTransferToken(
+        uint128 amount
+    ) public {
+        vm.assume(amount > 0);
+        loanAmount = amount;
+        FeeOnTransferERC20 token = new FeeOnTransferERC20();
+        erc20 = TestERC20(address(token));
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+        erc20.mint(address(this), loanAmount);
+        erc20.approve(address(facilitator), loanAmount);
+
+        facilitator.lend(loanId, interestRate, loanAmount, loanDuration, borrower);
+
+        uint256 facilitatorBalance = erc20.balanceOf(address(facilitator));
+        uint256 borrowerBalance = erc20.balanceOf(borrower);
+
+        uint256 normalTake = calculateTake(loanAmount);
+        uint256 expectedTake = normalTake - (normalTake * token.feeBips() / 10_000);
+        uint256 expectedBorrowerBalance = (loanAmount - normalTake) - ((loanAmount - normalTake) * token.feeBips() / 10_000);
+
+        assertEq(
+            facilitatorBalance,
+            expectedTake
+        );
+        assertEq(
+            borrowerBalance,
+            expectedBorrowerBalance
+        );
+    }
+
     function testInterestAccruesCorrectly() public {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         setUpLender(lender);
@@ -709,7 +740,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         address newLender = address(3);
         setUpLender(newLender);
         uint256 amountIncrease = amount - loanAmount;
-        dai.mint(amountIncrease, newLender);
+        erc20.mint(newLender, amountIncrease);
 
         vm.startPrank(newLender);
         facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
@@ -765,7 +796,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(accumulatedInterest, 0);
         // does not change immutable values
         assertEq(collateralContractAddress, address(punks));
-        assertEq(loanAssetContractAddress, address(dai));
+        assertEq(loanAssetContractAddress, address(erc20));
         assertEq(collateralTokenId, tokenId);
     }
 
@@ -776,8 +807,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         uint256 interest = facilitator.interestOwed(loanId);
         uint32 newDuration = uint32(increaseByMinPercent(loanDuration));
 
-        dai.mint(loanAmount + interest, address(this));
-        dai.approve(address(facilitator), loanAmount + interest);
+        erc20.mint(address(this), loanAmount + interest);
+        erc20.approve(address(facilitator), loanAmount + interest);
 
         facilitator.lend(
             loanId,
@@ -829,10 +860,10 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.warp(startTimestamp + 100);
         uint256 interest = facilitator.interestOwed(loanId);
 
-        dai.mint(amount + interest, address(this));
-        dai.approve(address(facilitator), amount + interest);
+        erc20.mint(address(this), amount + interest);
+        erc20.approve(address(facilitator), amount + interest);
 
-        uint256 beforeBalance = dai.balanceOf(lender);
+        uint256 beforeBalance = erc20.balanceOf(lender);
 
         facilitator.lend(
             loanId,
@@ -842,17 +873,17 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(1)
         );
 
-        assertEq(beforeBalance + loanAmount + interest, dai.balanceOf(lender));
+        assertEq(beforeBalance + loanAmount + interest, erc20.balanceOf(lender));
     }
 
     function testBuyoutPaysBorrowerCorrectly(uint128 amount) public {
         vm.assume(amount >= loanAmount);
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
-        dai.mint(amount, address(this));
-        dai.approve(address(facilitator), amount);
+        erc20.mint(address(this), amount);
+        erc20.approve(address(facilitator), amount);
 
-        uint256 beforeBalance = dai.balanceOf(borrower);
+        uint256 beforeBalance = erc20.balanceOf(borrower);
 
         facilitator.lend(
             loanId,
@@ -867,7 +898,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             facilitator.originationFeeRate()) / facilitator.SCALAR();
         assertEq(
             beforeBalance + (amountIncrease - originationFee),
-            dai.balanceOf(borrower)
+            erc20.balanceOf(borrower)
         );
     }
 
@@ -876,11 +907,11 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
 
         address newLender = address(3);
-        dai.mint(amount, newLender);
+        erc20.mint(newLender, amount);
         vm.startPrank(newLender);
-        dai.approve(address(facilitator), amount);
+        erc20.approve(address(facilitator), amount);
 
-        uint256 beforeBalance = dai.balanceOf(address(facilitator));
+        uint256 beforeBalance = erc20.balanceOf(address(facilitator));
 
         facilitator.lend(
             loanId,
@@ -895,7 +926,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             facilitator.originationFeeRate()) / facilitator.SCALAR();
         assertEq(
             beforeBalance + originationFee,
-            dai.balanceOf(address(facilitator))
+            erc20.balanceOf(address(facilitator))
         );
     }
 
@@ -906,11 +937,11 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.updateOriginationFeeRate(50);
 
         address newLender = address(3);
-        dai.mint(amount, newLender);
+        erc20.mint(newLender, amount);
         vm.startPrank(newLender);
-        dai.approve(address(facilitator), amount);
+        erc20.approve(address(facilitator), amount);
 
-        uint256 beforeBalance = dai.balanceOf(address(facilitator));
+        uint256 beforeBalance = erc20.balanceOf(address(facilitator));
 
         facilitator.lend(
             loanId,
@@ -925,7 +956,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             oldOriginationFee) / facilitator.SCALAR();
         assertEq(
             beforeBalance + originationFee,
-            dai.balanceOf(address(facilitator))
+            erc20.balanceOf(address(facilitator))
         );
     }
 
@@ -1116,18 +1147,18 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
 
         uint256 interestAccrued = facilitator.interestOwed(loanId);
-        dai.mint(interestAccrued + calculateTake(loanAmount), borrower); // give borrower enough money to pay back the loan
-        dai.approve(address(facilitator), loanAmount + interestAccrued);
-        uint256 balanceOfBorrower = dai.balanceOf(borrower);
+        erc20.mint(borrower, interestAccrued + calculateTake(loanAmount)); // give borrower enough money to pay back the loan
+        erc20.approve(address(facilitator), loanAmount + interestAccrued);
+        uint256 balanceOfBorrower = erc20.balanceOf(borrower);
 
         facilitator.repayAndCloseLoan(loanId);
 
         // ensure ERC20 balances are correct
         assertEq(
-            dai.balanceOf(borrower),
+            erc20.balanceOf(borrower),
             balanceOfBorrower - (loanAmount + interestAccrued)
         );
-        assertEq(dai.balanceOf(lender), loanAmount + interestAccrued);
+        assertEq(erc20.balanceOf(lender), loanAmount + interestAccrued);
 
         assertEq(punks.ownerOf(tokenId), borrower); // ensure borrower gets their NFT back
         (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
@@ -1244,10 +1275,10 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function setUpLender(address lenderAddress) public {
-        // create a lender address and give them some approved dai
+        // create a lender address and give them some approved erc20
         vm.startPrank(lenderAddress);
-        dai.mint(loanAmount, lenderAddress);
-        dai.approve(address(facilitator), 2**256 - 1); // approve for lending
+        erc20.mint(lenderAddress, loanAmount);
+        erc20.approve(address(facilitator), 2**256 - 1); // approve for lending
         vm.stopPrank();
     }
 
@@ -1281,7 +1312,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(punks),
             interestRate,
             loanAmount,
-            address(dai),
+            address(erc20),
             loanDuration,
             borrowerAddress
         );
