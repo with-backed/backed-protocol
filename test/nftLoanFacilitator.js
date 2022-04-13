@@ -257,6 +257,7 @@ describe("NFTLoanFacilitator contract", function () {
                 MaliciousERC20Contract = await ethers.getContractFactory("MaliciousERC20");
                 MAL = await MaliciousERC20Contract.connect(daiHolder).deploy(NFTLoanFacilitator.address);
                 await MAL.deployed();
+                await MAL.mint(daiHolder.address, loanAmount);
         
                 // make sure we mint borrow ticket to the erc20 contract address
                 await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, MAL.address, durationSeconds, MAL.address)
@@ -448,7 +449,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("10")
-            ).to.be.revertedWith("function call to a non-contract account")
+            ).to.be.revertedWith("no lender, use closeLoan")
         })
     })
 
