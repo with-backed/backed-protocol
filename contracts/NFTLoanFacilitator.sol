@@ -189,7 +189,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                 );
             }
 
-            require(accumulatedInterest <= type(uint128).max,
+            require(accumulatedInterest < 1 << 128, 
             "interest exceeds uint128");
 
             loan.perAnumInterestRate = interestRate;
