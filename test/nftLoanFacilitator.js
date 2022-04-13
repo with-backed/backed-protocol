@@ -65,10 +65,10 @@ describe("NFTLoanFacilitator contract", function () {
         await CryptoPunks.connect(punkHolder).approve(NFTLoanFacilitator.address, punkId)
 
 
-        DAIContract = await ethers.getContractFactory("DAI");
+        DAIContract = await ethers.getContractFactory("TestERC20");
         DAI = await DAIContract.deploy();
         await DAI.deployed();  
-        DAI.mint(ethers.BigNumber.from(10).pow(30), daiHolder.address);
+        DAI.mint(daiHolder.address, ethers.BigNumber.from(10).pow(30));
       });
       
     describe("tokenURI", function() {

