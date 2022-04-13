@@ -24,7 +24,8 @@ contract LendTicket is NFTLoanTicket, ILendTicket {
     /// @dev exact copy of 
     /// https://github.com/Rari-Capital/solmate/blob/a51b8a28b8f1347b2519138fc7e756278e1bffaa/src/tokens/ERC721.sol#L82-L109
     /// with L91 - L93 removed to enable loanFacilitatorTransfer
-    /// also L87 removed because we know from is ownerOf in this case
+    /// also L87 removed because NFTLoanFacilitator calls ownerOf when 
+    /// passing `from` to loanFacilitatorTransfer
     function _transfer(
         address from,
         address to,
