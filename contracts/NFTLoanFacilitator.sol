@@ -229,10 +229,13 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
     function repayAndCloseLoan(uint256 loanId) external override notClosed(loanId) {
         Loan storage loan = loanInfo[loanId];
 
+        uint256 lastAccumulated = loan.lastAccumulatedTimestamp;
+        require(lastAccumulated != 0, 'no lender, use closeLoan');
+
         uint256 loanAmount = loan.loanAmount;
         uint256 interest = _interestOwed(
             loanAmount,
-            loan.lastAccumulatedTimestamp,
+            lastAccumulated,
             loan.perAnumInterestRate,
             loan.accumulatedInterest
         );
