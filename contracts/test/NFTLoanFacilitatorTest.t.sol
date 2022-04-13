@@ -3,7 +3,7 @@ pragma solidity 0.8.12;
 
 import {DSTest} from "./helpers/test.sol";
 import {Vm} from "./helpers/Vm.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {INFTLoanFacilitator} from "contracts/interfaces/INFTLoanFacilitator.sol";
 import {NFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
