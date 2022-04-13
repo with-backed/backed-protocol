@@ -143,7 +143,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
         
         if (loan.lastAccumulatedTimestamp == 0) {
             address loanAssetContractAddress = loan.loanAssetContractAddress;
-            require(loanAssetContractAddress != address(0), "invalid loan");
+            require(loanAssetContractAddress.code.length != 0, "invalid loan");
 
             require(interestRate <= loan.perAnumInterestRate, 'rate too high');
             require(durationSeconds >= loan.durationSeconds, 'duration too low');
