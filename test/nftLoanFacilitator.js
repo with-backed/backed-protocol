@@ -7,7 +7,7 @@ describe("NFTLoanFacilitator contract", function () {
 
     let NFTLoanFacilitator;
     let LendTicket;
-    let CryptoPunks;
+    let TestERC721;
     // defaults
     var interestRateDecimals
     var originationFeeRate
@@ -16,11 +16,11 @@ describe("NFTLoanFacilitator contract", function () {
     var durationSeconds = ethers.BigNumber.from(10);
     var loanAmount = ethers.BigNumber.from(505).mul(ethers.BigNumber.from(10).pow(17))
 
-    var punkId = ethers.BigNumber.from(1000);
+    var erc721Id = ethers.BigNumber.from(1000);
     let BorrowTicketDescriptor;
 
     beforeEach(async function () {
-        [manager, punkHolder, daiHolder, addr4, addr5, ...addrs] = await ethers.getSigners();        
+        [manager, erc721Holder, erc20Holder, addr4, addr5, ...addrs] = await ethers.getSigners();        
 
         BorrowTicketSVGHelperContract = await ethers.getContractFactory("BorrowTicketSVGHelper");
         BorrowTicketSVGHelper = await BorrowTicketSVGHelperContract.deploy()
@@ -57,23 +57,23 @@ describe("NFTLoanFacilitator contract", function () {
         await NFTLoanFacilitator.connect(manager).setLendTicketContract(LendTicket.address)
         await NFTLoanFacilitator.connect(manager).setBorrowTicketContract(BorrowTicket.address)
 
-        CryptoPunksContract = await ethers.getContractFactory("CryptoPunks");
-        CryptoPunks = await CryptoPunksContract.deploy();
-        await CryptoPunks.deployed();
+        TestERC721Contract = await ethers.getContractFactory("TestERC721");
+        TestERC721 = await TestERC721Contract.deploy();
+        await TestERC721.deployed();
 
-        await CryptoPunks.connect(punkHolder).mint();
-        await CryptoPunks.connect(punkHolder).approve(NFTLoanFacilitator.address, punkId)
+        await TestERC721.connect(erc721Holder).mint();
+        await TestERC721.connect(erc721Holder).approve(NFTLoanFacilitator.address, erc721Id)
 
 
-        DAIContract = await ethers.getContractFactory("TestERC20");
-        DAI = await DAIContract.deploy();
-        await DAI.deployed();  
-        DAI.mint(daiHolder.address, ethers.BigNumber.from(10).pow(30));
+        ERC20Contract = await ethers.getContractFactory("TestERC20");
+        ERC20 = await ERC20Contract.deploy();
+        await ERC20.deployed();  
+        ERC20.mint(erc20Holder.address, ethers.BigNumber.from(10).pow(30));
       });
       
     describe("tokenURI", function() {
         it("retrieves successfully", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
             await expect(
                 BorrowTicket.tokenURI("1")
             ).not.to.be.reverted
@@ -85,73 +85,73 @@ describe("NFTLoanFacilitator contract", function () {
 
     describe("createLoan", function () {
         it("sets values correctly", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
             const ticket = await NFTLoanFacilitator.loanInfo("1")
-            expect(ticket.loanAssetContractAddress).to.equal(DAI.address)
+            expect(ticket.loanAssetContractAddress).to.equal(ERC20.address)
             expect(ticket.loanAmount).to.equal(loanAmount)
-            expect(ticket.collateralTokenId).to.equal(punkId)
-            expect(ticket.collateralContractAddress).to.equal(CryptoPunks.address)
+            expect(ticket.collateralTokenId).to.equal(erc721Id)
+            expect(ticket.collateralContractAddress).to.equal(TestERC721.address)
             expect(ticket.perAnumInterestRate).to.equal(interest)
             expect(ticket.durationSeconds).to.equal(durationSeconds)
             expect(ticket.accumulatedInterest).to.equal(0)
         })
 
         it("transfers NFT to contract, mints ticket", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
-            const punkOwner = await  CryptoPunks.ownerOf(punkId)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
+            const erc721Owner = await  TestERC721.ownerOf(erc721Id)
             const ticketOwner = await BorrowTicket.ownerOf("1")
-            expect(punkOwner).to.equal(NFTLoanFacilitator.address)
+            expect(erc721Owner).to.equal(NFTLoanFacilitator.address)
             expect(ticketOwner).to.equal(addr4.address)
         })
 
         it('reverts if not approved', async function(){
-            await CryptoPunks.connect(punkHolder).mint();
+            await TestERC721.connect(erc721Holder).mint();
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
             ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved")
         })
 
         it('reverts if collateral is loan ticket or borrow ticket', async function(){
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, LendTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, LendTicket.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
             ).to.be.revertedWith('lend ticket collateral')
             
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, BorrowTicket.address, interest, loanAmount, DAI.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, BorrowTicket.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
             ).to.be.revertedWith('borrow ticket collateral')
         })
 
         it('reverts if duration is 0', async function(){
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, 0, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, 0, addr4.address)
             ).to.be.revertedWith('0 duration')
         })
 
         it('reverts if loan amount is 0', async function(){
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, 0, DAI.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, 0, ERC20.address, durationSeconds, addr4.address)
             ).to.be.revertedWith('0 loan amount')
         })
 
         it('does not reverts if interest rate is 0', async function(){
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, 0, loanAmount, DAI.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, 0, loanAmount, ERC20.address, durationSeconds, addr4.address)
             ).not.to.be.reverted
         })
     });
 
     describe("closeLoan", function () {
         beforeEach(async function() {
-            await CryptoPunks.connect(punkHolder).mint();
-            await CryptoPunks.connect(punkHolder).approve(NFTLoanFacilitator.address, punkId.add(1))
-            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await TestERC721.connect(erc721Holder).mint();
+            await TestERC721.connect(erc721Holder).approve(NFTLoanFacilitator.address, erc721Id.add(1))
+            await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
         })
 
         it("transfers ERC721 and closes ticket", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
-            const owner = await CryptoPunks.ownerOf(punkId.add(1))
+            await NFTLoanFacilitator.connect(erc721Holder).closeLoan("1", addr4.address)
+            const owner = await TestERC721.ownerOf(erc721Id.add(1))
             expect(owner).to.equal(addr4.address)
             const ticket = await NFTLoanFacilitator.loanInfo("1")
             expect(ticket.closed).to.equal(true)
@@ -159,27 +159,27 @@ describe("NFTLoanFacilitator contract", function () {
 
         it("reverts if loan does not exist", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).closeLoan("2", addr4.address)
+                NFTLoanFacilitator.connect(erc20Holder).closeLoan("2", addr4.address)
                 ).to.be.revertedWith("borrow ticket holder only")
         });
 
         it("reverts if caller is not ticket owner", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).closeLoan("1", addr4.address)
+                NFTLoanFacilitator.connect(erc20Holder).closeLoan("1", addr4.address)
                 ).to.be.revertedWith("borrow ticket holder only")
         });
 
         it("reverts if loan closed", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+            await NFTLoanFacilitator.connect(erc721Holder).closeLoan("1", addr4.address)
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).closeLoan("1", addr4.address)
             ).to.be.revertedWith("loan closed")
         });
 
         it("reverts if ticket has lender", async function(){
-            await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
+            await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).closeLoan("1", addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).closeLoan("1", addr4.address)
             ).to.be.revertedWith("has lender")
         });
     })
@@ -187,37 +187,37 @@ describe("NFTLoanFacilitator contract", function () {
     describe("lend", function () {
         context("when loan does not have lender", function () {
             beforeEach(async function() {
-                await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-                await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
+                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+                await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount)
             })
 
             it("reverts if loan does not exist", async function(){
                 await expect(
-                    NFTLoanFacilitator.connect(daiHolder).lend("2", 0, 0, 0, daiHolder.address)
+                    NFTLoanFacilitator.connect(erc20Holder).lend("2", 0, 0, 0, erc20Holder.address)
                     ).to.be.revertedWith("invalid loan")
             })
 
             it("reverts if amount is too low", async function(){
                 await expect(
-                    NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount.sub(1), durationSeconds, daiHolder.address)
+                    NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount.sub(1), durationSeconds, erc20Holder.address)
                     ).to.be.revertedWith("amount too low")
             })
 
             it("reverts if interest is too high", async function(){
                 await expect(
-                    NFTLoanFacilitator.connect(daiHolder).lend("1", interest.add(1), loanAmount, durationSeconds, daiHolder.address)
+                    NFTLoanFacilitator.connect(erc20Holder).lend("1", interest.add(1), loanAmount, durationSeconds, erc20Holder.address)
                     ).to.be.revertedWith("rate too high")
             })
 
             it("reverts if block duration is too low", async function(){
                 await expect(
-                    NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds.sub(1), daiHolder.address)
+                    NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds.sub(1), erc20Holder.address)
                     ).to.be.revertedWith("duration too low")
             })
 
             it("sets values correctly", async function(){
                 await expect(
-                        NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
+                        NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
                         ).not.to.be.reverted
                 const ticket = await NFTLoanFacilitator.loanInfo("1")
                 expect(ticket.loanAmount).to.equal(loanAmount)
@@ -228,24 +228,24 @@ describe("NFTLoanFacilitator contract", function () {
                 expect(ticket.lastAccumulatedTimestamp).to.equal(block.timestamp)
             })
             it("transfers loan NFT to lender", async function(){
-                await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, addr5.address)
+                await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, addr5.address)
                 const owner = await LendTicket.ownerOf("1")
                 expect(owner).to.equal(addr5.address)
             });
 
             it("leaves origination fee in contract", async function(){
-                var value = await DAI.balanceOf(NFTLoanFacilitator.address)
+                var value = await ERC20.balanceOf(NFTLoanFacilitator.address)
                 expect(value).to.equal(0)
-                await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-                value = await DAI.balanceOf(NFTLoanFacilitator.address)
+                await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
+                value = await ERC20.balanceOf(NFTLoanFacilitator.address)
                 expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar))
             })
 
             it("transfers loan asset borrower", async function(){
-                var value = await DAI.balanceOf(punkHolder.address)
+                var value = await ERC20.balanceOf(erc721Holder.address)
                 expect(value).to.equal(0)
-                await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-                value = await DAI.balanceOf(punkHolder.address)
+                await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
+                value = await ERC20.balanceOf(erc721Holder.address)
                 expect(value).to.equal(loanAmount.sub(loanAmount.mul(originationFeeRate).div(scalar)))
             })
 
@@ -254,50 +254,50 @@ describe("NFTLoanFacilitator contract", function () {
         context("malicious ERC20", function () {
             beforeEach(async function () {
                 // deploy malicious erc20
-                MaliciousERC20Contract = await ethers.getContractFactory("MaliciousERC20");
-                MAL = await MaliciousERC20Contract.connect(daiHolder).deploy(NFTLoanFacilitator.address);
+                MaliciousERC20Contract = await ethers.getContractFactory("CloseLoanERC20");
+                MAL = await MaliciousERC20Contract.connect(erc20Holder).deploy(NFTLoanFacilitator.address);
                 await MAL.deployed();
-                await MAL.mint(daiHolder.address, loanAmount);
+                await MAL.mint(erc20Holder.address, loanAmount);
         
                 // make sure we mint borrow ticket to the erc20 contract address
-                await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, MAL.address, durationSeconds, MAL.address)
-                await MAL.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
+                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, MAL.address, durationSeconds, MAL.address)
+                await MAL.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount)
             })
         
             it("does not complete lend function if loan asset is malicious", async function () {
-                var value = await MAL.balanceOf(punkHolder.address)
+                var value = await MAL.balanceOf(erc721Holder.address)
                 expect(value).to.equal(0)
         
                 await expect(
-                    NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
+                    NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
                 ).to.be.revertedWith("has lender")
         
-                value = await MAL.balanceOf(punkHolder.address)
+                value = await MAL.balanceOf(erc721Holder.address)
                 expect(value).to.equal(0)
             })
         })
 
         context("when loan has lender", function () {
             beforeEach(async function() {
-                await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount)
+                await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount)
 
-                await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-                await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
+                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+                await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
 
-                await DAI.connect(daiHolder).transfer(addr4.address, loanAmount.mul(2))
-                await DAI.connect(addr4).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+                await ERC20.connect(erc20Holder).transfer(addr4.address, loanAmount.mul(2))
+                await ERC20.connect(addr4).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
             })
 
             it("reverts if terms are not improved", async function(){
                 await expect(
-                    NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
+                    NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
                 ).to.be.revertedWith("insufficient improvement")
             })
 
             it("reverts interest is already 0", async function(){
-                await NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, daiHolder.address)
+                await NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, erc20Holder.address)
                 await expect(
-                    NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, daiHolder.address)
+                    NFTLoanFacilitator.connect(addr4).lend("1", 0, loanAmount, durationSeconds, erc20Holder.address)
                 ).to.be.revertedWith("insufficient improvement")
             })
 
@@ -332,10 +332,10 @@ describe("NFTLoanFacilitator contract", function () {
             });
 
             it("pays back previous owner", async function(){
-                const beforeValue = await DAI.balanceOf(daiHolder.address)
+                const beforeValue = await ERC20.balanceOf(erc20Holder.address)
                 await NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount.add(loanAmount.mul(10).div(100)), durationSeconds, addr4.address)
                 const interestOwed = await interestOwedTotal("1")
-                const afterValue = await DAI.balanceOf(daiHolder.address)
+                const afterValue = await ERC20.balanceOf(erc20Holder.address)
                 expect(afterValue).to.equal(beforeValue.add(loanAmount).add(interestOwed))
             })
 
@@ -356,15 +356,15 @@ describe("NFTLoanFacilitator contract", function () {
                 const increase = loanAmount.mul(10).div(100)
                 const newLoanAmount = loanAmount.add(increase)
                 await NFTLoanFacilitator.connect(addr4).lend("1", interest, newLoanAmount, durationSeconds, addr4.address)
-                value = await DAI.balanceOf(NFTLoanFacilitator.address)
+                value = await ERC20.balanceOf(NFTLoanFacilitator.address)
                 expect(value).to.equal(loanAmount.mul(originationFeeRate).div(scalar).add(increase.mul(originationFeeRate).div(scalar)))
             })
 
             context("when loan amount is the same", function () {
                 it('does not increase cash drawer balance', async function(){
-                    var valueBefore = await DAI.balanceOf(NFTLoanFacilitator.address)
+                    var valueBefore = await ERC20.balanceOf(NFTLoanFacilitator.address)
                     await NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount, durationSeconds.add(durationSeconds.mul(10).div(100)), addr4.address)
-                    var valueAfter = await DAI.balanceOf(NFTLoanFacilitator.address)
+                    var valueAfter = await ERC20.balanceOf(NFTLoanFacilitator.address)
                     expect(valueBefore).to.equal(valueAfter)
                 })
 
@@ -382,10 +382,10 @@ describe("NFTLoanFacilitator contract", function () {
                 })
 
                 it("pays back previous owner", async function(){
-                    const beforeValue = await DAI.balanceOf(daiHolder.address)
+                    const beforeValue = await ERC20.balanceOf(erc20Holder.address)
                     await NFTLoanFacilitator.connect(addr4).lend("1", interest, loanAmount, durationSeconds.add(durationSeconds.mul(10).div(100)), addr4.address)
                     const interestOwed = await interestOwedTotal("1")
-                    const afterValue = await DAI.balanceOf(daiHolder.address)
+                    const afterValue = await ERC20.balanceOf(erc20Holder.address)
                     expect(afterValue).to.equal(beforeValue.add(loanAmount).add(interestOwed))
                 })
             })
@@ -395,13 +395,13 @@ describe("NFTLoanFacilitator contract", function () {
                     const buyout1LoanAmount = loanAmount.add(loanAmount.mul(10).div(100))
                     const buyout2LoanAmount = buyout1LoanAmount.add(buyout1LoanAmount.mul(10).div(100))
                     
-                    await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, buyout2LoanAmount.mul(2))
+                    await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, buyout2LoanAmount.mul(2))
                     
                     await NFTLoanFacilitator.connect(addr4).lend("1", interest, buyout1LoanAmount, durationSeconds, addr4.address)
-                    const addr4BeforeBalance = await DAI.balanceOf(addr4.address)
-                    await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, buyout2LoanAmount, durationSeconds, daiHolder.address)
+                    const addr4BeforeBalance = await ERC20.balanceOf(addr4.address)
+                    await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, buyout2LoanAmount, durationSeconds, erc20Holder.address)
                     const interestOwed = await interestOwedTotal("1")
-                    const addr4AfterBalance = await DAI.balanceOf(addr4.address)
+                    const addr4AfterBalance = await ERC20.balanceOf(addr4.address)
                     expect(addr4AfterBalance).to.equal(addr4BeforeBalance.add(buyout1LoanAmount).add(interestOwed))
                 })
             })
@@ -411,72 +411,72 @@ describe("NFTLoanFacilitator contract", function () {
 
     describe("repayAndCloseLoan", function () {
         beforeEach(async function() {
-            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-            await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-            await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
-            await DAI.connect(punkHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
+            await ERC20.connect(erc20Holder).transfer(erc721Holder.address, loanAmount.mul(2))
+            await ERC20.connect(erc721Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
         })
 
         it("pays back lender", async function(){
-            const balanceBefore = await DAI.balanceOf(daiHolder.address)
-            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
+            const balanceBefore = await ERC20.balanceOf(erc20Holder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
             const interest = await interestOwedTotal("1")
-            const balanceAfter = await DAI.balanceOf(daiHolder.address)
+            const balanceAfter = await ERC20.balanceOf(erc20Holder.address)
             expect(balanceAfter).to.equal(balanceBefore.add(loanAmount.add(interest)))
         })
 
         it("transfers collateral back to lendee", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
-            const punkOwner = await  CryptoPunks.ownerOf(punkId)
-            expect(punkOwner).to.equal(punkHolder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
+            const erc721Owner = await  TestERC721.ownerOf(erc721Id)
+            expect(erc721Owner).to.equal(erc721Holder.address)
         })
 
         it("closes ticket", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
+            await NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
             const ticket = await NFTLoanFacilitator.loanInfo("1")
             expect(ticket.closed).to.equal(true)
         })
 
         it("reverts if ticket is closed", async function(){
-            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
+            await NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
+                NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
             ).to.be.revertedWith("loan closed")
         })
 
         it("reverts if loan does not exist", async function(){
             await expect(
-                NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("10")
+                NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("10")
             ).to.be.revertedWith("no lender, use closeLoan")
         })
     })
 
     describe("seizeCollateral", function () {
         beforeEach(async function() {
-            await CryptoPunks.connect(punkHolder).mint();
-            await CryptoPunks.connect(punkHolder).approve(NFTLoanFacilitator.address, punkId.add(1))
-            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await TestERC721.connect(erc721Holder).mint();
+            await TestERC721.connect(erc721Holder).approve(NFTLoanFacilitator.address, erc721Id.add(1))
+            await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId.add(1), CryptoPunks.address, interest, loanAmount, DAI.address, 1, punkHolder.address)
-            await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, 1, daiHolder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, loanAmount, ERC20.address, 1, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, 1, erc20Holder.address)
         })
 
         it("transfers collateral to given address, closed", async function(){
             // mine on block
-            await DAI.connect(daiHolder).transfer(addr4.address, ethers.BigNumber.from(1))
+            await ERC20.connect(erc20Holder).transfer(addr4.address, ethers.BigNumber.from(1))
             // 
-            await NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
+            await NFTLoanFacilitator.connect(erc20Holder).seizeCollateral("1", addr4.address)
             const ticket = await NFTLoanFacilitator.loanInfo("1")
             expect(ticket.closed).to.equal(true)
-            const punkOwner = await CryptoPunks.ownerOf(punkId.add(1))
-            expect(punkOwner).to.equal(addr4.address)
+            const erc721Owner = await TestERC721.ownerOf(erc721Id.add(1))
+            expect(erc721Owner).to.equal(addr4.address)
         })
 
         it('reverts if non-loan-owner calls', async function(){
             // mine on block
-            await DAI.connect(daiHolder).transfer(addr4.address, ethers.BigNumber.from(1))
+            await ERC20.connect(erc20Holder).transfer(addr4.address, ethers.BigNumber.from(1))
             // 
             await expect(
                 NFTLoanFacilitator.connect(addr4).seizeCollateral("1", addr4.address)
@@ -484,64 +484,64 @@ describe("NFTLoanFacilitator contract", function () {
         })
 
         it("reverts if ticket is closed", async function(){
-            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(1))
+            await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(1))
             // repay and close
-            await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
-            await DAI.connect(punkHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
-            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
+            await ERC20.connect(erc20Holder).transfer(erc721Holder.address, loanAmount.mul(2))
+            await ERC20.connect(erc721Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
             // 
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
+                NFTLoanFacilitator.connect(erc20Holder).seizeCollateral("1", addr4.address)
             ).to.be.revertedWith("loan closed")
         })
 
         it("reverts if payment is not late", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).seizeCollateral("1", addr4.address)
+                NFTLoanFacilitator.connect(erc20Holder).seizeCollateral("1", addr4.address)
             ).to.be.revertedWith("payment is not late")
         })
 
         it("reverts loan does not exist", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).seizeCollateral("2", addr4.address)
+                NFTLoanFacilitator.connect(erc20Holder).seizeCollateral("2", addr4.address)
             ).to.be.revertedWith("lend ticket holder only")
         })
     })
 
     describe("withdrawOriginationFees", function () {
         beforeEach(async function() {
-            await DAI.connect(daiHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(punkHolder).createLoan(punkId, CryptoPunks.address, interest, loanAmount, DAI.address, durationSeconds, punkHolder.address)
-            await NFTLoanFacilitator.connect(daiHolder).lend("1", interest, loanAmount, durationSeconds, daiHolder.address)
-            await DAI.connect(daiHolder).transfer(punkHolder.address, loanAmount.mul(2))
-            await DAI.connect(punkHolder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
-            await NFTLoanFacilitator.connect(punkHolder).repayAndCloseLoan("1")
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
+            await ERC20.connect(erc20Holder).transfer(erc721Holder.address, loanAmount.mul(2))
+            await ERC20.connect(erc721Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
+            await NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("1")
         })
 
         it("transfers ERC20 value, reduces loan payment balance", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).withdrawOriginationFees(DAI.address, loanAmount, manager.address)
+                NFTLoanFacilitator.connect(erc20Holder).withdrawOriginationFees(ERC20.address, loanAmount, manager.address)
                 ).to.be.reverted
         });
 
         it("transfers ERC20 value, reduces loan payment balance", async function(){
-            const balanceBefore = await DAI.balanceOf(manager.address)
-            const value = await DAI.balanceOf(NFTLoanFacilitator.address)
+            const balanceBefore = await ERC20.balanceOf(manager.address)
+            const value = await ERC20.balanceOf(NFTLoanFacilitator.address)
             expect(value).to.be.above(0)
             await expect(
-                NFTLoanFacilitator.connect(manager).withdrawOriginationFees(DAI.address, value, manager.address)
+                NFTLoanFacilitator.connect(manager).withdrawOriginationFees(ERC20.address, value, manager.address)
                 ).not.to.be.reverted
-            const balanceAfter = await DAI.balanceOf(manager.address)
+            const balanceAfter = await ERC20.balanceOf(manager.address)
             expect(balanceAfter).to.equal(balanceBefore.add(value))
 
         })
         
         it("reverts if amount is greater than what is available", async function(){
-            const balanceBefore = await DAI.balanceOf(manager.address)
-            const value = await DAI.balanceOf(NFTLoanFacilitator.address)
+            const balanceBefore = await ERC20.balanceOf(manager.address)
+            const value = await ERC20.balanceOf(NFTLoanFacilitator.address)
             await expect(
-                NFTLoanFacilitator.connect(manager).withdrawOriginationFees(DAI.address, value.add(1), manager.address)
+                NFTLoanFacilitator.connect(manager).withdrawOriginationFees(ERC20.address, value.add(1), manager.address)
                 ).to.be.reverted
         })
     })
@@ -570,7 +570,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if not called by manager", async function(){
             const newTake = ethers.BigNumber.from(2).mul(ethers.BigNumber.from(10).pow(interestRateDecimals - 2))
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).updateOriginationFeeRate(newTake)
+                NFTLoanFacilitator.connect(erc20Holder).updateOriginationFeeRate(newTake)
             ).to.be.revertedWith("Ownable: caller is not the owner")
         })
     })
@@ -587,7 +587,7 @@ describe("NFTLoanFacilitator contract", function () {
 
         it("reverts if not called by manager", async function(){
             await expect(
-                NFTLoanFacilitator.connect(daiHolder).updateRequiredImprovementRate(5)
+                NFTLoanFacilitator.connect(erc20Holder).updateRequiredImprovementRate(5)
             ).to.be.revertedWith("Ownable: caller is not the owner")
         })
     })

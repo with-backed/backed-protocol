@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "../../interfaces/INFTLoanFacilitator.sol";
 
-contract MaliciousERC20 is ERC20, IERC721Receiver {
+contract CloseLoanERC20 is ERC20, IERC721Receiver {
     INFTLoanFacilitator nftLoanFacilitator;
 
     constructor(address facilitatorAddress) ERC20("MAL", "MAL") {
         nftLoanFacilitator = INFTLoanFacilitator(facilitatorAddress);
     }
 
-    function mint( address to, uint256 amount) external {
+    function mint(address to, uint256 amount) external {
         _mint(to, amount);
     }
 
