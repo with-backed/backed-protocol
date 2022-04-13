@@ -681,7 +681,8 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         uint256 normalTake = calculateTake(loanAmount);
         uint256 expectedTake = normalTake - (normalTake * token.feeBips() / 10_000);
-        uint256 expectedBorrowerBalance = (loanAmount - normalTake) - ((loanAmount - normalTake) * token.feeBips() / 10_000);
+        uint256 normalBorrowerBalance = (loanAmount - normalTake);
+        uint256 expectedBorrowerBalance = normalBorrowerBalance - (normalBorrowerBalance * token.feeBips() / 10_000);
 
         assertEq(
             facilitatorBalance,
@@ -924,6 +925,96 @@ contract NFTLoanFacilitatorTest is DSTest {
         uint256 amountIncrease = amount - loanAmount;
         uint256 originationFee = (amountIncrease *
             facilitator.originationFeeRate()) / facilitator.SCALAR();
+        assertEq(
+            beforeBalance + originationFee,
+            erc20.balanceOf(address(facilitator))
+        );
+    }
+    
+    function testBuyoutFeeOnTransferPaysPreviousLenderCorrectly(
+        uint128 amount
+    ) public {
+        vm.assume(amount >= loanAmount);
+        FeeOnTransferERC20 token = new FeeOnTransferERC20();
+        erc20 = TestERC20(address(token));
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        vm.warp(startTimestamp + 100);
+        uint256 interest = facilitator.interestOwed(loanId);
+
+        erc20.mint(address(this), amount + interest);
+        erc20.approve(address(facilitator), amount + interest);
+
+        uint256 beforeBalance = erc20.balanceOf(lender);
+
+        facilitator.lend(
+            loanId,
+            interestRate,
+            amount,
+            uint32(increaseByMinPercent(loanDuration)),
+            address(1)
+        );
+
+        uint256 expectedIncrease = (loanAmount + interest)
+            - ((loanAmount + interest) * token.feeBips() / 10_000);
+        assertEq(beforeBalance + expectedIncrease, erc20.balanceOf(lender));
+    }
+
+    function testBuyoutFeeOnTransferPaysBorrowerCorrectly(
+        uint128 amount
+    ) public {
+        vm.assume(amount >= loanAmount);
+        FeeOnTransferERC20 token = new FeeOnTransferERC20();
+        erc20 = TestERC20(address(token));
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        erc20.mint(address(this), amount);
+        erc20.approve(address(facilitator), amount);
+
+        uint256 beforeBalance = erc20.balanceOf(borrower);
+
+        facilitator.lend(
+            loanId,
+            interestRate,
+            amount,
+            uint32(increaseByMinPercent(loanDuration)),
+            address(1)
+        );
+
+        uint256 amountIncrease = amount - loanAmount;
+        uint256 originationFee = calculateTake(amountIncrease);
+        uint256 expectedIncrease = (amountIncrease - originationFee)
+            - ((amountIncrease - originationFee) * token.feeBips() / 10_000);
+        assertEq(
+            beforeBalance + expectedIncrease,
+            erc20.balanceOf(borrower)
+        );
+    }
+
+    function testBuyoutFeeOnTransferPaysFacilitatorCorrectly(uint128 amount) public {
+        vm.assume(amount >= loanAmount);
+        FeeOnTransferERC20 token = new FeeOnTransferERC20();
+        erc20 = TestERC20(address(token));
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        address newLender = address(3);
+        erc20.mint(newLender, amount);
+        vm.startPrank(newLender);
+        erc20.approve(address(facilitator), amount);
+
+        uint256 beforeBalance = erc20.balanceOf(address(facilitator));
+
+        facilitator.lend(
+            loanId,
+            interestRate,
+            amount,
+            uint32(increaseByMinPercent(loanDuration)),
+            address(1)
+        );
+
+        uint256 amountIncrease = amount - loanAmount;
+        uint256 originationFee = calculateTake(amountIncrease)
+            - calculateTake(amountIncrease) * token.feeBips() / 10_000;
         assertEq(
             beforeBalance + originationFee,
             erc20.balanceOf(address(facilitator))
