@@ -458,6 +458,34 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(lendTicket.ownerOf(loanId), lender);
     }
 
+    function testLendFailsWithAddressZeroLoanAsset() public {
+        erc20 = TestERC20(address(0));
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+    
+        vm.expectRevert('invalid loan');
+        facilitator.lend(
+            loanId,
+            interestRate,
+            loanAmount,
+            loanDuration,
+            lender
+        );
+    }
+
+    function testLendFailsWithEOALoanAsset() public {
+        erc20 = TestERC20(address(1));
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+    
+        vm.expectRevert('invalid loan');
+        facilitator.lend(
+            loanId,
+            interestRate,
+            loanAmount,
+            loanDuration,
+            lender
+        );
+    }
+
     function testLendTransfersERC20Correctly() public {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         setUpLender(lender);
