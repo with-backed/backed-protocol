@@ -199,6 +199,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
             loan.accumulatedInterest = uint128(accumulatedInterest);
 
             address currentLoanOwner = IERC721(lendTicketContract).ownerOf(loanId);
+            ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
             
             if(amountIncrease > 0){
                 handleAmountIncreaseBuyoutPayments(
@@ -217,7 +218,6 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
                     accumulatedInterest + previousLoanAmount
                 );
             }
-            ILendTicket(lendTicketContract).loanFacilitatorTransfer(currentLoanOwner, sendLendTicketTo, loanId);
             
             emit BuyoutLender(loanId, msg.sender, currentLoanOwner, accumulatedInterest, previousLoanAmount);
         }

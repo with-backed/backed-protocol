@@ -13,6 +13,8 @@ import {LendTicket} from "contracts/LendTicket.sol";
 import {TestERC721} from "./mocks/TestERC721.sol";
 import {TestERC20} from "./mocks/TestERC20.sol";
 import {FeeOnTransferERC20} from "./mocks/FeeOnTransferERC20.sol";
+import {RepayAndCloseERC20} from "./mocks/RepayAndCloseERC20.sol";
+import {ReLendERC20} from "./mocks/ReLendERC20.sol";
 
 contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     Vm vm = Vm(HEVM_ADDRESS);
@@ -1257,6 +1259,44 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.stopPrank();
     }
 
+    function testRepayReentryOnBuyoutPaysNewOwner() public {
+        vm.prank(borrower);
+        RepayAndCloseERC20 token = new RepayAndCloseERC20(address(facilitator));
+        erc20 = TestERC20(address(token));
+        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+            borrower,
+            borrower
+        );
+        token.mint(lender, loanAmount);
+        vm.startPrank(lender);
+        token.approve(address(facilitator), loanAmount);
+        facilitator.lend(loanId, interestRate, loanAmount, uint32(increaseByMinPercent(loanDuration)), lender);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
+        // before the fix the previous lender could reenter and pay themselves 
+        // and close the loan
+        assertEq(loan.loanAmount, token.balanceOf(lender));
+    }
+
+    function testLendReentryOnBuyoutIsNormalLend() public {
+        address attacker = address(4);
+        vm.prank(attacker);
+        ReLendERC20 token = new ReLendERC20(address(facilitator));
+        erc20 = TestERC20(address(token));
+        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+            attacker,
+            attacker
+        );
+        token.mint(lender, loanAmount);
+        vm.startPrank(lender);
+        token.approve(address(facilitator), loanAmount);
+        facilitator.lend(loanId, interestRate, loanAmount, uint32(increaseByMinPercent(loanDuration)), lender);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
+        // before the fix the previous lender could reenter, change loan terms
+        // and leave other lender with them
+        assertEq(loan.loanAmount, token.balanceOf(lender));
+        assertEq(lendTicket.ownerOf(loanId), attacker);
+    }
+
     function testRepayAndCloseSuccessful() public {
         (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
             borrower,
@@ -1420,7 +1460,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             interestRate,
             loanAmount,
             loanDuration,
-            lender
+            lenderAddress
         );
         vm.stopPrank();
     }
