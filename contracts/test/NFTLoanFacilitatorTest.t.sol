@@ -1264,6 +1264,13 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.repayAndCloseLoan(loanId);
     }
 
+    function testRepayAndCloseFailsIfNoLender() public {
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+        vm.startPrank(borrower);
+        vm.expectRevert("no lender, use closeLoan");
+        facilitator.repayAndCloseLoan(loanId);
+    }
+
     function testSeizeCollateralSuccessful() public {
         (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
             borrower,
