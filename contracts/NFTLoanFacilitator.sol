@@ -47,7 +47,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     mapping(uint256 => Loan) public loanInfo;
 
     /// @dev tracks loan count
-    uint256 private _nonce = 1;
+    uint256 private _nonce;
 
 
     // ==== constructor ====
@@ -89,7 +89,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         IERC721(collateralContractAddress).transferFrom(msg.sender, address(this), collateralTokenId);
 
         unchecked {
-            id = _nonce++;
+            id = ++_nonce;
         }
 
         Loan storage loan = loanInfo[id];
@@ -115,11 +115,13 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     }
 
     /// See {INFTLoanFacilitator-closeLoan}.
-    function closeLoan(uint256 loanId, address sendCollateralTo) external override notClosed(loanId) {
+    function closeLoan(uint256 loanId, address sendCollateralTo) external override {
         require(IERC721(borrowTicketContract).ownerOf(loanId) == msg.sender,
         "borrow ticket holder only");
 
         Loan storage loan = loanInfo[loanId];
+        require(!loan.closed, 'loan closed');
+        
         require(loan.lastAccumulatedTimestamp == 0, "has lender");
         
         loan.closed = true;
