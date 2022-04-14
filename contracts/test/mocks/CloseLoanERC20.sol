@@ -5,29 +5,24 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "../../interfaces/INFTLoanFacilitator.sol";
 
-contract MaliciousERC20 is ERC20, IERC721Receiver {
+contract CloseLoanERC20 is ERC20, IERC721Receiver {
     INFTLoanFacilitator nftLoanFacilitator;
 
-    constructor(address facilitatorAddress) ERC20("", "MAL") {
+    constructor(address facilitatorAddress) ERC20("MAL", "MAL") {
         nftLoanFacilitator = INFTLoanFacilitator(facilitatorAddress);
-        _mint(msg.sender, 1000000 * (10**uint256(decimals())));
     }
 
-    function mint(uint256 amount, address to) external {
-        _mint(to, amount * (10**decimals()));
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
     }
 
-    function transferFrom(address from, address to, uint256 amount)
-        public
-        virtual
-        override
-        returns (bool)
-    {
-        address spender = _msgSender();
-        _spendAllowance(from, spender, amount);
-        _transfer(from, to, amount);
+    function _afterTokenTransfer(
+        address from,
+        address,
+        uint256
+    ) internal virtual override {
+        if (from == address(0)) return;
         nftLoanFacilitator.closeLoan(1, address(this));
-        return true;
     }
 
     function onERC721Received(

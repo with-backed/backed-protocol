@@ -10,16 +10,18 @@ import {NFTLoanFacilitator} from "contracts/NFTLoanFacilitator.sol";
 import {NFTLoanFacilitatorFactory} from "./helpers/NFTLoanFacilitatorFactory.sol";
 import {BorrowTicket} from "contracts/BorrowTicket.sol";
 import {LendTicket} from "contracts/LendTicket.sol";
-import {CryptoPunks} from "./mocks/CryptoPunks.sol";
+import {TestERC721} from "./mocks/TestERC721.sol";
 import {TestERC20} from "./mocks/TestERC20.sol";
 import {FeeOnTransferERC20} from "./mocks/FeeOnTransferERC20.sol";
+import {RepayAndCloseERC20} from "./mocks/RepayAndCloseERC20.sol";
+import {ReLendERC20} from "./mocks/ReLendERC20.sol";
 
 contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     Vm vm = Vm(HEVM_ADDRESS);
     NFTLoanFacilitator facilitator;
-    CryptoPunks punks = new CryptoPunks();
+    TestERC721 erc721 = new TestERC721();
     TestERC20 erc20 = new TestERC20();
-    uint256 punkId;
+    uint256 erc721Id;
     uint16 interestRate = 15;
     uint128 loanAmount = 1e20;
     uint32 loanDuration = 1000;
@@ -34,11 +36,11 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
         erc20.approve(address(facilitator), loanAmount * 3);
 
         // create a loan so we can close it or lend against it
-        punkId = punks.mint();
-        punks.approve(address(facilitator), punkId);
+        erc721Id = erc721.mint();
+        erc721.approve(address(facilitator), erc721Id);
         facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -46,19 +48,19 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             address(this)
         );
 
-        // mint another punk so we can create a second loan
-        punks.mint();
-        punks.approve(address(facilitator), punkId + 1);
+        // mint another erc721 so we can create a second loan
+        erc721.mint();
+        erc721.approve(address(facilitator), erc721Id + 1);
 
         // prevent errors from timestamp 0
         vm.warp(startTimestamp);
 
         // create another loan and lend against it so we can buyout or repay
-        punks.mint();
-        punks.approve(address(facilitator), punkId + 2);
+        erc721.mint();
+        erc721.approve(address(facilitator), erc721Id + 2);
         facilitator.createLoan(
-            punkId + 2,
-            address(punks),
+            erc721Id + 2,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -76,8 +78,8 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
 
     function testCreateLoan() public {
         facilitator.createLoan(
-            punkId + 1,
-            address(punks),
+            erc721Id + 1,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -166,14 +168,14 @@ contract NFTLoanFacilitatorTest is DSTest {
     address borrower = address(1);
     address lender = address(2);
 
-    CryptoPunks punks = new CryptoPunks();
+    TestERC721 erc721 = new TestERC721();
     TestERC20 erc20 = new TestERC20();
 
     uint16 interestRate = 15;
     uint128 loanAmount = 1e20;
     uint32 loanDuration = 1000;
     uint256 startTimestamp = 5;
-    uint256 punkId;
+    uint256 erc721Id;
 
     function setUp() public {
         NFTLoanFacilitatorFactory factory = new NFTLoanFacilitatorFactory();
@@ -183,8 +185,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.warp(startTimestamp);
 
         vm.startPrank(borrower);
-        punkId = punks.mint();
-        punks.approve(address(facilitator), punkId);
+        erc721Id = erc721.mint();
+        erc721.approve(address(facilitator), erc721Id);
         vm.stopPrank();
     }
 
@@ -193,8 +195,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         emit CreateLoan(
             1,
             borrower,
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             address(erc20),
             loanAmount,
@@ -202,8 +204,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
         vm.prank(borrower);
         facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -215,8 +217,8 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testCreateLoanTransfersCollateralToSelf() public {
         vm.prank(borrower);
         facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -224,15 +226,15 @@ contract NFTLoanFacilitatorTest is DSTest {
             borrower
         );
 
-        assertEq(punks.ownerOf(punkId), address(facilitator));
+        assertEq(erc721.ownerOf(erc721Id), address(facilitator));
     }
 
     function testCreateLoanMintsBorrowTicketCorrectly() public {
         address mintBorrowTicketTo = address(3);
         vm.prank(borrower);
         uint256 loanId = facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -255,8 +257,8 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         vm.prank(borrower);
         uint256 loanId = facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             maxPerAnumInterest,
             minLoanAmount,
             address(erc20),
@@ -272,8 +274,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(loan.loanAmount, minLoanAmount);
         assertEq(loan.lastAccumulatedTimestamp, 0);
         assertEq(loan.accumulatedInterest, 0);
-        assertEq(loan.collateralContractAddress, address(punks));
-        assertEq(loan.collateralTokenId, punkId);
+        assertEq(loan.collateralContractAddress, address(erc721));
+        assertEq(loan.collateralTokenId, erc721Id);
         assertEq(loan.loanAssetContractAddress, address(erc20));
         assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
     }
@@ -282,8 +284,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
         vm.expectRevert("0 duration");
         facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
@@ -296,8 +298,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
         vm.expectRevert("0 loan amount");
         facilitator.createLoan(
-            punkId,
-            address(punks),
+            erc721Id,
+            address(erc721),
             interestRate,
             0,
             address(erc20),
@@ -310,7 +312,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
         vm.expectRevert(bytes(""));
         facilitator.createLoan(
-            punkId,
+            erc721Id,
             address(0),
             interestRate,
             loanAmount,
@@ -359,7 +361,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(borrower);
 
         facilitator.closeLoan(loanId, borrower);
-        assertEq(punks.ownerOf(tokenId), borrower); // make sure borrower gets their NFT back
+        assertEq(erc721.ownerOf(tokenId), borrower); // make sure borrower gets their NFT back
         (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId);
         assertTrue(closed); // make sure loan was closed
     }
@@ -534,7 +536,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(loan.loanAmount, amount);
         assertEq(loan.lastAccumulatedTimestamp, block.timestamp);
         assertEq(loan.accumulatedInterest, 0);
-        assertEq(loan.collateralContractAddress, address(punks));
+        assertEq(loan.collateralContractAddress, address(erc721));
         assertEq(loan.collateralTokenId, tokenId);
         assertEq(loan.loanAssetContractAddress, address(erc20));
         assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
@@ -638,7 +640,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(durationSeconds, loanDuration);
         assertEq(accumulatedInterest, 0);
         assertEq(loanAmountFromLoan, loanAmount);
-        assertEq(collateralContractAddress, address(punks));
+        assertEq(collateralContractAddress, address(erc721));
         assertEq(loanAssetContractAddress, address(erc20));
         assertEq(collateralTokenId, tokenId);
     }
@@ -824,7 +826,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(lastAccumulatedTimestamp, startTimestamp);
         assertEq(accumulatedInterest, 0);
         // does not change immutable values
-        assertEq(collateralContractAddress, address(punks));
+        assertEq(collateralContractAddress, address(erc721));
         assertEq(loanAssetContractAddress, address(erc20));
         assertEq(collateralTokenId, tokenId);
     }
@@ -1257,6 +1259,44 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.stopPrank();
     }
 
+    function testRepayReentryOnBuyoutPaysNewOwner() public {
+        vm.prank(borrower);
+        RepayAndCloseERC20 token = new RepayAndCloseERC20(address(facilitator));
+        erc20 = TestERC20(address(token));
+        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+            borrower,
+            borrower
+        );
+        token.mint(lender, loanAmount);
+        vm.startPrank(lender);
+        token.approve(address(facilitator), loanAmount);
+        facilitator.lend(loanId, interestRate, loanAmount, uint32(increaseByMinPercent(loanDuration)), lender);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
+        // before the fix the previous lender could reenter and pay themselves 
+        // and close the loan
+        assertEq(loan.loanAmount, token.balanceOf(lender));
+    }
+
+    function testLendReentryOnBuyoutIsNormalLend() public {
+        address attacker = address(4);
+        vm.prank(attacker);
+        ReLendERC20 token = new ReLendERC20(address(facilitator));
+        erc20 = TestERC20(address(token));
+        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+            attacker,
+            attacker
+        );
+        token.mint(lender, loanAmount);
+        vm.startPrank(lender);
+        token.approve(address(facilitator), loanAmount);
+        facilitator.lend(loanId, interestRate, loanAmount, uint32(increaseByMinPercent(loanDuration)), lender);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
+        // before the fix the previous lender could reenter, change loan terms
+        // and leave other lender with them
+        assertEq(loan.loanAmount, token.balanceOf(lender));
+        assertEq(lendTicket.ownerOf(loanId), attacker);
+    }
+
     function testRepayAndCloseSuccessful() public {
         (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
             borrower,
@@ -1279,7 +1319,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         );
         assertEq(erc20.balanceOf(lender), loanAmount + interestAccrued);
 
-        assertEq(punks.ownerOf(tokenId), borrower); // ensure borrower gets their NFT back
+        assertEq(erc721.ownerOf(tokenId), borrower); // ensure borrower gets their NFT back
         (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
         assertTrue(closed);
     }
@@ -1308,7 +1348,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.prank(lender);
 
         facilitator.seizeCollateral(loanId, lender);
-        assertEq(punks.ownerOf(tokenId), lender); // ensure lender seized collateral
+        assertEq(erc721.ownerOf(tokenId), lender); // ensure lender seized collateral
 
         (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
         assertTrue(closed);
@@ -1420,7 +1460,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             interestRate,
             loanAmount,
             loanDuration,
-            lender
+            lenderAddress
         );
         vm.stopPrank();
     }
@@ -1431,11 +1471,11 @@ contract NFTLoanFacilitatorTest is DSTest {
         returns (uint256 tokenId, uint256 loanId)
     {
         vm.startPrank(borrowerAddress);
-        tokenId = punks.mint();
-        punks.approve(address(facilitator), tokenId);
+        tokenId = erc721.mint();
+        erc721.approve(address(facilitator), tokenId);
         loanId = facilitator.createLoan(
             tokenId,
-            address(punks),
+            address(erc721),
             interestRate,
             loanAmount,
             address(erc20),
