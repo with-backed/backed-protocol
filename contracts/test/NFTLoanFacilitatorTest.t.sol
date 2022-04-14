@@ -16,7 +16,6 @@ import {TestERC777} from "./mocks/TestERC777.sol";
 import {FeeOnTransferERC20} from "./mocks/FeeOnTransferERC20.sol";
 import {RepayAndCloseERC20} from "./mocks/RepayAndCloseERC20.sol";
 import {ReLendERC20} from "./mocks/ReLendERC20.sol";
-import {ERC1820Registry} from "./mocks/ERC1820Registry.sol";
 
 contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     Vm vm = Vm(HEVM_ADDRESS);
@@ -30,9 +29,6 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     uint256 startTimestamp = 5;
 
     function setUp() public {
-        ERC1820Registry registery = new ERC1820Registry();
-        vm.etch(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24, address(registery).code);
-
         NFTLoanFacilitatorFactory factory = new NFTLoanFacilitatorFactory();
         (, , facilitator) = factory.newFacilitator(address(this));
 
@@ -183,9 +179,6 @@ contract NFTLoanFacilitatorTest is DSTest {
     uint256 erc721Id;
 
     function setUp() public {
-        ERC1820Registry registery = new ERC1820Registry();
-        vm.etch(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24, address(registery).code);
-
         NFTLoanFacilitatorFactory factory = new NFTLoanFacilitatorFactory();
         (borrowTicket, lendTicket, facilitator) = factory.newFacilitator(
             address(this)
@@ -1538,9 +1531,6 @@ contract NFTLendTicketTest is DSTest {
     LendTicket lendTicket;
 
     function setUp() public {
-        ERC1820Registry registery = new ERC1820Registry();
-        vm.etch(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24, address(registery).code);
-
         NFTLoanFacilitatorFactory factory = new NFTLoanFacilitatorFactory();
         (borrowTicket, lendTicket, facilitator) = factory.newFacilitator(
             address(this)
