@@ -20,31 +20,4 @@ contract LendTicket is NFTLoanTicket, ILendTicket {
     function loanFacilitatorTransfer(address from, address to, uint256 loanId) external override loanFacilitatorOnly {
         _transfer(from, to, loanId);
     }
-
-    /// @dev exact copy of 
-    /// https://github.com/Rari-Capital/solmate/blob/a51b8a28b8f1347b2519138fc7e756278e1bffaa/src/tokens/ERC721.sol#L82-L109
-    /// with L91 - L93 removed to enable loanFacilitatorTransfer
-    /// also L87 removed because NFTLoanFacilitator calls ownerOf when 
-    /// passing `from` to loanFacilitatorTransfer
-    function _transfer(
-        address from,
-        address to,
-        uint256 id
-    ) internal {
-        require(to != address(0), "INVALID_RECIPIENT");
-
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        unchecked {
-            balanceOf[from]--;
-
-            balanceOf[to]++;
-        }
-
-        ownerOf[id] = to;
-
-        delete getApproved[id];
-
-        emit Transfer(from, to, id);
-    }
 }
