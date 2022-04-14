@@ -5,12 +5,14 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeTransferLib, ERC20} from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {IERC1820Registry} from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import {IERC777Recipient} from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
 import {INFTLoanFacilitator} from './interfaces/INFTLoanFacilitator.sol';
 import {IERC721Mintable} from './interfaces/IERC721Mintable.sol';
 import {ILendTicket} from './interfaces/ILendTicket.sol';
 
-contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
+contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     using SafeTransferLib for ERC20;
 
     // ==== constants ====
@@ -60,6 +62,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
     constructor(address _manager) {
         transferOwnership(_manager);
+
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24).setInterfaceImplementer(
+            address(this),
+            keccak256("ERC777TokensRecipient"),
+            address(this)
+        );
     }
 
     
@@ -270,6 +278,21 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator {
 
         emit SeizeCollateral(loanId);
         emit Close(loanId);
+    }
+
+    /// @dev If we allowed ERC777 tokens, 
+    /// a malicious lender could revert in 
+    /// tokensReceived and block buyouts or repayment.
+    /// So we do not support ERC777 tokens.
+    function tokensReceived(
+        address,
+        address,
+        address,
+        uint256,
+        bytes calldata,
+        bytes calldata
+    ) external pure override {
+        revert('ERC777 unsupported');
     }
 
     
