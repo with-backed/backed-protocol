@@ -1392,9 +1392,12 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testSeizeCollateralFailsIfLoanIsClosed() public {
-        (, uint256 loanId) = setUpLoanForTest(borrower);
-        vm.prank(borrower);
-        facilitator.closeLoan(loanId, borrower);
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+        erc20.mint(borrower, loanAmount);
+        vm.startPrank(borrower);
+        erc20.approve(address(facilitator), loanAmount);
+        facilitator.repayAndCloseLoan(loanId);
+        vm.stopPrank();
 
         vm.startPrank(lender);
         vm.expectRevert("loan closed");
