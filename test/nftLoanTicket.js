@@ -57,7 +57,7 @@ describe("NFTLoanTicket contract", function () {
                     await NFTLoanTicket.connect(pretendNFTLoanFacilitator).mint(addr1.address, "1")
                     await expect(
                         NFTLoanTicket.connect(pretendNFTLoanFacilitator).mint(addr1.address, "1")
-                    ).to.be.revertedWith('ALREADY_MINTED')
+                    ).to.be.revertedWith('ERC721: token already minted')
                     const owner = await NFTLoanTicket.ownerOf("1")
                     expect(owner).to.equal(addr1.address)
                 })

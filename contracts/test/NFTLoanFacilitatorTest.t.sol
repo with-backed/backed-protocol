@@ -1335,7 +1335,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     function testRepayAndCloseFailsIfNoLender() public {
         (, uint256 loanId) = setUpLoanForTest(borrower);
         vm.startPrank(borrower);
-        vm.expectRevert("no lender, use closeLoan");
+        vm.expectRevert("ERC721: owner query for nonexistent token");
         facilitator.repayAndCloseLoan(loanId);
     }
 
