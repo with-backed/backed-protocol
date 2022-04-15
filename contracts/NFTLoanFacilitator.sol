@@ -172,6 +172,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 previousLoanAmount = loan.loanAmount;
+            // implicitly checks that amount >= loan.loanAmount
             // will underflow if amount < previousAmount
             uint256 amountIncrease = amount - previousLoanAmount;
             uint256 accumulatedInterest;
