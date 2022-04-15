@@ -8,14 +8,11 @@ import {BorrowTicketDescriptor} from 'contracts/descriptors/BorrowTicketDescript
 import {LendTicketDescriptor} from 'contracts/descriptors/LendTicketDescriptor.sol';
 import {LendTicketSVGHelper} from 'contracts/descriptors/LendTicketSVGHelper.sol';
 import {BorrowTicketSVGHelper} from 'contracts/descriptors/BorrowTicketSVGHelper.sol';
-
-interface Vm {
-    function startPrank(address account) external;
-    function stopPrank() external;
-}
+import {Vm} from './Vm.sol';
+import {ERC1820Registry} from "../mocks/ERC1820Registry.sol";
 
 contract NFTLoanFacilitatorFactory {
-    Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+    Vm vm = Vm(address(bytes20(uint160(uint256(keccak256('hevm cheat code'))))));
 
     function newFacilitator(address manager)
         public 
@@ -25,6 +22,9 @@ contract NFTLoanFacilitatorFactory {
             NFTLoanFacilitator facilitator
         )
     {
+        ERC1820Registry registery = new ERC1820Registry();
+        vm.etch(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24, address(registery).code);
+
         BorrowTicketSVGHelper bs = new BorrowTicketSVGHelper();
         BorrowTicketDescriptor bd = new BorrowTicketDescriptor(bs);
 

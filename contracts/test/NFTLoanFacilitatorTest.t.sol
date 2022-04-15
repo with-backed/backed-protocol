@@ -12,6 +12,7 @@ import {BorrowTicket} from "contracts/BorrowTicket.sol";
 import {LendTicket} from "contracts/LendTicket.sol";
 import {TestERC721} from "./mocks/TestERC721.sol";
 import {TestERC20} from "./mocks/TestERC20.sol";
+import {TestERC777} from "./mocks/TestERC777.sol";
 import {FeeOnTransferERC20} from "./mocks/FeeOnTransferERC20.sol";
 import {RepayAndCloseERC20} from "./mocks/RepayAndCloseERC20.sol";
 import {ReLendERC20} from "./mocks/ReLendERC20.sol";
@@ -465,6 +466,24 @@ contract NFTLoanFacilitatorTest is DSTest {
         (, uint256 loanId) = setUpLoanForTest(borrower);
     
         vm.expectRevert('invalid loan');
+        facilitator.lend(
+            loanId,
+            interestRate,
+            loanAmount,
+            loanDuration,
+            lender
+        );
+    }
+
+    function testLendFailsWithERC777Token() public {
+        TestERC777 token = new TestERC777();
+        erc20 = TestERC20(address(token));
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+
+        erc20.mint(address(this), loanAmount);
+        erc20.approve(address(facilitator), loanAmount);
+
+        vm.expectRevert("ERC777 unsupported");
         facilitator.lend(
             loanId,
             interestRate,
