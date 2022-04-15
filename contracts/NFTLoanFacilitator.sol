@@ -323,7 +323,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     }
 
     /**
-     * @notice Updates originationFeeRate the faciliator keeps of each loan amount
+     * @notice Updates originationFeeRate the facilitator keeps of each loan amount
      * @dev Cannot be set higher than 5%
      */
     function updateOriginationFeeRate(uint32 _originationFeeRate) external onlyOwner {
@@ -336,12 +336,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
 
     /**
      * @notice updates the percent improvement required of at least one loan term when buying out lender 
-     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
+     * a loan that already has a lender. E.g. setting this value to 100 means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
      * @dev Cannot be 0.
      */
     function updateRequiredImprovementRate(uint256 _improvementRate) external onlyOwner {
-        require(_improvementRate > 0, '0 improvement rate');
+        require(_improvementRate != 0, '0 improvement rate');
 
         requiredImprovementRate = _improvementRate;
 

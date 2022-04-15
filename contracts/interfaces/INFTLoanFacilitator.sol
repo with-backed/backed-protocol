@@ -35,13 +35,13 @@ interface INFTLoanFacilitator {
     function originationFeeRate() external returns (uint256);
 
     /**
-     * @notice The lend ticket contract associated with this loan faciliator
+     * @notice The lend ticket contract associated with this loan facilitator
      * @dev Once set, cannot be modified
      */
     function lendTicketContract() external returns (address);
 
     /**
-     * @notice The borrow ticket contract associated with this loan faciliator
+     * @notice The borrow ticket contract associated with this loan facilitator
      * @dev Once set, cannot be modified
      */
     function borrowTicketContract() external returns (address);
@@ -287,18 +287,22 @@ interface INFTLoanFacilitator {
     /**
      * @notice returns the total amount owed for the loan, i.e. principal + interest
      * @param loanId The loan id
+     * @return amount required to repay and close the loan corresponding to loanId
      */
     function totalOwed(uint256 loanId) view external returns (uint256);
 
     /**
      * @notice returns the interest owed on the loan, in loan asset units
      * @param loanId The loan id
+     * @return amount of interest owed on loan corresonding to loanId
      */
     function interestOwed(uint256 loanId) view external returns (uint256);
 
     /**
      * @notice returns the unix timestamp (seconds) of the loan end
      * @param loanId The loan id
+     * @return timestamp at which loan payment is due, after which lend ticket holder
+     * can seize collateral
      */
     function loanEndSeconds(uint256 loanId) view external returns (uint256);
 }
