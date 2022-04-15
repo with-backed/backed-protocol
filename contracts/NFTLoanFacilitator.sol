@@ -388,7 +388,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     /// See {INFTLoanFacilitator-loanEndSeconds}.
     function loanEndSeconds(uint256 loanId) external view override returns (uint256) {
         Loan storage loan = loanInfo[loanId];
-        return loan.durationSeconds + loan.lastAccumulatedTimestamp;
+        uint256 lastAccumulated;
+        require((lastAccumulated = loan.lastAccumulatedTimestamp) != 0, 'loan has no lender');
+        
+        return loan.durationSeconds + lastAccumulated;
     }
 
     
