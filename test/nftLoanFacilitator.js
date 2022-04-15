@@ -160,7 +160,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(erc20Holder).closeLoan("2", addr4.address)
-                ).to.be.revertedWith("borrow ticket holder only")
+                ).to.be.revertedWith("NOT_MINTED")
         });
 
         it("reverts if caller is not ticket owner", async function(){
@@ -449,7 +449,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts if loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(erc721Holder).repayAndCloseLoan("10")
-            ).to.be.revertedWith("no lender, use closeLoan")
+            ).to.be.revertedWith("NOT_MINTED")
         })
     })
 
@@ -504,7 +504,7 @@ describe("NFTLoanFacilitator contract", function () {
         it("reverts loan does not exist", async function(){
             await expect(
                 NFTLoanFacilitator.connect(erc20Holder).seizeCollateral("2", addr4.address)
-            ).to.be.revertedWith("lend ticket holder only")
+            ).to.be.revertedWith("NOT_MINTED")
         })
     })
 
