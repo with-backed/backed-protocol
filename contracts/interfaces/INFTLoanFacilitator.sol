@@ -5,7 +5,7 @@ interface INFTLoanFacilitator {
     /// @notice See loanInfo
     struct Loan {
         bool closed;
-        uint16 perAnumInterestRate;
+        uint16 perAnnumInterestRate;
         uint32 durationSeconds;
         uint40 lastAccumulatedTimestamp;
         address collateralContractAddress;
@@ -174,7 +174,7 @@ interface INFTLoanFacilitator {
      * collateralContractAddress cannot be address(borrowTicket) or address(lendTicket).
      * @param collateralTokenId The token id of the collateral NFT 
      * @param collateralContractAddress The contract address of the collateral NFT
-     * @param maxPerAnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
+     * @param maxPerAnnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
      * @param minLoanAmount The minimum acceptable loan amount for this loan
      * @param loanAssetContractAddress The address of the loan asset
      * @param minDurationSeconds The minimum duration for this loan
@@ -184,7 +184,7 @@ interface INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint16 maxPerAnumInterest,
+            uint16 maxPerAnnumInterest,
             uint128 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
@@ -247,7 +247,7 @@ interface INFTLoanFacilitator {
      * @notice returns the info for this loan
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
-     * @return perAnumInterestRate The per anum interest rate, scaled by SCALAR
+     * @return perAnnumInterestRate The per anum interest rate, scaled by SCALAR
      * @return durationSeconds The loan duration in seconds
      
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
@@ -264,7 +264,7 @@ interface INFTLoanFacilitator {
         view 
         returns (
             bool closed,
-            uint16 perAnumInterestRate,
+            uint16 perAnnumInterestRate,
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,

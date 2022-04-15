@@ -247,7 +247,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     }
 
     function testCreateLoanSetsValuesCorrectly(
-        uint16 maxPerAnumInterest,
+        uint16 maxPerAnnumInterest,
         uint128 minLoanAmount,
         uint32 minDurationSeconds,
         address mintTo
@@ -260,7 +260,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         uint256 loanId = facilitator.createLoan(
             erc721Id,
             address(erc721),
-            maxPerAnumInterest,
+            maxPerAnnumInterest,
             minLoanAmount,
             address(erc20),
             minDurationSeconds,
@@ -271,7 +271,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         assertTrue(!loan.closed);
         assertEq(loan.durationSeconds, minDurationSeconds);
-        assertEq(loan.perAnumInterestRate, maxPerAnumInterest);
+        assertEq(loan.perAnnumInterestRate, maxPerAnnumInterest);
         assertEq(loan.loanAmount, minLoanAmount);
         assertEq(loan.lastAccumulatedTimestamp, 0);
         assertEq(loan.accumulatedInterest, 0);
@@ -551,7 +551,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         assertTrue(!loan.closed);
         assertEq(loan.durationSeconds, duration);
-        assertEq(loan.perAnumInterestRate, rate);
+        assertEq(loan.perAnnumInterestRate, rate);
         assertEq(loan.loanAmount, amount);
         assertEq(loan.lastAccumulatedTimestamp, block.timestamp);
         assertEq(loan.accumulatedInterest, 0);

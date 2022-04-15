@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config()
+require('@nomiclabs/hardhat-truffle5');
 
 const ALCHEMY_ROPSTEN_API_KEY = process.env.ALCHEMY_ROPSTEN_API_KEY
 const ROPSTEN_PRIVATE_KEY = process.env.ROPSTEN_PRIVATE_KEY
