@@ -26,14 +26,14 @@ library PopulateSVGParams{
         view
         returns (NFTLoanTicketSVG.SVGParams memory)
     {
-        (bool closed, uint256 perAnumInterestRate,
+        (bool closed, uint256 perAnnumInterestRate,
         uint256 durationSeconds, uint256 lastAccumulatedTimestamp,
         address collateralAddress, , address loanAsset, ,
         uint256 loanAmount, uint256 collateralID) = nftLoanFacilitator.loanInfo(id);
 
         svgParams.id = Strings.toString(id);
         svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
-        svgParams.interestRate = interestRateString(nftLoanFacilitator, perAnumInterestRate); 
+        svgParams.interestRate = interestRateString(nftLoanFacilitator, perAnnumInterestRate); 
         svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
         svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
         svgParams.collateralContract = HexStrings.toHexString(uint160(collateralAddress), 20);
@@ -49,13 +49,13 @@ library PopulateSVGParams{
         return svgParams;
     }
 
-    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perAnumInterestRate) 
+    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perAnnumInterestRate) 
         private 
         view 
         returns (string memory)
     {
         return UintStrings.decimalString(
-            perAnumInterestRate,
+            perAnnumInterestRate,
             nftLoanFacilitator.INTEREST_RATE_DECIMALS() - 2,
             true
             );

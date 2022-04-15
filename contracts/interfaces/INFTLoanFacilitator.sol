@@ -5,7 +5,7 @@ interface INFTLoanFacilitator {
     /// @notice See loanInfo
     struct Loan {
         bool closed;
-        uint16 perAnumInterestRate;
+        uint16 perAnnumInterestRate;
         uint32 durationSeconds;
         uint40 lastAccumulatedTimestamp;
         address collateralContractAddress;
@@ -35,13 +35,13 @@ interface INFTLoanFacilitator {
     function originationFeeRate() external returns (uint256);
 
     /**
-     * @notice The lend ticket contract associated with this loan faciliator
+     * @notice The lend ticket contract associated with this loan facilitator
      * @dev Once set, cannot be modified
      */
     function lendTicketContract() external returns (address);
 
     /**
-     * @notice The borrow ticket contract associated with this loan faciliator
+     * @notice The borrow ticket contract associated with this loan facilitator
      * @dev Once set, cannot be modified
      */
     function borrowTicketContract() external returns (address);
@@ -174,7 +174,7 @@ interface INFTLoanFacilitator {
      * collateralContractAddress cannot be address(borrowTicket) or address(lendTicket).
      * @param collateralTokenId The token id of the collateral NFT 
      * @param collateralContractAddress The contract address of the collateral NFT
-     * @param maxPerAnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
+     * @param maxPerAnnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
      * @param minLoanAmount The minimum acceptable loan amount for this loan
      * @param loanAssetContractAddress The address of the loan asset
      * @param minDurationSeconds The minimum duration for this loan
@@ -184,7 +184,7 @@ interface INFTLoanFacilitator {
     function createLoan(
             uint256 collateralTokenId,
             address collateralContractAddress,
-            uint16 maxPerAnumInterest,
+            uint16 maxPerAnnumInterest,
             uint128 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
@@ -247,7 +247,7 @@ interface INFTLoanFacilitator {
      * @notice returns the info for this loan
      * @param loanId The id of the loan
      * @return closed Whether or not the ticket is closed
-     * @return perAnumInterestRate The per anum interest rate, scaled by SCALAR
+     * @return perAnnumInterestRate The per anum interest rate, scaled by SCALAR
      * @return durationSeconds The loan duration in seconds
      
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
@@ -264,7 +264,7 @@ interface INFTLoanFacilitator {
         view 
         returns (
             bool closed,
-            uint16 perAnumInterestRate,
+            uint16 perAnnumInterestRate,
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
@@ -287,18 +287,22 @@ interface INFTLoanFacilitator {
     /**
      * @notice returns the total amount owed for the loan, i.e. principal + interest
      * @param loanId The loan id
+     * @return amount required to repay and close the loan corresponding to loanId
      */
     function totalOwed(uint256 loanId) view external returns (uint256);
 
     /**
      * @notice returns the interest owed on the loan, in loan asset units
      * @param loanId The loan id
+     * @return amount of interest owed on loan corresonding to loanId
      */
     function interestOwed(uint256 loanId) view external returns (uint256);
 
     /**
      * @notice returns the unix timestamp (seconds) of the loan end
      * @param loanId The loan id
+     * @return timestamp at which loan payment is due, after which lend ticket holder
+     * can seize collateral
      */
     function loanEndSeconds(uint256 loanId) view external returns (uint256);
 }

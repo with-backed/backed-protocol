@@ -77,7 +77,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     function createLoan(
         uint256 collateralTokenId,
         address collateralContractAddress,
-        uint16 maxPerAnumInterest,
+        uint16 maxPerAnnumInterest,
         uint128 minLoanAmount,
         address loanAssetContractAddress,
         uint32 minDurationSeconds,
@@ -106,7 +106,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         loan.loanAmount = minLoanAmount;
         loan.collateralTokenId = collateralTokenId;
         loan.collateralContractAddress = collateralContractAddress;
-        loan.perAnumInterestRate = maxPerAnumInterest;
+        loan.perAnnumInterestRate = maxPerAnnumInterest;
         loan.durationSeconds = minDurationSeconds;
         
         IERC721Mintable(borrowTicketContract).mint(mintBorrowTicketTo, id);
@@ -115,7 +115,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             msg.sender,
             collateralTokenId,
             collateralContractAddress,
-            maxPerAnumInterest,
+            maxPerAnnumInterest,
             loanAssetContractAddress,
             minLoanAmount,
             minDurationSeconds
@@ -153,11 +153,11 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             address loanAssetContractAddress = loan.loanAssetContractAddress;
             require(loanAssetContractAddress.code.length != 0, "invalid loan");
 
-            require(interestRate <= loan.perAnumInterestRate, 'rate too high');
+            require(interestRate <= loan.perAnnumInterestRate, 'rate too high');
             require(durationSeconds >= loan.durationSeconds, 'duration too low');
             require(amount >= loan.loanAmount, 'amount too low');
         
-            loan.perAnumInterestRate = interestRate;
+            loan.perAnnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
@@ -172,12 +172,13 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             IERC721Mintable(lendTicketContract).mint(sendLendTicketTo, loanId);
         } else {
             uint256 previousLoanAmount = loan.loanAmount;
+            // implicitly checks that amount >= loan.loanAmount
             // will underflow if amount < previousAmount
             uint256 amountIncrease = amount - previousLoanAmount;
             uint256 accumulatedInterest;
 
             {
-                uint256 previousInterestRate = loan.perAnumInterestRate;
+                uint256 previousInterestRate = loan.perAnnumInterestRate;
                 uint256 previousDurationSeconds = loan.durationSeconds;
 
                 require(interestRate <= previousInterestRate, 'rate too high');
@@ -200,7 +201,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             require(accumulatedInterest < 1 << 128, 
             "interest exceeds uint128");
 
-            loan.perAnumInterestRate = interestRate;
+            loan.perAnnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
             loan.durationSeconds = durationSeconds;
             loan.loanAmount = amount;
@@ -241,7 +242,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         uint256 interest = _interestOwed(
             loanAmount,
             loan.lastAccumulatedTimestamp,
-            loan.perAnumInterestRate,
+            loan.perAnnumInterestRate,
             loan.accumulatedInterest
         );
         address lender = IERC721(lendTicketContract).ownerOf(loanId);
@@ -323,7 +324,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     }
 
     /**
-     * @notice Updates originationFeeRate the faciliator keeps of each loan amount
+     * @notice Updates originationFeeRate the facilitator keeps of each loan amount
      * @dev Cannot be set higher than 5%
      */
     function updateOriginationFeeRate(uint32 _originationFeeRate) external onlyOwner {
@@ -336,12 +337,12 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
 
     /**
      * @notice updates the percent improvement required of at least one loan term when buying out lender 
-     * a loan that already has a lender. E.g. setting this value to 10 means duration or amount
+     * a loan that already has a lender. E.g. setting this value to 100 means duration or amount
      * must be 10% higher or interest rate must be 10% lower. 
      * @dev Cannot be 0.
      */
     function updateRequiredImprovementRate(uint256 _improvementRate) external onlyOwner {
-        require(_improvementRate > 0, '0 improvement rate');
+        require(_improvementRate != 0, '0 improvement rate');
 
         requiredImprovementRate = _improvementRate;
 
@@ -365,7 +366,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         return loanInfo[loanId].loanAmount + _interestOwed(
             loan.loanAmount,
             lastAccumulated,
-            loan.perAnumInterestRate,
+            loan.perAnnumInterestRate,
             loan.accumulatedInterest
         );
     }
@@ -379,7 +380,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         return _interestOwed(
             loan.loanAmount,
             lastAccumulated,
-            loan.perAnumInterestRate,
+            loan.perAnnumInterestRate,
             loan.accumulatedInterest
         );
     }
@@ -391,13 +392,13 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     }
 
     
-    // === private ===
+    // === internal & private ===
 
     /// @dev Returns the total interest owed on loan
     function _interestOwed(
         uint256 loanAmount,
         uint256 lastAccumulatedTimestamp,
-        uint256 perAnumInterestRate,
+        uint256 perAnnumInterestRate,
         uint256 accumulatedInterest
     ) 
         internal 
@@ -406,7 +407,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     {
         return loanAmount
             * (block.timestamp - lastAccumulatedTimestamp)
-            * (perAnumInterestRate * 1e18 / 365 days)
+            * (perAnnumInterestRate * 1e18 / 365 days)
             / 1e21 // SCALAR * 1e18
             + accumulatedInterest;
     }
