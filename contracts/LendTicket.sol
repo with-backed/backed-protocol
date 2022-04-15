@@ -36,12 +36,12 @@ contract LendTicket is NFTLoanTicket, ILendTicket {
         // Underflow of the sender's balance is impossible because we check for
         // ownership above and the recipient's balance can't realistically overflow.
         unchecked {
-            balanceOf[from]--;
+            _balanceOf[from]--;
 
-            balanceOf[to]++;
+            _balanceOf[to]++;
         }
 
-        ownerOf[id] = to;
+        _ownerOf[id] = to;
 
         delete getApproved[id];
 

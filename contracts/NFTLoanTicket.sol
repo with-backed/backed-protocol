@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.12;
 
-import {ERC721} from "@rari-capital/solmate/src/tokens/ERC721.sol";
+import {ERC721} from "./ERC721.sol";
 
 import {NFTLoanFacilitator} from './NFTLoanFacilitator.sol';
 import {NFTLoansTicketDescriptor} from './descriptors/NFTLoansTicketDescriptor.sol';
@@ -36,6 +36,8 @@ contract NFTLoanTicket is ERC721, IERC721Mintable {
 
     /// @notice returns a base64 encoded data uri containing the token metadata in JSON format
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_ownerOf[tokenId] != address(0), 'nonexistent token');
+        
         return descriptor.uri(nftLoanFacilitator, tokenId);
     }
 }
