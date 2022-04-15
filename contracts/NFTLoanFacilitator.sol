@@ -391,7 +391,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
     }
 
     
-    // === private ===
+    // === internal & private ===
 
     /// @dev Returns the total interest owed on loan
     function _interestOwed(
