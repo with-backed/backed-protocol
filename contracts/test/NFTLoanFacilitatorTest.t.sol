@@ -27,6 +27,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
     uint128 loanAmount = 1e20;
     uint32 loanDuration = 1000;
     uint256 startTimestamp = 5;
+    bool allowLoanAmountIncrease = true;
 
     function setUp() public {
         NFTLoanFacilitatorFactory factory = new NFTLoanFacilitatorFactory();
@@ -43,6 +44,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             erc721Id,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -63,6 +65,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             erc721Id + 2,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -82,6 +85,7 @@ contract NFTLoanFacilitatorGasBenchMarkTest is DSTest {
             erc721Id + 1,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -140,6 +144,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         address collateralContract,
         uint256 maxInterestRate,
         address loanAssetContract,
+        bool allowLoanAmountIncrease,
         uint256 minLoanAmount,
         uint256 minDurationSeconds
     );
@@ -175,6 +180,7 @@ contract NFTLoanFacilitatorTest is DSTest {
     uint16 interestRate = 15;
     uint128 loanAmount = 1e20;
     uint32 loanDuration = 1000;
+    bool allowLoanAmountIncrease = true;
     uint256 startTimestamp = 5;
     uint256 erc721Id;
 
@@ -200,6 +206,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             address(erc721),
             interestRate,
             address(erc20),
+            allowLoanAmountIncrease,
             loanAmount,
             loanDuration
         );
@@ -208,6 +215,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -221,6 +229,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -237,6 +246,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -261,6 +271,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(erc721),
             maxPerAnnumInterest,
+            allowLoanAmountIncrease,
             minLoanAmount,
             address(erc20),
             minDurationSeconds,
@@ -279,6 +290,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(loan.collateralTokenId, erc721Id);
         assertEq(loan.loanAssetContractAddress, address(erc20));
         assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
+        assertTrue(loan.allowLoanAmountIncrease == allowLoanAmountIncrease);
     }
 
     function testCreateLoanZeroDurationNotAllowed() public {
@@ -288,6 +300,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             0,
@@ -302,6 +315,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             0,
             address(erc20),
             loanDuration,
@@ -316,6 +330,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             erc721Id,
             address(0),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -333,6 +348,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             loanId,
             address(borrowTicket),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -350,6 +366,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             loanId,
             address(lendTicket),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
@@ -363,7 +380,7 @@ contract NFTLoanFacilitatorTest is DSTest {
 
         facilitator.closeLoan(loanId, borrower);
         assertEq(erc721.ownerOf(tokenId), borrower); // make sure borrower gets their NFT back
-        (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId);
+        (bool closed, , , , , , , , , , ) = facilitator.loanInfo(loanId);
         assertTrue(closed); // make sure loan was closed
     }
 
@@ -559,6 +576,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(loan.collateralTokenId, tokenId);
         assertEq(loan.loanAssetContractAddress, address(erc20));
         assertEq(loan.originationFeeRate, facilitator.originationFeeRate());
+        assertTrue(loan.allowLoanAmountIncrease == allowLoanAmountIncrease);
     }
 
     function testLendEmitsCorrectly() public {
@@ -607,6 +625,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             ,
             ,
             ,
+            ,
             uint256 accumulatedInterest,
             ,
 
@@ -640,28 +659,19 @@ contract NFTLoanFacilitatorTest is DSTest {
             loanDuration,
             lender
         );
-        (
-            bool closed,
-            uint16 interest,
-            uint32 durationSeconds,
-            uint40 lastAccumulatedTimestamp,
-            address collateralContractAddress,
-            uint96 originationFeeRate,
-            address loanAssetContractAddress,
-            uint128 accumulatedInterest,
-            uint128 loanAmountFromLoan,
-            uint256 collateralTokenId
-        ) = facilitator.loanInfo(loanId);
+        
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
 
-        assertTrue(!closed);
-        assertEq(interestRate, interest);
-        assertEq(lastAccumulatedTimestamp, startTimestamp);
-        assertEq(durationSeconds, loanDuration);
-        assertEq(accumulatedInterest, 0);
-        assertEq(loanAmountFromLoan, loanAmount);
-        assertEq(collateralContractAddress, address(erc721));
-        assertEq(loanAssetContractAddress, address(erc20));
-        assertEq(collateralTokenId, tokenId);
+        assertTrue(!loan.closed);
+        assertEq(interestRate, loan.perAnnumInterestRate);
+        assertEq(loan.lastAccumulatedTimestamp, startTimestamp);
+        assertEq(loan.durationSeconds, loanDuration);
+        assertEq(loan.accumulatedInterest, 0);
+        assertEq(loan.loanAmount, loanAmount);
+        assertEq(loan.collateralContractAddress, address(erc721));
+        assertEq(loan.loanAssetContractAddress, address(erc20));
+        assertEq(loan.collateralTokenId, tokenId);
+        assertTrue(loan.allowLoanAmountIncrease == allowLoanAmountIncrease);
     }
 
     function testLendFailsIfHigherInterestRate(
@@ -710,6 +720,37 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.startPrank(lender);
         vm.expectRevert("duration too low");
         facilitator.lend(loanId, rate, amount, duration, lender);
+    }
+
+    function testLendFailsIfAmountGreaterAndIncreaseNotAllowed(uint128 amount) public {
+        vm.assume(amount > loanAmount);
+        allowLoanAmountIncrease = false;
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+
+        setUpLender(lender);
+        vm.startPrank(lender);
+        vm.expectRevert("invalid amount");
+        facilitator.lend(loanId, interestRate, amount, loanDuration, lender);
+    }
+
+    function testLendFailsIfAmountLessAndIncreaseNotAllowed(uint128 amount) public {
+        vm.assume(amount < loanAmount);
+        allowLoanAmountIncrease = false;
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+
+        setUpLender(lender);
+        vm.startPrank(lender);
+        vm.expectRevert("invalid amount");
+        facilitator.lend(loanId, interestRate, amount, loanDuration, lender);
+    }
+
+    function testLendWorksWithAmountSameAndIncreaseNotAllowed() public {
+        allowLoanAmountIncrease = false;
+        (, uint256 loanId) = setUpLoanForTest(borrower);
+
+        setUpLender(lender);
+        vm.startPrank(lender);
+        facilitator.lend(loanId, interestRate, loanAmount, loanDuration, lender);
     }
 
     function testLendWithFeeOnTransferToken(
@@ -796,6 +837,25 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
     }
 
+    function testBuyoutSucceedsFailsWithAmountImprovedIfIncreaseNotAllowed(
+        uint128 amount
+    ) 
+        public 
+    {
+        vm.assume(amount >= increaseByMinPercent(loanAmount));
+        allowLoanAmountIncrease = false;
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        address newLender = address(3);
+        setUpLender(newLender);
+        uint256 amountIncrease = amount - loanAmount;
+        erc20.mint(newLender, amountIncrease);
+
+        vm.startPrank(newLender);
+        vm.expectRevert('insufficient improvement');
+        facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
+    }
+
     function testBuyoutSucceedsIfDurationImproved(uint32 duration) public {
         vm.assume(duration >= increaseByMinPercent(loanDuration));
         (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
@@ -825,29 +885,20 @@ contract NFTLoanFacilitatorTest is DSTest {
             newDuration,
             address(1)
         );
-        (
-            bool closed,
-            uint16 interest,
-            uint32 durationSeconds,
-            uint40 lastAccumulatedTimestamp,
-            address collateralContractAddress,
-            uint96 originationFeeRate,
-            address loanAssetContractAddress,
-            uint128 accumulatedInterest,
-            uint128 loanAmountFromLoan,
-            uint256 collateralTokenId
-        ) = facilitator.loanInfo(loanId);
 
-        assertTrue(!closed);
-        assertEq(interestRate, interest);
-        assertEq(newDuration, durationSeconds);
-        assertEq(loanAmount, loanAmountFromLoan);
-        assertEq(lastAccumulatedTimestamp, startTimestamp);
-        assertEq(accumulatedInterest, 0);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
+
+        assertTrue(!loan.closed);
+        assertEq(loan.perAnnumInterestRate, interestRate);
+        assertEq(newDuration, loan.durationSeconds);
+        assertEq(loanAmount, loan.loanAmount);
+        assertEq(loan.lastAccumulatedTimestamp, startTimestamp);
+        assertEq(loan.accumulatedInterest, 0);
         // does not change immutable values
-        assertEq(collateralContractAddress, address(erc721));
-        assertEq(loanAssetContractAddress, address(erc20));
-        assertEq(collateralTokenId, tokenId);
+        assertEq(loan.collateralContractAddress, address(erc721));
+        assertEq(loan.loanAssetContractAddress, address(erc20));
+        assertEq(loan.collateralTokenId, tokenId);
+        assertTrue(allowLoanAmountIncrease == loan.allowLoanAmountIncrease);
     }
 
     function testBuyoutUpdatesAccumulatedInterestCorrectly() public {
@@ -867,21 +918,11 @@ contract NFTLoanFacilitatorTest is DSTest {
             newDuration,
             address(1)
         );
-        (
-            ,
-            ,
-            ,
-            uint40 lastAccumulatedTimestamp,
-            ,
-            ,
-            ,
-            uint256 accumulatedInterest,
-            ,
 
-        ) = facilitator.loanInfo(loanId);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
 
-        assertEq(lastAccumulatedTimestamp, startTimestamp + elapsedTime);
-        assertEq(accumulatedInterest, interest);
+        assertEq(loan.lastAccumulatedTimestamp, startTimestamp + elapsedTime);
+        assertEq(loan.accumulatedInterest, interest);
     }
 
     function testBuyoutTransfersLendTicket() public {
@@ -1339,8 +1380,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         assertEq(erc20.balanceOf(lender), loanAmount + interestAccrued);
 
         assertEq(erc721.ownerOf(tokenId), borrower); // ensure borrower gets their NFT back
-        (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
-        assertTrue(closed);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId);
+        assertTrue(loan.closed);
     }
 
     function testRepayAndCloseFailsIfLoanClosed() public {
@@ -1369,8 +1410,8 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.seizeCollateral(loanId, lender);
         assertEq(erc721.ownerOf(tokenId), lender); // ensure lender seized collateral
 
-        (bool closed, , , , , , , , , ) = facilitator.loanInfo(loanId); // ensure loan is closed on-chain
-        assertTrue(closed);
+        INFTLoanFacilitator.Loan memory loan = facilitator.loanInfoStruct(loanId); // ensure loan is closed on-chain
+        assertTrue(loan.closed);
     }
 
     function testSeizeCollateralFailsIfLoanNotOverdue() public {
@@ -1513,6 +1554,7 @@ contract NFTLoanFacilitatorTest is DSTest {
             tokenId,
             address(erc721),
             interestRate,
+            allowLoanAmountIncrease,
             loanAmount,
             address(erc20),
             loanDuration,
