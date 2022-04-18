@@ -888,6 +888,23 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(loanId, interestRate, loanAmount, duration, newLender);
     }
 
+    function testBuyoutSucceedsIfDurationImprovedAmoutIncreaseNotAllowed() public {
+        // sanity check + want to log gas (because fuzz don't log)
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        address newLender = address(3);
+        setUpLender(newLender);
+        vm.startPrank(newLender);
+
+        facilitator.lend(
+            loanId, 
+            interestRate,
+            loanAmount, 
+            uint32(increaseByMinPercent(loanDuration)),
+            newLender
+        );
+    }
+
     function testBuyoutUpdatesValuesCorrectly() public {
         (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
             borrower,
@@ -1344,7 +1361,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.prank(borrower);
         RepayAndCloseERC20 token = new RepayAndCloseERC20(address(facilitator));
         erc20 = TestERC20(address(token));
-        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+        (, uint256 loanId) = setUpLoanWithLenderForTest(
             borrower,
             borrower
         );
@@ -1363,7 +1380,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         vm.prank(attacker);
         ReLendERC20 token = new ReLendERC20(address(facilitator));
         erc20 = TestERC20(address(token));
-        (uint256 tokenId, uint256 loanId) = setUpLoanWithLenderForTest(
+        (, uint256 loanId) = setUpLoanWithLenderForTest(
             attacker,
             attacker
         );
