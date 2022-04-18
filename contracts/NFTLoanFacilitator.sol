@@ -78,6 +78,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         uint256 collateralTokenId,
         address collateralContractAddress,
         uint16 maxPerAnnumInterest,
+        bool allowLoanAmountIncrease,
         uint128 minLoanAmount,
         address loanAssetContractAddress,
         uint32 minDurationSeconds,
@@ -101,7 +102,8 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
         }
 
         Loan storage loan = loanInfo[id];
-        loan.originationFeeRate = uint96(originationFeeRate);
+        loan.allowLoanAmountIncrease = allowLoanAmountIncrease;
+        loan.originationFeeRate = uint88(originationFeeRate);
         loan.loanAssetContractAddress = loanAssetContractAddress;
         loan.loanAmount = minLoanAmount;
         loan.collateralTokenId = collateralTokenId;
@@ -117,6 +119,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             collateralContractAddress,
             maxPerAnnumInterest,
             loanAssetContractAddress,
+            allowLoanAmountIncrease,
             minLoanAmount,
             minDurationSeconds
         );
@@ -154,8 +157,14 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             require(loanAssetContractAddress.code.length != 0, "invalid loan");
 
             require(interestRate <= loan.perAnnumInterestRate, 'rate too high');
+
             require(durationSeconds >= loan.durationSeconds, 'duration too low');
-            require(amount >= loan.loanAmount, 'amount too low');
+
+            if (loan.allowLoanAmountIncrease) {
+                require(amount >= loan.loanAmount, 'amount too low');
+            } else {
+                require(amount == loan.loanAmount, 'invalid amount');
+            }
         
             loan.perAnnumInterestRate = interestRate;
             loan.lastAccumulatedTimestamp = uint40(block.timestamp);
@@ -175,6 +184,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             // implicitly checks that amount >= loan.loanAmount
             // will underflow if amount < previousAmount
             uint256 amountIncrease = amount - previousLoanAmount;
+            if (!loan.allowLoanAmountIncrease) {
+                require(amountIncrease == 0, 'amount increase not allowed');
+            }
+
             uint256 accumulatedInterest;
 
             {
@@ -182,13 +195,16 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
                 uint256 previousDurationSeconds = loan.durationSeconds;
 
                 require(interestRate <= previousInterestRate, 'rate too high');
+
                 require(durationSeconds >= previousDurationSeconds, 'duration too low');
 
-                require(Math.ceilDiv(previousLoanAmount * requiredImprovementRate, SCALAR) <= amountIncrease
-                || previousDurationSeconds + Math.ceilDiv(previousDurationSeconds * requiredImprovementRate, SCALAR) <= durationSeconds 
-                || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
-                    && previousInterestRate - Math.ceilDiv(previousInterestRate * requiredImprovementRate, SCALAR) >= interestRate), 
-                "insufficient improvement");
+                require(
+                    Math.ceilDiv(previousLoanAmount * requiredImprovementRate, SCALAR) <= amountIncrease
+                    || previousDurationSeconds + Math.ceilDiv(previousDurationSeconds * requiredImprovementRate, SCALAR) <= durationSeconds 
+                    || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
+                        && previousInterestRate - Math.ceilDiv(previousInterestRate * requiredImprovementRate, SCALAR) >= interestRate), 
+                    "insufficient improvement"
+                );
 
                  accumulatedInterest = _interestOwed(
                     previousLoanAmount,

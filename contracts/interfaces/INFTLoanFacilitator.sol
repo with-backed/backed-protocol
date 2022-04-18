@@ -9,7 +9,8 @@ interface INFTLoanFacilitator {
         uint32 durationSeconds;
         uint40 lastAccumulatedTimestamp;
         address collateralContractAddress;
-        uint96 originationFeeRate;
+        bool allowLoanAmountIncrease;
+        uint88 originationFeeRate;
         address loanAssetContractAddress;
         uint128 accumulatedInterest;
         uint128 loanAmount;
@@ -73,6 +74,7 @@ interface INFTLoanFacilitator {
         address collateralContract,
         uint256 maxInterestRate,
         address loanAssetContract,
+        bool allowLoanAmountIncrease,
         uint256 minLoanAmount,
         uint256 minDurationSeconds
         );
@@ -175,6 +177,7 @@ interface INFTLoanFacilitator {
      * @param collateralTokenId The token id of the collateral NFT 
      * @param collateralContractAddress The contract address of the collateral NFT
      * @param maxPerAnnumInterest The maximum per anum interest rate for this loan, scaled by SCALAR
+     * @param allowLoanAmountIncrease Whether the borrower is open to lenders offerring greater than minLoanAmount
      * @param minLoanAmount The minimum acceptable loan amount for this loan
      * @param loanAssetContractAddress The address of the loan asset
      * @param minDurationSeconds The minimum duration for this loan
@@ -185,6 +188,7 @@ interface INFTLoanFacilitator {
             uint256 collateralTokenId,
             address collateralContractAddress,
             uint16 maxPerAnnumInterest,
+            bool allowLoanAmountIncrease,
             uint128 minLoanAmount,
             address loanAssetContractAddress,
             uint32 minDurationSeconds,
@@ -253,6 +257,7 @@ interface INFTLoanFacilitator {
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
      * i.e. the timestamp of the most recent underwriting
      * @return collateralContractAddress The contract address of the NFT collateral 
+     * @return allowLoanAmountIncrease
      * @return originationFeeRate
      * @return loanAssetContractAddress The contract address of the loan asset.
      * @return accumulatedInterest The amount of interest accumulated on the loan prior to the current lender
@@ -268,7 +273,8 @@ interface INFTLoanFacilitator {
             uint32 durationSeconds,
             uint40 lastAccumulatedTimestamp,
             address collateralContractAddress,
-            uint96 originationFeeRate,
+            bool allowLoanAmountIncrease,
+            uint88 originationFeeRate,
             address loanAssetContractAddress,
             uint128 accumulatedInterest,
             uint128 loanAmount,
