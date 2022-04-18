@@ -837,7 +837,7 @@ contract NFTLoanFacilitatorTest is DSTest {
         facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
     }
 
-    function testBuyoutSucceedsFailsWithAmountImprovedIfIncreaseNotAllowed(
+    function testBuyoutFailsWithAmountImprovedIfIncreaseNotAllowed(
         uint128 amount
     ) 
         public 
@@ -852,7 +852,28 @@ contract NFTLoanFacilitatorTest is DSTest {
         erc20.mint(newLender, amountIncrease);
 
         vm.startPrank(newLender);
-        vm.expectRevert('insufficient improvement');
+        vm.expectRevert('amount increase not allowed');
+        facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
+    }
+
+    function testBuyoutFailsWithAmountAndDurationIncreasedIfAmountIncreaseNotAllowed(
+        uint128 amount,
+        uint32 duration
+    )
+        public 
+    {
+        vm.assume(amount >= increaseByMinPercent(loanAmount));
+        vm.assume(duration >= increaseByMinPercent(loanDuration));
+        allowLoanAmountIncrease = false;
+        (, uint256 loanId) = setUpLoanWithLenderForTest(borrower, lender);
+
+        address newLender = address(3);
+        setUpLender(newLender);
+        uint256 amountIncrease = amount - loanAmount;
+        erc20.mint(newLender, amountIncrease);
+
+        vm.startPrank(newLender);
+        vm.expectRevert('amount increase not allowed');
         facilitator.lend(loanId, interestRate, amount, loanDuration, newLender);
     }
 

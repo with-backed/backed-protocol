@@ -184,6 +184,10 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
             // implicitly checks that amount >= loan.loanAmount
             // will underflow if amount < previousAmount
             uint256 amountIncrease = amount - previousLoanAmount;
+            if (!loan.allowLoanAmountIncrease) {
+                require(amountIncrease == 0, 'amount increase not allowed');
+            }
+
             uint256 accumulatedInterest;
 
             {
@@ -195,7 +199,7 @@ contract NFTLoanFacilitator is Ownable, INFTLoanFacilitator, IERC777Recipient {
                 require(durationSeconds >= previousDurationSeconds, 'duration too low');
 
                 require(
-                    (loan.allowLoanAmountIncrease && Math.ceilDiv(previousLoanAmount * requiredImprovementRate, SCALAR) <= amountIncrease)
+                    Math.ceilDiv(previousLoanAmount * requiredImprovementRate, SCALAR) <= amountIncrease
                     || previousDurationSeconds + Math.ceilDiv(previousDurationSeconds * requiredImprovementRate, SCALAR) <= durationSeconds 
                     || (previousInterestRate != 0 // do not allow rate improvement if rate already 0
                         && previousInterestRate - Math.ceilDiv(previousInterestRate * requiredImprovementRate, SCALAR) >= interestRate), 
