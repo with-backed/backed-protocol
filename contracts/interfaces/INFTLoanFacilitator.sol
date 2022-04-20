@@ -21,31 +21,31 @@ interface INFTLoanFacilitator {
      * @notice The magnitude of SCALAR
      * @dev 10^INTEREST_RATE_DECIMALS = 1 = 100%
      */
-    function INTEREST_RATE_DECIMALS() external returns (uint8);
+    function INTEREST_RATE_DECIMALS() external view returns (uint8);
 
     /**
      * @notice The SCALAR for all percentages in the loan facilitator contract
      * @dev Any interest rate passed to a function should already been multiplied by SCALAR
      */
-    function SCALAR() external returns (uint256);
+    function SCALAR() external view returns (uint256);
 
     /**
      * @notice The percent of the loan amount that the facilitator will take as a fee, scaled by SCALAR
      * @dev Starts set to 1%. Can only be set to 0 - 5%. 
      */
-    function originationFeeRate() external returns (uint256);
+    function originationFeeRate() external view returns (uint256);
 
     /**
      * @notice The lend ticket contract associated with this loan facilitator
      * @dev Once set, cannot be modified
      */
-    function lendTicketContract() external returns (address);
+    function lendTicketContract() external view returns (address);
 
     /**
      * @notice The borrow ticket contract associated with this loan facilitator
      * @dev Once set, cannot be modified
      */
-    function borrowTicketContract() external returns (address);
+    function borrowTicketContract() external view returns (address);
 
     /**
      * @notice The percent improvement required of at least one loan term when buying out current lender 
@@ -54,7 +54,7 @@ interface INFTLoanFacilitator {
      * at least 10% greater duration or loan amount or at least 10% lower interest rate. 
      * @dev Starts at 100 = 10%. Only owner can set. Cannot be set to 0.
      */
-    function requiredImprovementRate() external returns (uint256);
+    function requiredImprovementRate() external view returns (uint256);
     
     /**
      * @notice Emitted when the loan is created
