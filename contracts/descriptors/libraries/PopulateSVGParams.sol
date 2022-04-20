@@ -26,10 +26,6 @@ library PopulateSVGParams{
         view
         returns (NFTLoanTicketSVG.SVGParams memory)
     {
-        // (bool closed, uint256 perAnnumInterestRate,
-        // uint256 durationSeconds, uint256 lastAccumulatedTimestamp,
-        // address collateralAddress, , , address loanAsset, ,
-        // uint256 loanAmount, uint256 collateralID) 
         INFTLoanFacilitator.Loan memory loan = nftLoanFacilitator.loanInfoStruct(id);
 
         svgParams.id = Strings.toString(id);
