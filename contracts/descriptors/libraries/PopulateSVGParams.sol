@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import './BokkyPooBahsDateTimeLibrary.sol';
 import './UintStrings.sol';
-import '../../NFTLoanFacilitator.sol';
+import '../../interfaces/INFTLoanFacilitator.sol';
 import '../../interfaces/IERC20Metadata.sol';
 import './HexStrings.sol';
 import './NFTLoanTicketSVG.sol';
@@ -21,35 +21,32 @@ library PopulateSVGParams{
      * @param id The id of the loan
      * @return `svgParams`, with all values now populated
      */
-    function populate(NFTLoanTicketSVG.SVGParams memory svgParams, NFTLoanFacilitator nftLoanFacilitator, uint256 id)
+    function populate(NFTLoanTicketSVG.SVGParams memory svgParams, INFTLoanFacilitator nftLoanFacilitator, uint256 id)
         internal
         view
         returns (NFTLoanTicketSVG.SVGParams memory)
     {
-        (bool closed, uint256 perAnnumInterestRate,
-        uint256 durationSeconds, uint256 lastAccumulatedTimestamp,
-        address collateralAddress, , , address loanAsset, ,
-        uint256 loanAmount, uint256 collateralID) = nftLoanFacilitator.loanInfo(id);
+        INFTLoanFacilitator.Loan memory loan = nftLoanFacilitator.loanInfoStruct(id);
 
         svgParams.id = Strings.toString(id);
-        svgParams.status = loanStatus(lastAccumulatedTimestamp, durationSeconds, closed);
-        svgParams.interestRate = interestRateString(nftLoanFacilitator, perAnnumInterestRate); 
-        svgParams.loanAssetContract = HexStrings.toHexString(uint160(loanAsset), 20);
-        svgParams.loanAssetSymbol = loanAssetSymbol(loanAsset);
-        svgParams.collateralContract = HexStrings.toHexString(uint160(collateralAddress), 20);
-        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(collateralAddress), 10, 40);
-        svgParams.collateralAssetSymbol = collateralAssetSymbol(collateralAddress);
-        svgParams.collateralId = Strings.toString(collateralID);
-        svgParams.loanAmount = loanAmountString(loanAmount, loanAsset);
-        svgParams.interestAccrued = accruedInterest(nftLoanFacilitator, id, loanAsset);
-        svgParams.durationDays = Strings.toString(durationSeconds / (24 * 60 * 60));
-        svgParams.endDateTime = lastAccumulatedTimestamp == 0 ? "n/a" 
-        : endDateTime(lastAccumulatedTimestamp + durationSeconds);
+        svgParams.status = loanStatus(loan.lastAccumulatedTimestamp, loan.durationSeconds, loan.closed);
+        svgParams.interestRate = interestRateString(nftLoanFacilitator, loan.perAnnumInterestRate); 
+        svgParams.loanAssetContract = HexStrings.toHexString(uint160(loan.loanAssetContractAddress), 20);
+        svgParams.loanAssetSymbol = loanAssetSymbol(loan.loanAssetContractAddress);
+        svgParams.collateralContract = HexStrings.toHexString(uint160(loan.collateralContractAddress), 20);
+        svgParams.collateralContractPartial = HexStrings.partialHexString(uint160(loan.collateralContractAddress), 10, 40);
+        svgParams.collateralAssetSymbol = collateralAssetSymbol(loan.collateralContractAddress);
+        svgParams.collateralId = Strings.toString(loan.collateralTokenId);
+        svgParams.loanAmount = loanAmountString(loan.loanAmount, loan.loanAssetContractAddress);
+        svgParams.interestAccrued = accruedInterest(nftLoanFacilitator, id, loan.loanAssetContractAddress);
+        svgParams.durationDays = Strings.toString(loan.durationSeconds / (24 * 60 * 60));
+        svgParams.endDateTime = loan.lastAccumulatedTimestamp == 0 ? "n/a" 
+        : endDateTime(loan.lastAccumulatedTimestamp + loan.durationSeconds);
         
         return svgParams;
     }
 
-    function interestRateString(NFTLoanFacilitator nftLoanFacilitator, uint256 perAnnumInterestRate) 
+    function interestRateString(INFTLoanFacilitator nftLoanFacilitator, uint256 perAnnumInterestRate) 
         private 
         view 
         returns (string memory)
@@ -73,7 +70,7 @@ library PopulateSVGParams{
         return ERC721(asset).symbol();
     }
 
-    function accruedInterest(NFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) 
+    function accruedInterest(INFTLoanFacilitator nftLoanFacilitator, uint256 loanId, address loanAsset) 
         private 
         view 
         returns (string memory)

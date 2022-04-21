@@ -76,7 +76,16 @@ describe("NFTLoanFacilitator contract", function () {
       
     describe("tokenURI", function() {
         it("retrieves successfully", async function(){
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                erc721Id, 
+                TestERC721.address, 
+                interest,
+                true,
+                loanAmount, 
+                ERC20.address, 
+                durationSeconds, 
+                erc721Holder.address
+            )
             await expect(
                 BorrowTicket.tokenURI("1")
             ).not.to.be.reverted
@@ -88,7 +97,16 @@ describe("NFTLoanFacilitator contract", function () {
 
     describe("createLoan", function () {
         it("sets values correctly", async function(){
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                erc721Id,
+                TestERC721.address,
+                interest,
+                true,
+                loanAmount,
+                ERC20.address,
+                durationSeconds,
+                addr4.address
+            )
             const ticket = await NFTLoanFacilitator.loanInfo("1")
             expect(ticket.loanAssetContractAddress).to.equal(ERC20.address)
             expect(ticket.loanAmount).to.equal(loanAmount)
@@ -100,7 +118,16 @@ describe("NFTLoanFacilitator contract", function () {
         })
 
         it("transfers NFT to contract, mints ticket", async function(){
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                erc721Id,
+                TestERC721.address,
+                interest,
+                true,
+                loanAmount, 
+                ERC20.address,
+                durationSeconds,
+                addr4.address
+            )
             const erc721Owner = await  TestERC721.ownerOf(erc721Id)
             const ticketOwner = await BorrowTicket.ownerOf("1")
             expect(erc721Owner).to.equal(NFTLoanFacilitator.address)
@@ -110,35 +137,89 @@ describe("NFTLoanFacilitator contract", function () {
         it('reverts if not approved', async function(){
             await TestERC721.connect(erc721Holder).mint();
             await expect(
-                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                    erc721Id.add(1), 
+                    TestERC721.address, 
+                    interest, 
+                    true,
+                    loanAmount, 
+                    ERC20.address,
+                    durationSeconds, 
+                    addr4.address
+                )
             ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved")
         })
 
         it('reverts if collateral is loan ticket or borrow ticket', async function(){
             await expect(
-                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, LendTicket.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                    erc721Id, 
+                    LendTicket.address, 
+                    interest,
+                    true, 
+                    loanAmount,
+                    ERC20.address,
+                    durationSeconds,
+                    addr4.address
+                )
             ).to.be.revertedWith('lend ticket collateral')
             
             await expect(
-                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, BorrowTicket.address, interest, loanAmount, ERC20.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                    erc721Id,
+                    BorrowTicket.address,
+                    interest,
+                    true,
+                    loanAmount,
+                    ERC20.address,
+                    durationSeconds,
+                    addr4.address
+                )
             ).to.be.revertedWith('borrow ticket collateral')
         })
 
         it('reverts if duration is 0', async function(){
             await expect(
-                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, 0, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                    erc721Id,
+                    TestERC721.address,
+                    interest,
+                    true,
+                    loanAmount,
+                    ERC20.address,
+                    0,
+                    addr4.address
+                )
             ).to.be.revertedWith('0 duration')
         })
 
         it('reverts if loan amount is 0', async function(){
             await expect(
-                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, 0, ERC20.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                    erc721Id,
+                    TestERC721.address,
+                    interest,
+                    true,
+                    0,
+                    ERC20.address,
+                    durationSeconds,
+                    addr4.address
+                )
             ).to.be.revertedWith('0 loan amount')
         })
 
         it('does not reverts if interest rate is 0', async function(){
             await expect(
-                NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, 0, loanAmount, ERC20.address, durationSeconds, addr4.address)
+                NFTLoanFacilitator.connect(erc721Holder).createLoan(
+                    erc721Id,
+                    TestERC721.address,
+                    0,
+                    true,
+                    loanAmount,
+                    ERC20.address,
+                    durationSeconds,
+                    addr4.address
+                )
             ).not.to.be.reverted
         })
     });
@@ -149,7 +230,7 @@ describe("NFTLoanFacilitator contract", function () {
             await TestERC721.connect(erc721Holder).approve(NFTLoanFacilitator.address, erc721Id.add(1))
             await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, true, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
         })
 
         it("transfers ERC721 and closes ticket", async function(){
@@ -190,7 +271,7 @@ describe("NFTLoanFacilitator contract", function () {
     describe("lend", function () {
         context("when loan does not have lender", function () {
             beforeEach(async function() {
-                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, true, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
                 await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount)
             })
 
@@ -263,7 +344,7 @@ describe("NFTLoanFacilitator contract", function () {
                 await MAL.mint(erc20Holder.address, loanAmount);
         
                 // make sure we mint borrow ticket to the erc20 contract address
-                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, MAL.address, durationSeconds, MAL.address)
+                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, true, loanAmount, MAL.address, durationSeconds, MAL.address)
                 await MAL.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount)
             })
         
@@ -284,7 +365,7 @@ describe("NFTLoanFacilitator contract", function () {
             beforeEach(async function() {
                 await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount)
 
-                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+                await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, true, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
                 await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
 
                 await ERC20.connect(erc20Holder).transfer(addr4.address, loanAmount.mul(2))
@@ -416,7 +497,7 @@ describe("NFTLoanFacilitator contract", function () {
         beforeEach(async function() {
             await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, true, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
             await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
             await ERC20.connect(erc20Holder).transfer(erc721Holder.address, loanAmount.mul(2))
             await ERC20.connect(erc721Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
@@ -462,7 +543,7 @@ describe("NFTLoanFacilitator contract", function () {
             await TestERC721.connect(erc721Holder).approve(NFTLoanFacilitator.address, erc721Id.add(1))
             await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, loanAmount, ERC20.address, 1, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id.add(1), TestERC721.address, interest, true, loanAmount, ERC20.address, 1, erc721Holder.address)
             await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, 1, erc20Holder.address)
         })
 
@@ -515,7 +596,7 @@ describe("NFTLoanFacilitator contract", function () {
         beforeEach(async function() {
             await ERC20.connect(erc20Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
 
-            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
+            await NFTLoanFacilitator.connect(erc721Holder).createLoan(erc721Id, TestERC721.address, interest, true, loanAmount, ERC20.address, durationSeconds, erc721Holder.address)
             await NFTLoanFacilitator.connect(erc20Holder).lend("1", interest, loanAmount, durationSeconds, erc20Holder.address)
             await ERC20.connect(erc20Holder).transfer(erc721Holder.address, loanAmount.mul(2))
             await ERC20.connect(erc721Holder).approve(NFTLoanFacilitator.address, loanAmount.mul(2))
