@@ -1,3 +1,5 @@
+Find our Code4Rena audit results [here](https://code4rena.com/reports/2022-04-backed/).
+
 ## Summary
 
 Backed protocol enables peer-to-peer loans with NFT collateral. Its main unique features are
