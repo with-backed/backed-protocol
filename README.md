@@ -42,7 +42,7 @@ The contracts are deployed on Ethereum networks Rinkeby and Mainnet.
 | LendTicketSVGHelper   | 0x3F4D6CA3518D81C7152FC7A47B006d4343896E44        |
 | BorrowTicketDescriptor   | 0xEe457DB5113Dc6fb0447C53Ab68131F7b494bf48        |
 | LendTicketDescriptor   | 0x0982FED63643Cd69F2AF3eA824b462829FBD9703        |
-| NFTLoanFacilitator   | 0x0baccdd01ff681b07334362387559ba140bd7b2a        |
+| NFTLoanFacilitator   | 0x0bACCDD01FF681b07334362387559Ba140bD7b2A        |
 | LendTicket   | 0xE8a91e8C8A8ff8Cab9BbBC5527891b9BD89a5F8e        |
 | BorrowTicket   | 0xeF87894f0B37f8f1De2f23DB27d9aa43aCd50f51        |
 
