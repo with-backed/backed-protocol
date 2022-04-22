@@ -40,13 +40,13 @@ $ forge test
 The contracts are deployed on Ethereum networks Rinkeby and Mainnet. 
 | Contract      | Address |
 | ----------- | ----------- |
-| BorrowTicketSVGHelper      | 0x31dc0b33F01F314A10B77C722dA34eA046b4daA2       |
-| LendTicketSVGHelper   | 0x3F4D6CA3518D81C7152FC7A47B006d4343896E44        |
-| BorrowTicketDescriptor   | 0xEe457DB5113Dc6fb0447C53Ab68131F7b494bf48        |
-| LendTicketDescriptor   | 0x0982FED63643Cd69F2AF3eA824b462829FBD9703        |
-| NFTLoanFacilitator   | 0x0bACCDD01FF681b07334362387559Ba140bD7b2A        |
-| LendTicket   | 0xE8a91e8C8A8ff8Cab9BbBC5527891b9BD89a5F8e        |
-| BorrowTicket   | 0xeF87894f0B37f8f1De2f23DB27d9aa43aCd50f51        |
+| BorrowTicketSVGHelper      | 0xc37a73e2cE90eE073e70D95Cd73cD7ac8f8FF1b1       |
+| LendTicketSVGHelper   | 0x3bffd69722073889793989eaC1b98cb1b721e294        |
+| BorrowTicketDescriptor   | 0xDaC8316F24364FfEEa73A190ee7E332eaA04b8f2        |
+| LendTicketDescriptor   | 0x007Ff7Eb7a45bE057192D8b7f660BeA70f3e141c        |
+| NFTLoanFacilitator   | 0x0BacCDD05a729aB8B56e09Ef19c15f953E10885f        |
+| LendTicket   | 0x4c6822204Ee5E13B4281942Ff231314Bf05f2D3D        |
+| BorrowTicket   | 0xe01194534169DC6f38c9Aefea4917C623a99E7Ec        |
 
 ## Disclaimer
 
