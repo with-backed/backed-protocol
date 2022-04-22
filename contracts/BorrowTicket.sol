@@ -12,6 +12,6 @@ contract BorrowTicket is NFTLoanTicket {
         NFTLoanFacilitator _nftLoanFacilitator,
         NFTLoansTicketDescriptor _descriptor
     ) 
-        NFTLoanTicket("Borrow Ticket", "BRWT", _nftLoanFacilitator, _descriptor)
+        NFTLoanTicket("Backed Borrow Ticket", "BRWT", _nftLoanFacilitator, _descriptor)
     {}
 }

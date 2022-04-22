@@ -13,7 +13,7 @@ contract LendTicket is NFTLoanTicket, ILendTicket {
         NFTLoanFacilitator _nftLoanFacilitator,
         NFTLoansTicketDescriptor _descriptor
     ) 
-        NFTLoanTicket("Lend Ticket", "LNDT", _nftLoanFacilitator, _descriptor) 
+        NFTLoanTicket("Backed Lend Ticket", "LNDT", _nftLoanFacilitator, _descriptor) 
     {}
 
     /// See {ILendTicket-loanFacilitatorTransfer}
