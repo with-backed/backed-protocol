@@ -86,8 +86,8 @@ interface INFTLoanFacilitator {
     event Close(uint256 indexed id);
 
     /** 
-     * @notice Emitted when the loan is underwritten or re-underwritten
-     * @param id The id of the ticket which is being underwritten
+     * @notice Emitted when the loan is lent to
+     * @param id The id of the loan which is being lent to
      * @param lender msg.sender
      * @param interestRate The per anum interest rate, scaled by SCALAR, for the loan
      * @param loanAmount The loan amount
@@ -102,7 +102,8 @@ interface INFTLoanFacilitator {
     );
 
     /**
-     * @notice Emitted when a loan is being re-underwritten, the current loan ticket holder is being bought out
+     * @notice Emitted when a lender is being bought out: 
+     * the current loan ticket holder is being replaced by a new lender offering better terms
      * @param lender msg.sender
      * @param replacedLoanOwner The current loan ticket holder
      * @param interestEarned The amount of interest the loan has accrued from first lender to this buyout
@@ -198,7 +199,7 @@ interface INFTLoanFacilitator {
     /**
      * @notice Closes the loan, sends the NFT collateral to sendCollateralTo
      * @dev Can only be called by the holder of the Borrow Ticket with tokenId
-     * matching the loanId. Can only be called if loan has not be underwritten,
+     * matching the loanId. Can only be called if loan has no lender,
      * i.e. lastAccumulatedInterestTimestamp = 0
      * @param loanId The loan id
      * @param sendCollateralTo The address to send the collateral NFT to
@@ -208,9 +209,9 @@ interface INFTLoanFacilitator {
     /**
      * @notice Lends, meeting or beating the proposed loan terms, 
      * transferring `amount` of the loan asset 
-     * to the facilitator contract. If the loan has not yet been underwritten, 
+     * to the facilitator contract. If the loan has not yet been lent to, 
      * a Lend Ticket is minted to `sendLendTicketTo`. If the loan has already been 
-     * underwritten, then this is a buyout, and the Lend Ticket will be transferred
+     * lent to, then this is a buyout, and the Lend Ticket will be transferred
      * from the current holder to `sendLendTicketTo`. Also in the case of a buyout, interestOwed()
      * is transferred from the caller to the facilitator contract, in addition to `amount`, and
      * totalOwed() is paid to the current Lend Ticket holder.
@@ -255,7 +256,7 @@ interface INFTLoanFacilitator {
      * @return durationSeconds The loan duration in seconds
      
      * @return lastAccumulatedTimestamp The timestamp (in seconds) when interest was last accumulated, 
-     * i.e. the timestamp of the most recent underwriting
+     * i.e. the timestamp of the most recent lend
      * @return collateralContractAddress The contract address of the NFT collateral 
      * @return allowLoanAmountIncrease
      * @return originationFeeRate
