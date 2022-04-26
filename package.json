@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "gas:NFTLendOfferFacilitator": "forge snapshot --match-contract NFTLendOfferFacilitatorGasBenchmarkTest > test2.txt",
+    "gas:NFTLendOfferFacilitator:testCreateLendOfferForNFTGas": "forge snapshot --match-test testCreateLendOfferForNFTGas"
+  },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
