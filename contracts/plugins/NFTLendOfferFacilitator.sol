@@ -54,7 +54,10 @@ contract NFTLendOfferFacilitator is INFTLendOfferFacilitator {
         uint128 maxLoanAmount,
         uint32 maxDurationSeconds
     ) external override returns (uint256 id) {
-        id = ++_nonce;
+        unchecked {
+            id = _nonce++;
+        }
+
         LendOffer storage bid = lendOfferInfo[id];
         bid.lender = msg.sender;
         bid.collateralContractAddress = collateralContractAddress;
@@ -129,7 +132,7 @@ contract NFTLendOfferFacilitator is INFTLendOfferFacilitator {
             uint256 tokenIdFromLoan
         ) = facilitator.loanInfo(loanId);
 
-        LendOffer storage bid = lendOfferInfo[lendOfferId];
+        LendOffer memory bid = lendOfferInfo[lendOfferId];
 
         require(
             bid.collateralTokenId < 0 ||

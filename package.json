@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "gas:NFTLendOfferFacilitator": "forge snapshot --match-contract NFTLendOfferFacilitatorGasBenchmarkTest > test2.txt",
+    "gas:NFTLendOfferFacilitator": "forge snapshot --match-contract NFTLendOfferFacilitatorGasBenchmarkTest",
     "gas:NFTLendOfferFacilitator:testCreateLendOfferForNFTGas": "forge snapshot --match-test testCreateLendOfferForNFTGas"
   },
   "dependencies": {

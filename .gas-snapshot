@@ -1,1 +1,4 @@
-NFTLendOfferFacilitatorGasBenchmarkTest:testCreateLendOfferForNFTGas() (gas: 133903)
+NFTLendOfferFacilitatorGasBenchmarkTest:testCreateLendOfferForNFTGas() (gas: 133727)
+NFTLendOfferFacilitatorGasBenchmarkTest:testcancelLendOfferGas() (gas: 28043)
+NFTLendOfferFacilitatorGasBenchmarkTest:testfulfillLendOfferGas() (gas: 181867)
+NFTLendOfferFacilitatorGasBenchmarkTest:testfulfillLendOfferWithNoApprovalsGas() (gas: 179091)
