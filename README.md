@@ -48,6 +48,12 @@ The contracts are deployed on Ethereum networks Rinkeby and Mainnet.
 | LendTicket   | 0x4c6822204Ee5E13B4281942Ff231314Bf05f2D3D        |
 | BorrowTicket   | 0xe01194534169DC6f38c9Aefea4917C623a99E7Ec        |
 
+Polygon has different Lend and Borrow ticket contract addresses
+| Contract      | Address |
+| ----------- | ----------- |
+| LendTicket   | 0xe01194534169DC6f38c9Aefea4917C623a99E7Ec        |
+| BorrowTicket   | 0x222FB4559B1CfbaB63fc9C9a30F14A7232CB2636        |
+
 ## Disclaimer
 
 Last Updated: April 21, 2022
